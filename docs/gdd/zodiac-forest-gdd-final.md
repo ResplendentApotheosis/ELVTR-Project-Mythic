@@ -476,9 +476,11 @@ The MVP passes if Android players reach D1 ≥ 35% and D7 ≥ 12% (proposed bars
 
 **Open questions**
 
-- [x] Confirm the proposed audience and the D1 35% / D7 12% retention bars
-- [x] Hero booster prices and coin income: confirm once the economy sheet is built.
-- [x] Guardians turned to stone, ice, or a mix by element?
-- [x] Order of the "easier" guardians after Rat: Ox → Rabbit → Dog is proposed
-- [x] Element families: should each guardian belong to Fire, Earth, Water or Air (ties obstacles to heroes for Part 2)?
-- [x] Your upgrade flow: keep milestones at every 20/50 levels, or align them to the 25-level chapters (25/50/75/100)? Plus the forest restoration meta
+| Question | Answer |
+| --- | --- |
+| Confirm the proposed audience and the D1 35% / D7 12% retention bars | Confirm |
+| Hero booster prices and coin income: confirm once the economy sheet is built | Confirm for now |
+| Guardians turned to stone, ice, or a mix by element? | stone only |
+| Order of the "easier" guardians after Rat: Ox → Rabbit → Dog is proposed | agreed |
+| Element families: should each guardian belong to Fire, Earth, Water or Air (ties obstacles to heroes for Part 2)? | yes for now |
+| Your upgrade flow: keep milestones at every 20/50 levels, or align them to the 25-level chapters (25/50/75/100)? Plus the forest restoration meta | agreed |
