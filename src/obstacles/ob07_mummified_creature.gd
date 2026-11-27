@@ -10,5 +10,5 @@ func on_cleared(board: BoardModel, id: String, cell: Vector2i, content: BoardCon
 	board.add_collected("fragment")
 	var e: BoardEvent = BoardEvent.new("collected")
 	e.cell = cell
-	e.data = {"item": "fragment"}
+	e.data = {"item": "fragment", "carrier": "OB07"}   # also counts for a plain OB07 goal (IR-31)
 	return [e]

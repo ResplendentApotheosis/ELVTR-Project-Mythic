@@ -12,6 +12,10 @@ Status: `OPEN` / `ANSWERED`. "Blocks" names the rules whose tests can't be writt
 
 **Update (27 Nov 2026, round 4):** Owner in chat: "59:A, 60:A, 61: A". OQ-59, OQ-60 and OQ-61 ANSWERED (Option A each, every sub-part settled), cited as "Owner decision, chat 27 Nov 2026 › OQ-xx". No question is open. GDD lines to add: see "GDD text to update (round 4)" at the end.
 
+**Update (27 Nov 2026, round 5, GoalTracker build):** OQ-62 to OQ-70 OPEN: goal units (62), the last move (63), when win/fail is checked (64), fragment goal entry (65), dew targets and seeds (66), boosters and moves (67), colour goals (68), goal counts on easy/medium levels (69), lives after a continue (70). They block parts of IR-56, IR-57, IR-59, IR-60 (new) and IR-49.
+
+**Update (28 Nov 2026, round 6, GoalTracker answers):** Owner in chat: OQ-62 A (trial, "for now"), 63 A, 64 B (trial, "for now"), 65 B ("Basically fragment is part of the goal and must be completed to pass"), 67 A, 68 A, 69 A, 70 A; cited as "Owner decision, chat 28 Nov 2026 › OQ-xx". OQ-62 and OQ-64 are trial decisions: revisit after playtest. OPEN: OQ-66 (the owner asked what seed cells are; see the note under OQ-66), OQ-71 (which cocoon or drop item holds the fragment in the level file) and OQ-72 (how much of the winning step still happens). Also recorded: Nian's Eye (OB09) is not in levels 1–50 (owner decision, matches the GDD's level 61). GDD and brief lines to add: see "GDD and brief text to update (round 5, owner only)" at the end.
+
 ---
 
 ### OQ-01 · Bamboo Rocket: row or column? — ANSWERED
@@ -567,6 +571,154 @@ Blocks: IR-55 (matches containing a coloured special next to a shrine), the OB05
 
 ---
 
+## New questions from the GoalTracker build (27 Nov 2026)
+
+### OQ-62 · What is one unit of a goal's count? — ANSWERED (trial decision, revisit after playtest)
+Decision: Owner decision, chat 28 Nov 2026 › OQ-62: Option A, "for now". In plain words: one unit of a goal = one obstacle fully gone (a bramble with no layers left, a moss cell removed, a goo cell cleared, a pillar ground down completely, a creature freed, an idol cleared, a shrine lit, a drop item collected, a cell given dew); a goal's count must equal the number placed. Now in IR-61 (new), IR-56, IR-49. (Dew goals still wait for OQ-66.)
+
+Parts that read against each other:
+- GDD › Core gameplay › "Goals are always obstacles to clear, free or collect (see the obstacle table)".
+- `level_agent_brief.md` §4 Goals › "Goal count must equal what is placed on the board (or what generators can produce)."
+- `level_agent_brief.md` §6 › "Each goal count is achievable: placed hp/items ≥ the goal".
+- `level_agent_brief.md` §5 example: two OB06 pillars with `"hp": 4` each, and the goal `{"obstacle": "OB06", "count": 4}` (2 pillars, 8 hp: matches neither reading). Plan: level 13 "OB06 x2", level 10 "OB05 x1", level 1 "OB02 x17".
+"Must equal what is placed" reads as counting obstacles; "placed hp ≥ the goal" reads as counting hits. GoalTracker can't count progress until this is fixed.
+- Option A: One unit = one obstacle fully gone: a bramble cell with no layers left, a moss cell removed, a goo cell cleared, a pillar ground down completely, a creature freed, an idol cleared, a shrine lit, a drop item collected, a cell given dew. The count must equal the number placed.
+- Option B: One unit = one hit removed: each bramble layer, moss hp, goo hp, pillar hp, creature wrap and idol hit counts 1; a shrine lit, a drop item collected and a cell given dew count 1 each. The count may be lower than the total hp placed; the goal is done when the count is reached.
+Blocks: IR-56, IR-57 (tests with obstacles of hp ≥ 2), IR-49 ("hits left" for obstacle goals), GoalTracker, the validator and every level file.
+
+### OQ-63 · Goals finished by the last move — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-63: Option A. In plain words: everything a move does (its matches, cascades and specials) counts for that move; finishing the goals on the last move is a win with 0 finale Rockets (win coins 20). Now in IR-56, IR-57, IR-16.
+
+GDD › Core gameplay › Rules › "Win: all goals done before moves run out." A move is used when the swap or tap is accepted (IR-01, IR-02), so while the last move's matches and cascades resolve, moves left is already 0. If that last move finishes the last goal, have the goals been done "before moves run out"?
+- Option A: Yes: everything a move does (its matches, cascades and specials) counts for that move; finishing the goals on the last move is a win with 0 finale Rockets (win coins 20).
+- Option B: No (literal reading): the goals must be done while at least one move is left; finishing them on the last move is a fail and the continue offer is shown.
+Blocks: IR-56, IR-57.
+
+### OQ-64 · When are win and fail checked during a resolve? — ANSWERED (CHANGED by the owner, 28 Nov 2026)
+Decision (current): Owner decision, chat 28 Nov 2026 › OQ-72, changing OQ-64: "I would like the whole match to apply and the rest continued because that is the satisfaction level." In effect Option A for the win: when the last goal is done, the whole winning match or special applies, and the rest of that move's resolve continues (falls, refills, waiting specials, second blasts, cascades, free shuffle); the win is declared only once the move has fully settled, and then the finale starts on that settled board. The fail is still checked only after the move has fully settled. No longer a trial decision. Now in IR-56, IR-57, IR-16, IR-49.
+History: earlier the same day the owner chose Option B "for now" (trial): the win declared the moment the last goal is done, the rest of the resolve dropped, the finale starting on the board as it was. That answer is replaced; the IR changes are in the CHANGELOG (28 Nov 2026).
+
+GDD › Core gameplay › Rules › "Win: all goals done before moves run out"; Feel, juice & sound › "Rule: game logic resolves instantly; a separate animation and sound queue plays the results". One move's resolve can have many steps (cascades, set-off specials, a Firecracker's second blast, a free shuffle: IR-17, IR-32, IR-33, IR-41). Not settled:
+- (a) If the last goal is done part-way through a resolve, does the rest of that resolve (waiting specials, second blasts, cascades) still happen before the win and the finale?
+- (b) Is the fail (moves 0, a goal not done) checked only after the last move's resolve has fully settled, including any free shuffle?
+- Option A: Both are checked only once the move's resolve has fully settled; the rest of the resolve always plays out (e.g. a waiting Crane still flies, aiming as IR-49's no-goal case says), then the win or fail follows.
+- Option B: The win is declared the moment the last goal is done: the rest of that resolve is dropped and the finale starts on the board as it is; the fail is checked once the resolve has fully settled.
+Blocks: IR-56, IR-57 (event order), the finale start (IR-16).
+
+### OQ-65 · How the fragment is written in `goals`, and does it also count for another goal? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-65: Option B ("Basically fragment is part of the goal and must be completed to pass"). In plain words: (a) the fragment is an obstacle goal entry with a flag, e.g. `{"obstacle": "OB07", "count": 1, "fragment": true}`; (b) freeing the fragment's cocoon (or collecting its drop item) also counts toward a plain OB07 (or OB11) goal on the same level. The brief's schema is owner-only, so the schema line is in the round-5 update list. Now in IR-31, IR-56, IR-61. (Which cocoon or drop item holds the fragment in the level file: OQ-71.)
+
+- GDD › Technical design › Level format › "plus one Mythic field: `"fragment": {"guardian": "rat", "scripted": true}` on fragment levels. A fragment level also lists the fragment in goals, inside the tier's goal count."
+- `level_agent_brief.md` §5 › goals are only `{"obstacle": "OB06", "count": 4}`.
+- GDD › Soul fragments › "sealed in a creep cocoon (OB07 behaviour) … it can also be an OB11 drop item". Plan: level 26 (fragment level) "OB07 x25"; level 45 "OB11 x1".
+Not settled: (a) what the fragment's goal entry looks like and how it says where the fragment is; (b) whether freeing the fragment's cocoon also counts toward an OB07 creature goal on the same level (and a fragment drop item toward an OB11 hatchling goal).
+- Option A: (a) its own entry, e.g. `{"fragment": "rat", "count": 1}`, with the cocoon or drop item placed through `objects` / `spawn` marked as the fragment; (b) no: the fragment counts only for the fragment goal.
+- Option B: (a) an obstacle entry with a flag, e.g. `{"obstacle": "OB07", "count": 1, "fragment": true}`; (b) yes: it also counts toward a plain OB07 or OB11 goal on the same level.
+(The owner may mix parts. The brief is owner-only, so any schema change is the owner's edit.)
+Blocks: IR-31, IR-56 (fragment goals), IR-58, LevelLoader, the validator, levels 26, 30, 33, 35, 38, 40, 45, 50.
+
+### OQ-66 · Dew goal: which cells are targets, and do seed cells count? — ANSWERED (trial decision, revisit after playtest)
+Decision: Owner decision, chat 28 Nov 2026 › OQ-66: Option A, "let's try A for now". In plain words: every playable cell is a dew target; a dew goal's progress is the number of playable cells that have dew, and seed cells (`s`) count from the start. For the Crane, a dew goal's "hits left" is the number of playable cells without dew. Now in IR-61, IR-53, IR-49. (New gaps from it: OQ-73, OQ-74.)
+
+Earlier note (28 Nov 2026): the owner asked what seed cells are. In plain words: a **seed cell** is a cell that already has healing dew under it when the level starts. The level file marks it with `s` in the `underlay` rows (brief §5: "`s` = OB04 already covering that cell (a seed)"). Dew spreads outward from these cells when matches or specials clear pieces on them (IR-53). The question is whether those starting cells already count toward a dew goal like "cover 51 cells" (Option A) or only cells that get dew during play count (Option B). Dew-goal tests stay blocked.
+
+- GDD › Obstacle set › OB04 "Matches made on dew spread it; cover the target cells"; Interaction rules › Crane "Dew goal: an uncovered target cell".
+- `level_agent_brief.md` §5 › "`s` = OB04 already covering that cell (a seed)"; §4 › "OB04 spread goals must not exceed 90% of playable cells". Plan: "OB04 x51".
+The schema has no field marking target cells. Not settled: is every playable cell a target, and do seed cells count toward the goal from the start?
+- Option A: Every playable cell is a target; progress = playable cells that have dew, seed cells included from the start.
+- Option B: Every playable cell is a target, but only cells that get dew during play count; seed cells don't.
+Blocks: GoalTracker (dew goals), IR-49 (dew "uncovered target cells left"), the validator's 90% check, levels 4–6, 12, 30, 38, 40, 44, 45.
+
+### OQ-67 · Does using a hero booster use a move? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-67: Option A. In plain words: using Hoof Tap, Tail Slam, Bamboo Dash or Feather Fan uses no move. Now in IR-62 (new), IR-34, IR-35, IR-36, IR-56, IR-57.
+
+GDD › Meta & economy › Booster unlocks gives each booster's effect and price but says nothing about moves; Core gameplay › Rules › "Specials fire when matched, swapped or tapped (tap costs a move)" covers specials only.
+- Option A: Using Hoof Tap, Tail Slam, Bamboo Dash or Feather Fan uses no move.
+- Option B: Each booster use costs one move, like a tap.
+Blocks: IR-34, IR-35, IR-36 (moves after a booster), IR-57 (can a booster at 1 move cause a fail), GoalTracker.
+
+### OQ-68 · Colour goals ("collect N red") in the MVP — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-68: Option A. In plain words: no colour goals in levels 1–50; GoalTracker supports obstacle goals only (one of which may carry the fragment flag, OQ-65). Now in IR-61.
+
+GDD › Core gameplay › "'collect N red' style goals are only used in tutorials". The brief's schema has only obstacle goals, and the plan lists only obstacle goals for levels 1–50, including the special tutorials (levels 2, 3, 5, 6).
+- Option A: No colour goals in levels 1–50; GoalTracker supports obstacle goals (and the fragment goal) only.
+- Option B: GoalTracker supports colour goals (e.g. `{"color": "red", "count": 20}`, one per matched piece of that colour); the owner names the levels that use them.
+Blocks: GoalTracker goal types, LevelLoader.
+
+### OQ-69 · How many goals on easy and medium levels? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-69: Option A. In plain words: use the tier table: easy levels have 1–2 goals, medium levels 2–3. Now in IR-59.
+
+- GDD › Core gameplay › "Goals per level: 1 on intro levels, 1–3 on regular levels, 3–4 on hard levels, 4 on finales".
+- GDD › Level progression › Level tiers › Easy "1–2", Medium "2–3".
+An easy level with 3 goals is allowed by the first and refused by the second; so is a medium level with 1 goal.
+- Option A: Use the tier table: easy 1–2, medium 2–3.
+- Option B: Any regular level (easy or medium) may have 1–3.
+Blocks: IR-59 (easy with 3, medium with 1), the validator.
+
+### OQ-70 · Moves run out and a continue is accepted: is a life lost? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-70: Option A. In plain words: a life is lost only when the attempt ends in a fail (a declined offer, moves out a 6th time, or a quit); at most one life per attempt; an attempt won after continues costs no life. Now in IR-60.
+
+- GDD › Meta & economy › Lives "lose one on fail, except on chapter finales".
+- GDD › Interaction rules › "Continue offer | Always shown after a fail" (so running out of moves is called a fail even before the offer); Core gameplay › Fail flow "an optional '+5 moves' for coins … then the retry screen".
+Not settled: does the life go when moves first run out (even if the player buys +5 moves and then wins), or only when the attempt ends on the retry screen?
+- Option A: Only when the attempt ends in a fail (declined offer, moves out a 6th time, or a quit): at most one life per attempt; an attempt won after continues costs no life.
+- Option B: One life the first time moves run out in an attempt, even if a continue is accepted and the level is then won; later run-outs in the same attempt cost nothing more.
+Blocks: IR-60 (accept-then-win and accept-then-fail tests), SaveService.
+
+---
+
+## New questions from applying the owner's answers to OQ-62 to OQ-70 (28 Nov 2026)
+
+### OQ-71 · Which cocoon or drop item holds the fragment in the level file? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-71: Option A. In plain words: the fragment's cocoon is one of the OB07 entries in `objects`, with `"fragment": true`; for a fragment drop item, `spawn.drop_items` gets `"fragment_item": n` (the n-th item spawned carries it). The brief's schema is owner-only, so the schema lines are in the round-6 update list below. Now in IR-31, IR-61, IR-58.
+
+Parts that, read together, leave this open:
+- GDD › Technical design › Level format › "plus one Mythic field: `"fragment": {"guardian": "rat", "scripted": true}` on fragment levels".
+- `level_agent_brief.md` §5 › "`objects`: one entry per blocker"; "`spawn.drop_items`: e.g. `{"type":"OB11","total":3,"max_on_board":1,"exit_columns":[2,6]}`".
+- Owner decision, chat 28 Nov 2026 › OQ-65 (Option B): the goal entry is `{"obstacle": "OB07", "count": 1, "fragment": true}`, and the fragment's cocoon or drop item also counts toward a plain OB07 / OB11 goal.
+The goal entry says what kind of obstacle holds the fragment, not which one. Level 26 is planned with "OB07 x25", so LevelLoader can't tell which cocoon holds the fragment; from level 38, which spawned drop item carries it is also not said. (The schema is in the owner-only brief.)
+- Option A: Mark the object itself: the fragment's cocoon is one of the OB07 entries in `objects`, with `"fragment": true`; for a fragment drop item, `spawn.drop_items` gets e.g. `"fragment_item": n` (the n-th item spawned carries it).
+- Option B: Put the position in the level's `fragment` field, e.g. `"fragment": {"guardian": "rat", "scripted": true, "x": 4, "y": 4}` (the OB07 entry in `objects` at that cell holds it); for a drop item, e.g. `"fragment": {…, "drop_item": n}`.
+Blocks: LevelLoader, the validator (a plain OB07 / OB11 goal's count with the fragment's cocoon or item included, IR-31, IR-61), levels 26, 30, 33, 35, 38, 40, 45, 50. GoalTracker tests are not blocked (they set the fragment up directly).
+
+### OQ-72 · The win "moment": does the rest of the winning step still happen? — ANSWERED (beyond Option A; changes OQ-64)
+Decision: Owner decision, chat 28 Nov 2026 › OQ-72: "I would like the whole match to apply and the rest continued because that is the satisfaction level." In plain words: more than Option A: the whole match or special that finishes the last goal applies, and everything after it in that move (falls, refills, waiting specials, second blasts, cascades, free shuffle) still happens; the win comes once the move has fully settled. This replaces the trial answer to OQ-64. Now in IR-56, IR-16, IR-57, IR-49.
+
+Question as asked: Owner decision, chat 28 Nov 2026 › OQ-64 (Option B, trial): "The win is declared the moment the last goal is done: the rest of that resolve is dropped and the finale starts on the board as it is". A single step of a resolve can do several things at once: one match clears 3+ pieces, gives neighbour hits to several obstacles and may make a special (IR-14, IR-40); one special (or one Firecracker blast) covers many cells (IR-09). Not settled: if the last goal is done by one part of such a step (e.g. a row Rocket's cell (2,4) frees the last creature, and the Rocket also covers (3,4)–(8,4)), does the rest of that same step still happen before the win?
+- Option A: The step finishes: the whole match (its clears, neighbour hits and any special it makes) or the whole special or blast is applied, then the win is declared; everything after that step (falls, refills, waiting specials, second blasts, cascades) is dropped.
+- Option B: The win is declared at the exact hit or collection that finishes the last goal; the rest of that match or special is not applied (its other cells keep their pieces and layers).
+Blocks: IR-56 and IR-16 tests where the step that finishes the last goal also covers other cells or obstacles (board state at the finale start). No current test case depends on it.
+
+---
+
+## New questions from applying OQ-66, OQ-71 and OQ-72 (28 Nov 2026)
+
+### OQ-73 · Can a goal's progress go past its count, and what does the goal counter show? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-73: Option A. In plain words: progress stops at the count: GoalTracker reports e.g. 72/72 and the counter shows the goal as done; extra dew is not counted. Now in IR-61, IR-53, IR-56.
+
+Parts that, read together, leave this open:
+- Owner decision, chat 28 Nov 2026 › OQ-66 (Option A, trial): dew progress = "playable cells that have dew, seed cells included from the start"; `level_agent_brief.md` §4 › "OB04 spread goals must not exceed 90% of playable cells". So a dew goal's count is below the number of cells that can get dew.
+- Owner decision, chat 28 Nov 2026 › OQ-72: after the last goal is done "the rest continued", so more dew can spread in the same move after the goal is met (and one dew-spreading match or special can pass the count by itself).
+- GDD › Feel, juice & sound › "Collect ring … as pieces fly to the goal counter" says there is a counter, not what it shows once a goal is done.
+Example: goal OB04 count 72; 70 cells have dew; a row Rocket on dew gives 5 more cells dew. For other goals the count equals the number placed (IR-61), so they can't pass it. Whether the level is won is the same either way (the owner: "it shouldn't matter for a win").
+- Option A: Progress stops at the count: GoalTracker reports 72/72 and the counter shows the goal as done; extra dew is not counted.
+- Option B: Progress keeps counting: GoalTracker reports 75/72 (done = progress ≥ count); the counter shows the goal as done (e.g. a tick) rather than the number.
+Blocks: GoalTracker's progress value for dew goals past the count, the goal counter UI. Not the win (IR-56).
+
+### OQ-74 · A dew goal already met by its seed cells at the start — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-74: Option A. In plain words: the validator rejects a dew goal whose count is not more than the number of seed cells, so the count must need at least one new dew cell. Now in IR-61, IR-53, IR-56. The brief's §4/§6 needs a matching line (round-7 list below).
+
+Parts that, read together, leave this open:
+- Owner decision, chat 28 Nov 2026 › OQ-66 (Option A, trial): seed cells count toward the dew goal from the start.
+- `level_agent_brief.md` §4 › "OB04 spread goals must not exceed 90% of playable cells" (a top limit only); §6 › "OB04 count ≤ 90% of playable cells". Nothing sets a bottom limit.
+- GDD › Core gameplay › Rules › "Win: all goals done before moves run out" (a win comes after a move, IR-56).
+Example: 5 seed cells and a goal OB04 count 4: the goal is done before the first move. Nothing says whether the validator allows this.
+- Option A: Validator rejects a dew goal whose count is not more than the number of seed cells (the count must need at least one new dew cell).
+- Option B: Allowed: the dew goal simply starts done; the level is won once the other goals are done (or, if it is the only goal, after the first move settles).
+Blocks: the validator's dew check (bottom limit), GoalTracker on a goal that is done at the start. Not the current dew tests (all start below the count).
+
+---
+
 ## GDD text to update (owner only) — ALL DONE in a94a7e4
 
 Checked line by line against the GDD on 27 Nov 2026. All 12 contradictions are now fixed:
@@ -632,3 +784,55 @@ Round 2 item 1 now reads, with OQ-39 confirmed and OQ-52: "…the 1st for 300 co
 3. Core gameplay › Win / Feel › Win finale (replaces round 3 item 3): "…if none is left it still pays 5 coins and fires from a random playable cell without replacing what is there (that cell is hit like any cell a special covers). Finale Rockets go one at a time: the board settles fully (fall, refill, cascades, set-off specials) before the next one." Note: "0.15 s apart" in Feel › Win finale then means 0.15 s after the board settles, not a fixed beat; owner to word it.
 4. Rules clarifications › OQ-18 ("Rockets, Firecrackers and Cranes keep the colour they were made from and match like normal pieces"): add "and fill a lantern shrine like a piece of that colour".
 5. Rules clarifications: add rows 59 to 61.
+
+---
+
+## GDD and brief text to update (round 5, owner only): decisions OQ-62 to OQ-70 (chat 28 Nov 2026)
+
+GDD (`docs/gdd/zodiac-forest-gdd-final.md`):
+1. Core gameplay › Rules › "Win: all goals done before moves run out": add "Everything the last move does (matches, cascades, specials) counts for it, so finishing the goals on the last move is a win with 0 finale Rockets. The win is declared the moment the last goal is done; the rest of that move is dropped and the finale starts on the board as it is (trial). The fail is checked only once the move has fully settled." (SUPERSEDED by round 6 item 1: the owner changed OQ-64 on 28 Nov 2026.)
+2. Core gameplay › Goals per level ("1 on intro levels, 1–3 on regular levels, 3–4 on hard levels, 4 on finales"): replace "1–3 on regular levels" with "1–2 on easy levels, 2–3 on medium levels", to match Level progression › Level tiers.
+3. Core gameplay › Goals per level ("'collect N red' style goals are only used in tutorials"): "No colour goals in levels 1–50; every goal is an obstacle goal."
+4. Core gameplay › Goals per level and/or Level progression: add "One unit of a goal is one obstacle fully gone (a bramble with no layers left, a moss or goo cell cleared, a pillar ground down, a creature freed, an idol cleared, a shrine lit, a drop item collected, a cell given dew); the count equals the number placed (trial)."
+5. Technical design › Level format ("A fragment level also lists the fragment in goals, inside the tier's goal count"): add "as an obstacle goal with a flag, e.g. `{"obstacle": "OB07", "count": 1, "fragment": true}`; the fragment's cocoon or drop item also counts toward a plain OB07 / OB11 goal on the same level". (Where the file says which cocoon holds it: OQ-71.)
+6. Meta & economy › Booster unlocks: add "Using a booster uses no move."
+7. Meta & economy › Lives ("lose one on fail, except on chapter finales"): add "A life is lost only when the attempt ends in a fail (declined offer, moves out a 6th time, or a quit): at most one per attempt; an attempt won after continues costs no life."
+8. Rules clarifications: add rows 62 to 65 and 67 to 70 (marking 62 and 64 as trial decisions to revisit after playtest).
+
+Brief and plan (`research/match-villains/`):
+9. `level_agent_brief.md` §4 Goals ("Goal count must equal what is placed on the board (or what generators can produce)"): add "One unit = one obstacle fully gone (not one hit)."
+10. `level_agent_brief.md` §6 ("Each goal count is achievable: placed hp/items ≥ the goal"): replace with "Each obstacle goal's count equals the number of those obstacles placed (spawned items meet the goal; OB04 count ≤ 90% of playable cells)".
+11. `level_agent_brief.md` §5 example: goals `{"obstacle": "OB06", "count": 4}` with 2 pillars, and `{"obstacle": "OB03", "count": 30}` with 1 moss, no longer pass; e.g. `"count": 2` and `"count": 1` (or place more).
+12. `level_agent_brief.md` §5 schema: add the goal flag `"fragment": true` (OQ-65) and, once OQ-71 is answered, how the fragment's cocoon or drop item is marked.
+13. `level_agent_brief.md` §4 Hazards ("The OB09 beam must be visible") and §5: note that OB09 (Nian's Eye) is not used in levels 1–50.
+14. `levels_1_100_plan.csv`: remove OB09 from levels 46–50 (owner decision, chat 28 Nov 2026: Nian's Eye comes after level 50; the GDD already puts it at level 61). Checked: OB09 is in rows 46, 47, 48 and 50 (not 49). Level 46 is OB09's intro level ("OB09 x1", new obstacle OB09), so removing it leaves level 46 with no goal and no new obstacle: the owner needs to give it a new plan (tier, goal, new obstacle or none). Levels 47, 48 and 50 then have one goal fewer (finale 50 drops to 3, below the tier's 4, IR-59; medium 48 keeps 2, OK; easy 47 keeps 1, OK).
+
+---
+
+## GDD and brief text to update (round 6, owner only): decisions OQ-66, OQ-71, OQ-72 and the changed OQ-64 (chat 28 Nov 2026)
+
+GDD (`docs/gdd/zodiac-forest-gdd-final.md`):
+1. Core gameplay › Rules › "Win: all goals done before moves run out" (replaces round 5 item 1): add "Everything a move does (matches, cascades, specials) counts for it, so finishing the goals on the last move is a win with 0 finale Rockets. When the last goal is done, the rest of that move still happens in full (the rest of the match or special, falls, refills, waiting specials, second blasts, cascades, any free shuffle); the win is declared once the move has fully settled, and the finale starts on that settled board. The fail is also checked only once the move has fully settled."
+2. Feel, juice & sound › Win finale: add "starts once the winning move has fully settled".
+3. Board layers & obstacles › Obstacle set › OB04 ("Matches made on dew spread it; cover the target cells"): add "Every playable cell is a target; progress counts the playable cells that have dew, seed cells included from the start (trial)."
+4. Technical design › Level format (round 5 item 5): replace "(Where the file says which cocoon holds it: OQ-71.)" with "The fragment's cocoon is the OB07 entry in `objects` with `"fragment": true`; a fragment drop item is set by `"fragment_item": n` in `spawn.drop_items` (the n-th item spawned carries it)."
+5. Rules clarifications: add rows 66 (trial), 71 and 72; row 64 shows the changed answer (no longer trial).
+
+Brief (`research/match-villains/level_agent_brief.md`):
+6. §5 schema (round 5 item 12, now complete): add `"fragment": true` on the fragment's OB07 entry in `objects`, and `"fragment_item": n` in `spawn.drop_items`, e.g. `{"type":"OB11","total":3,"max_on_board":1,"exit_columns":[2,6],"fragment_item":2}`; plus the goal flag `"fragment": true` (OQ-65).
+7. §6 checklist: add "On a fragment level, exactly one OB07 entry has `"fragment": true`, or `spawn.drop_items` has a `fragment_item` between 1 and `total`; a plain OB07 / OB11 goal's count includes the fragment's cocoon or item."
+8. §4 Goals / §6: add "OB04 goal: every playable cell is a target; seed cells count from the start" (bottom limit: round 7 item 3).
+
+---
+
+## GDD and brief text to update (round 7, owner only): decisions OQ-73, OQ-74 (chat 28 Nov 2026)
+
+GDD (`docs/gdd/zodiac-forest-gdd-final.md`):
+1. Board layers & obstacles › Obstacle set › OB04 (round 6 item 3): add "Progress stops at the count; extra dew is not counted. The count must be more than the number of seed cells."
+2. Rules clarifications: add rows 73 and 74.
+
+Brief (`research/match-villains/level_agent_brief.md`):
+3. §4 Goals ("OB04 spread goals must not exceed 90% of playable cells"): add "and must be more than the number of seed cells (`s`), so at least one new dew cell is needed".
+4. §6 checklist ("OB04 count ≤ 90% of playable cells", round 5 item 10): make it "number of seed cells < OB04 count ≤ 90% of playable cells".
+
+Owner decision with no IR (chat 28 Nov 2026): **Nian's Eye (OB09) is not in levels 1–50.** This matches GDD › Board layers & obstacles ("Nian's Eye moves to level 61"; "Hazards | None in the MVP") and CLAUDE.md's out-of-scope list. Note for level-designer: never place OB09 in levels 1–50, even though `levels_1_100_plan.csv` still lists it at levels 46–50 until the owner makes edit 14.

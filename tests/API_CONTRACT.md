@@ -206,3 +206,97 @@ Behaviour the tests now expect:
 - **Lifted coloured specials count (OQ-61 A).** A Rocket/Firecracker/Crane that is part of the match counts as a piece of its colour for the shrine, although it is lifted and not listed in the match `clear`.
 - **Fallback finale Rocket (OQ-60 A a).** With no uncovered plain piece, the Rocket appears on a (seeded) playable cell replacing nothing: no `special_created` event with `data.finale`; it fires from that cell; a piece there is cleared, a Firecracker/Rocket/Crane there is set off, a fragment or drop item stays, the top layer (moss overlay or bramble layer) takes one hit.
 - **One Rocket at a time (OQ-60 A b).** The whole resolution of Rocket i (fire, `clear`, `fall`, `refill`, set-off specials and their blasts, cascades) comes before any event of Rocket i+1; Rocket i+1's direction and cell are drawn on the settled board.
+
+## 10. GoalTracker (round 6: IR-56, IR-57, IR-59, IR-60, IR-61, IR-62 and the goal parts of IR-14, 16, 29, 30, 31, 49, 53, 55)
+
+Tests: `tests/goal_tracker/`, helpers `tests/helpers/goal_test_base.gd`. The tests load the classes by path, so a missing file fails a test with a clear message. Nothing here changes a MatchResolver call that has no tracker attached: every existing test must keep passing.
+
+### 10.1 Files and classes
+
+| File | Class (`extends RefCounted`) |
+|---|---|
+| `src/goals/goal_tracker.gd` | `GoalTracker` |
+| `src/boosters/booster_service.gd` | `BoosterService` (static functions only; only the four calls in 10.6 are assumed) |
+
+### 10.2 GoalTracker (instance)
+
+```gdscript
+func _init(goals: Array, level: int = 1) -> void
+    # goals: Array of Dictionary, e.g. {"obstacle": "OB07", "count": 1, "fragment": true}; "fragment" is optional (default false)
+var lives: int          # the attempt's lives (SaveService loads and saves it); the tracker lowers it on a fail
+var coins: int          # coins available for continues (SaveService wires it)
+func observe(event: BoardEvent) -> void      # MatchResolver / BoosterService feed every event they append (see 10.4)
+func goal_units_done(index: int) -> int      # units finished for goals[index] (0..count)
+func goal_units_total(index: int) -> int     # goals[index].count
+func is_goal_done(index: int) -> bool
+func is_won() -> bool                        # every goal done (the fragment goal included)
+func moves_ran_out(board: BoardModel) -> void   # called by the resolver when board.moves hits 0 and the level is not won (10.4, 10.5)
+func offer_price() -> int                    # price of the continue offer shown now: 300 (1st), 500 (2nd..5th); 0 = no offer
+func accept_offer(board: BoardModel) -> bool # false if no offer or coins < price; else coins -= price, board.moves += 5
+func decline_offer() -> void                 # attempt ends as a fail
+func quit() -> void                          # attempt ends as a fail, no offer (IR-38)
+```
+
+Static (pure, used by LevelLoader and the validator):
+
+```gdscript
+static func win_coins(finale_rockets: int) -> int                          # 20 + 5 * rockets (IR-16, IR-56)
+static func goal_errors(level: int, tier: String, goals: Array) -> Array   # [] = valid (IR-59, IR-31, IR-61)
+static func goal_count_errors(goals: Array, board: BoardModel, spawn: Dictionary = {}) -> Array    # [] = every goal count equals the obstacles placed (IR-61, IR-31); `spawn` = the level file's "spawn" object
+```
+
+- `tier` is `"intro"`, `"easy"`, `"medium"`, `"hard"` or `"finale"`: intro exactly 1 goal, easy 1-2, medium 2-3, hard 3-4, finale exactly 4. The fragment entry counts inside those numbers.
+- `goal_errors` also rejects: a goal with a `"color"` key (the message contains "color" or "colour"), and a fragment level (26, 30, 33, 35, 38, 40, 45, 50) with no entry that has `"fragment": true`.
+- `goal_count_errors` counts units, not hp: two 2x2 pillars of hp 4 are 2 OB06 units; 17 brambles are 17 OB02 units. **Round 7 rules (OQ-66, OQ-71):** (a) a dew (OB04) goal is valid when `count <= 0.9 * playable cells` (81 cells: 72 ok, 73 rejected; 70 cells: 63 ok, 64 rejected); (b) a fragment OB07 goal needs exactly one OB07 content with `fragment == true` on the board (none or two: error), and the plain OB07 goal's count includes it (3 placed OB07, one marked: plain count 3 valid, 2 rejected); (c) a fragment OB11 goal needs `spawn.drop_items.fragment_item` in `1..total` (missing or above total: error), and the plain OB11 count equals the OB11 drop items on the board plus `spawn.drop_items.total` (the fragment item is one of them). The third argument `spawn` is NEW (default `{}`); it holds `{"drop_items": {"type": "OB11", "total": 3, "max_on_board": 1, "fragment_item": 2}}`.
+
+### 10.3 What counts as one unit (IR-61, IR-31)
+
+`observe` maps events to goals. A goal matches by `obstacle` id (entries with `"fragment": true` are the fragment goal):
+
+| event | counts |
+|---|---|
+| `obstacle_cleared` with `data.id` = `"OBxx"` (already emitted today) | +1 to every non-fragment goal with that id |
+| `shrine_lit` (already emitted today) | +1 to every non-fragment `"OB05"` goal |
+| `collected`, `data.item` = `"OB11"` (already emitted today) | +1 to every non-fragment `"OB11"` goal |
+| `collected`, `data.item` = `"fragment"` (already emitted today) with a **new field** `data.carrier` = `"OB07"` (freed cocoon) or `"OB11"` (drop item) | +1 to the fragment goal AND +1 to every non-fragment goal whose `obstacle` equals the carrier (IR-31, IR-34) |
+
+A goal never goes above its `count`.
+
+### 10.4 What MatchResolver (and BoosterService) must add
+
+1. `BoardModel.goal_tracker: GoalTracker = null`. When null, nothing below happens (old behaviour).
+2. When not null: every event the resolver appends is passed to `goal_tracker.observe(event)` as it is appended (swap, tap, settle, cascades, `fire_finale` too). **CHANGED (round 7, OQ-64 changed + OQ-72): the resolver does NOT stop when the last goal gets done.** The rest of that move plays out in full (rest of the match or special, falls, refills, waiting specials, both Firecracker blasts, flying Cranes, cascades, free shuffle). Only once the move has fully settled, if `goal_tracker.is_won()`, it appends one last event, `win`, with `data.moves_left = board.moves`; `win` is the LAST event of that call. A goal done part-way stays done. Event order examples: `match, fall, refill, win`; Firecracker tap `blast, fall, refill, blast, fall, refill, win`; a lifted Firecracker swap `match, fall, refill, blast, fall, refill, blast, fall, refill, win`; a free `shuffle` comes before `win`. Coins come only from the win (`win_coins(moves_left)`), not from extra clears. `GoalHook.stopped` / early-return in `cascade`, `double_blast`, `stabilise` must go.
+3. **New field** on the existing `collected` event for a fragment: `data.carrier` (see 10.3). `data.item` stays `"fragment"`. A freed non-fragment cocoon keeps emitting `obstacle_cleared` with `data.id` `"OB07"`.
+4. `shrine_lit` must be emitted exactly once per shrine and `obstacle_cleared` must NOT also be emitted for the shrine (so it is not counted twice).
+5. Fail: at the end of `swap` (accepted swaps only) and `tap` (special taps only), after everything has settled, if `board.moves <= 0` and the tracker is not won: call `goal_tracker.moves_ran_out(board)` and append a `fail` event with `data.offer_price = goal_tracker.offer_price()` (0 = no offer). Never emitted for `invalid_swap`, a tap that does nothing, `settle`, `fire_finale` or a booster (IR-57, IR-62).
+6. The finale stays a separate call: after a `win` the caller runs `MatchResolver.fire_finale(board)` (one Rocket per leftover move, IR-16). Win coins = `GoalTracker.win_coins(moves_left)`.
+7. Moves: unchanged (`board.moves` is the source of truth; an accepted swap and a special tap each use 1; cascades, snap-backs, refused swaps, shuffles and boosters use 0).
+
+### 10.5 Continue offers and lives (IR-37 prices, IR-60)
+
+- `moves_ran_out(board)`: if fewer than 5 offers were accepted, an offer becomes pending (`offer_price()` 300 for the first, 500 for 2 to 5). Otherwise (6th time) no offer is pending and the attempt ends in a fail at once: `lives -= 1` (not on finales, levels 25 and 50).
+- `accept_offer`: see 10.2. A player with fewer coins than the price still sees the offer (`offer_price()` stays above 0) but `accept_offer` returns false and nothing changes.
+- A fail (declined offer, 6th run-out, `quit()`) lowers `lives` by 1, at most once per attempt, and not at all on levels 25 and 50. Accepting an offer and winning never cost a life.
+- `decline_offer()` and `quit()` clear the pending offer.
+
+### 10.6 BoosterService (only what IR-34, IR-35, IR-36, IR-57, IR-62 need)
+
+```gdscript
+static func hoof_tap(board: BoardModel, cell: Vector2i) -> Array[BoardEvent]
+static func tail_slam(board: BoardModel, center: Vector2i) -> Array[BoardEvent]
+static func bamboo_dash(board: BoardModel, direction: String, index: int) -> Array[BoardEvent]   # "row" or "col" plus the row/column number (a diagonal form is not tested here)
+static func feather_fan(board: BoardModel) -> Array[BoardEvent]
+```
+
+They use no move, act like specials per IR-34/36, settle the board (IR-32), feed the tracker like the resolver (a `win` event can end the call), and never emit `fail`. If boosters get their own contract later, tell test-engineer so these tests can move.
+
+### 10.7 Test helpers
+
+`tests/helpers/goal_test_base.gd` (`extends GutTest`): `track(board, goals, level)` (creates the tracker and sets `board.goal_tracker`), `loose_tracker`, `tracker_static`, `booster`, `prime_row_match` / `swap_row_match(board, cx, cy)` (a 3-in-a-row swap clearing (cx-1..cx+1, cy) with fillers around it), `cascade_board` / `swap_cascade` (a swap whose fall forms a cascade match next to (6,6)), `obstacle_goal(id, count, fragment)`.
+
+### 10.8 Dew goals (round 7, OQ-66 trial) - NEW API
+
+- A dew level: every playable cell is a dew target (`set_dew_target` on each; the LevelLoader's job; test helper `BB.dew_level(board, bare_cells)` does it and gives dew to every cell except `bare_cells`). `dew_targets_left()` = playable cells without dew.
+- NEW `GoalTracker.attach(board: BoardModel) -> void`. Called by whoever starts an attempt (LevelLoader; the test helper `track_dew`). After it, `goal_units_done(i)` of an `"OB04"` goal = the number of playable cells that have dew on that board RIGHT NOW (seed cells counted from the start, no double counting, kept up to date after every move; capped or not at `count` is OQ-73, not tested), and `is_goal_done` / `is_won` use it, so a move that gives the last cells dew ends in `win`. How it reads the board (live reference, a `dew_given` event, ...) is the coder's choice.
+- `track()` in `goal_test_base.gd` is unchanged; `track_dew()` = `track()` + `attach(board)`. Set the seeds on the board BEFORE `track_dew`.
+- `goal_count_errors` for OB04: see 10.2.

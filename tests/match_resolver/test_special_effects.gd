@@ -585,10 +585,11 @@ func test_ir48_takeoff_takes_one_layer_off_goo_hp2() -> void:
 
 func test_ir48_landing_on_an_uncovered_dew_target_clears_the_piece_and_gives_dew() -> void:
 	# OQ-49 B: the landing is a special covering the cell, so the piece there is cleared (IR-09).
+	# Dew level (OQ-66): every playable cell is a target; (6,2), holding B, is the only one without dew.
 	var board: BoardModel = BB.blank()
 	BB.put(board, "GC", [[1, 7]])
 	BB.put(board, "B", [[6, 2]])
-	BB.set_dew_target(board, 6, 2)
+	assert_eq(BB.dew_level(board, [Vector2i(6, 2)]), 80, "80 of 81 cells have dew")
 	board.goals = ["OB04"]
 	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(1, 7))
 	assert_eq(EV.cells_of(events, "crane_landing"), [Vector2i(6, 2)])
@@ -764,9 +765,10 @@ func test_ir49_no_goal_left_moss_counts_as_an_obstacle() -> void:
 
 
 func test_ir49_no_goal_left_uncovered_dew_target_counts_as_an_obstacle() -> void:
+	# Dew level, all goals complete: (4,6), holding a plain piece, is the only playable cell without dew.
 	var board: BoardModel = BB.blank()
 	BB.put(board, "GC", [[4, 4]])
-	BB.set_dew_target(board, 4, 6)
+	BB.dew_level(board, [Vector2i(4, 6)])
 	board.add_content("OB02", 4, 1, 1)
 	board.goals = []
 	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(4, 4))
@@ -776,17 +778,6 @@ func test_ir49_no_goal_left_uncovered_dew_target_counts_as_an_obstacle() -> void
 		assert_eq(targets[0].cell, Vector2i(4, 6), "dew target at distance 2 beats the bramble at 3")
 	assert_true(BB.has_dew(board, 4, 6), "the landing gives the cell dew")
 	assert_true(EV.cleared(events).has(Vector2i(4, 6)), "OQ-49 B: the piece on the target cell is cleared")
-
-
-func test_ir49_dew_goal_counts_uncovered_target_cells_as_hits_left() -> void:
-	var board: BoardModel = BB.blank()
-	BB.put(board, "GC", [[4, 4]])
-	BB.set_dew_target(board, 1, 1)
-	BB.set_dew_target(board, 7, 7)
-	board.add_content("OB02", 6, 1, 3)
-	board.goals = ["OB04", "OB02"]
-	assert_eq(_crane_target(board), Vector2i(1, 1), "2 dew cells left < 3 bramble hits; equal distance, top-most")
-	assert_true(BB.has_dew(board, 1, 1))
 
 
 func test_ir49_hatchling_goal_counts_items_still_to_collect() -> void:
