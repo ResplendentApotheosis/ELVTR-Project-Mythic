@@ -1,0 +1,652 @@
+# Zodiac Forest: Interaction rules spec
+
+Derived only from `docs/gdd/zodiac-forest-gdd-final.md` (the GDD wins over this file). Owner decisions OQ-01 to OQ-38 are in the GDD's "Rules clarifications" table and are cited as "Rules clarifications › OQ-xx". Owner decisions OQ-39 to OQ-61, given in chat on 27 Nov 2026 and not yet in the GDD, are cited as "Owner decision, chat 27 Nov 2026 › OQ-xx". IDs are permanent: never renumber; a removed rule is marked `RETIRED` and kept. Gaps and conflicts live in `spec/open_questions.md` (OQ-xx), never here. New rules are numbered after IR-38 but filed in the section they belong to (see the index).
+
+**Conventions used in test cases**
+- Coordinates are `(x, y)`; `x` = column from the left, `y` = row from the top (row 0 is the top row), matching the level JSON schema.
+- "Lowest" = largest `y`; "top-most" = smallest `y`; "left-most" = smallest `x`.
+- Colours: R = red peach, Y = yellow bell, B = blue fan, G = green leaf. A bare letter is a plain piece.
+- "Swap A→B" = the player drags the piece at A into B. B is the swap's **target cell** ("the cell the player moved into"); A is the **start cell**. After the swap, the dragged piece sits in B and the other piece sits in A.
+- "Adjacent" / "next to" always means directly above, below, left or right, never diagonal (GDD › Rules clarifications › OQ-08).
+- "Hit" = one hit to the top **obstacle** layer of a cell (overlay, then content blocker or container, then underlay). Pieces are not obstacle layers (IR-09).
+- "Distance" between cells = straight-line distance, √(dx² + dy²) (IR-49).
+- "Emptied directly" = the test harness removes the piece (no match, no special), then the board settles.
+- Unless a test says otherwise, the board is 9×9, fully playable, and the rest of the board contains no match before or after the action (refills in tests use a seed or a fixed sequence that makes no match).
+- Where part of a rule depends on an open question, the rule lists it under "Blocked by" and only the unblocked test cases are written.
+
+**Index**
+
+| Section | Rules |
+|---|---|
+| A. Swaps, taps and moves | IR-01, IR-02, IR-39, IR-52 |
+| B. Match detection and special creation | IR-03 to IR-08, IR-40, IR-42, IR-43, IR-50 |
+| C. Damage to layers and obstacles | IR-09 to IR-15, IR-44, IR-45, IR-53, IR-54, IR-55 |
+| D. Special effects | IR-16 to IR-21, IR-41, IR-47, IR-48, IR-49 |
+| E. Combos | IR-22 to IR-27, IR-46 |
+| F. Soul fragments and drop items | IR-28 to IR-31 |
+| G. Gravity, refill, cascades, shuffle | IR-32, IR-33, IR-51 |
+| H. Hero boosters | IR-34 to IR-36 |
+| I. Level flow | IR-37, IR-38 |
+
+---
+
+## A. Swaps, taps and moves
+
+### IR-01 · A plain or drop-item swap that makes no match snaps back (CHANGED)
+Rule: A swap between two plain pieces, or between a drop item and a plain piece or another drop item, uses one move if it makes a match; if it makes no match it snaps back and uses no move.
+Applies to: Plain + plain, drop item + plain, drop item + drop item. Special + plain piece or drop item: IR-39 (and IR-18 for the Orb). Special + special: IR-22 to IR-27. What can be swapped at all: IR-52.
+Source: GDD › Core gameplay › Rules › "Swap two adjacent pieces; a swap that makes no match snaps back (no move used)."; Rules clarifications › OQ-03 "Snap-back applies to two plain pieces, and to a drop item swapped with a plain piece (no move used)", OQ-30 "Drop item swaps | No match: snaps back with no move used".
+Test cases:
+- Moves 20. R at (2,4),(3,4), Y at (4,4), R at (4,5). Swap (4,5)→(4,4) → R at (2,4),(3,4),(4,4) clears; moves = 19.
+- Moves 20. Swap two plain pieces that form no line of 3 and no 2×2 → board identical to before; moves = 20; an "invalid swap" event is returned.
+- Moves 20. Lost hatchling (OB11) at (4,4), Y at (4,5); swap (4,5)→(4,4) makes no match → snaps back: hatchling still at (4,4), Y at (4,5); moves = 20; "invalid swap" event.
+- Moves 20. Hatchling at (4,4); R at (2,4),(3,4) and (4,5). Swap (4,5)→(4,4) → R at (2,4),(3,4),(4,4) clears; moves = 19 (see IR-52).
+
+### IR-02 · Tapping a special fires it and costs a move (CHANGED)
+Rule: Tapping an uncovered special fires it and uses one move; tapping anything else, including a special locked under an overlay (IR-54), does nothing and uses no move.
+Applies to: Bamboo Rocket, Firecracker, Paper Crane, Jade Orb (Orb tap effect: IR-19). Covered specials: IR-54.
+Source: GDD › Core gameplay › Rules › "Specials fire when matched, swapped or tapped (tap costs a move)"; Interaction rules › "Tapping a Jade Orb … costs a move like any tap"; Owner decision, chat 27 Nov 2026 › OQ-57 (Option A: "locked like any covered piece: it can't be swapped, doesn't fall and can't be tapped").
+Test cases:
+- Moves 10. Tap a Firecracker at (4,4) → it fires (IR-17); moves = 9.
+- Moves 10. Tap a plain piece → nothing happens; moves = 10.
+- Moves 10. Row Rocket at (2,6) under creep moss (OB03) hp 1. Tap (2,6) → no fire event; board unchanged; moves = 10.
+
+### IR-39 · A special swapped with a plain piece or drop item fires from its new cell, after the swap's matches (CHANGED)
+Rule: Swapping a Bamboo Rocket, Firecracker or Paper Crane with an adjacent plain piece or drop item is never snapped back: the swap completes and uses one move; any match the swap makes resolves first (clears, neighbour hits, new specials) and, if the swap made a match, the swapped special is lifted off the board at that moment (like a set-off special, IR-41: it no longer falls or takes hits, and its cell refills in the fall); pieces fall and refill (cascade matches don't resolve yet), and then the special fires from the cell it sat in right after the swap, possibly setting off (IR-41) a special that match has just made; cascade matches resolve only after it (and any specials it set off) has finished.
+Applies to: Rocket, Firecracker or Crane + plain piece or drop item. Jade Orb + plain piece or drop item: IR-18. Crane + special: IR-27. A Firecracker's own two blasts still have cascades in between (IR-17). A lifted Crane's take-off: IR-48.
+Source: GDD › Rules clarifications › OQ-03 "The special fires and the swap costs a move. Snap-back applies to two plain pieces, and to a drop item swapped with a plain piece", OQ-26 "The swap completes; any match it makes resolves first, then each special fires from the cell it sits in", OQ-30 "A Rocket, Firecracker or Crane swapped with a drop item fires as with a plain piece"; setting off a just-made special follows OQ-04; Owner decision, chat 27 Nov 2026 › OQ-44 (Option A: "Only the fall and refill happen before a waiting special fires; cascade matches resolve after it has fired (swap: match clears, fall, refill, special fires, then cascades)"), OQ-54 (Option A: "Both are lifted off the board as the match resolves, like a set-off special (IR-41): their cells refill in the fall, and each fires from the cell it was in right after the swap").
+Test cases:
+- Moves 10. Row Rocket at (4,4), Y at (4,5); swap (4,5)→(4,4) makes no match → accepted; moves = 9; the Rocket (now at (4,5)) clears all 9 cells of row 5; no cell of row 4 is cleared by it.
+- Moves 10. R at (2,4),(3,4); yellow Firecracker at (4,4); R at (4,5). Swap (4,5)→(4,4) → R at (2,4),(3,4),(4,4) clear and the Firecracker (now at (4,5)) is lifted; fall: columns 2 and 3 drop by one (pieces from (2,3),(3,3) into (2,4),(3,4)); in column 4 both (4,4) and (4,5) are empty, so pieces from (4,0)–(4,3) move to (4,2)–(4,5); refill: new pieces at (2,0),(3,0),(4,0),(4,1); then the Firecracker fires with both blasts centred on (4,5) (area x 3–5, y 4–6), so blast 1 clears the pieces that fell into (3,4), (4,4) and (4,5); events in order: match clear, fall, refill, blast 1; moves = 9.
+- Moves 10. R at (5,6),(6,6); column Rocket (colour B) at (7,6); R at (7,7); G at (4,6),(5,5),(6,5); Y at (4,5),(7,5); B at (5,4); R at (6,4). Swap (7,7)→(7,6) → R at (5,6),(6,6),(7,6) clear and the Rocket (now at (7,7)) is lifted; pieces fall (columns 5 and 6 by one, so G now sits at (4,6),(5,6),(6,6); column 7 by two: pieces from (7,0)–(7,5) move to (7,2)–(7,7)); refill; the Rocket fires along column 7 from (7,7); fall, refill; only then do G at (4,6),(5,6),(6,6) clear as a cascade match. Events in order: match clear, fall, refill, Rocket fire (column 7), fall, refill, match clear (4,6)–(6,6).
+- Moves 10. Row Rocket (colour B) at (4,5); R at (4,4); R at (2,5),(3,5). Swap (4,5)→(4,4) → the Rocket moves to (4,4) and R to (4,5); R at (2,5),(3,5),(4,5) clear and the Rocket is lifted from (4,4); fall: columns 2 and 3 drop by one; in column 4 pieces from (4,0)–(4,3) move to (4,2)–(4,5); refill; then the Rocket fires along **row 4** (the row of (4,4), its cell right after the swap), not row 5: all 9 cells of row 4 are cleared, including the piece that fell from (4,2) into (4,4); no cell of row 5 is cleared by it. Events in order: match clear, fall, refill, Rocket fire (row 4); moves = 9.
+- Moves 10. Paper Crane at (4,4), G at (4,3); swap (4,4)→(4,3) makes no match → moves = 9; the Crane fires from (4,3) (crane take-off event at (4,3), IR-48).
+- Moves 10. Firecracker at (4,4), hatchling (OB11) at (4,5); swap (4,5)→(4,4) → accepted; moves = 9; the Firecracker fires centred on (4,5); the hatchling (now at (4,4), inside the blast) is not destroyed and not collected (IR-28, IR-30).
+- Moves 10. Same set-ups with two plain pieces instead and no match → snaps back; moves = 10 (IR-01).
+
+### IR-52 · What can be swapped (CHANGED)
+Rule: A swap is only accepted between two orthogonally adjacent cells that each hold an uncovered plain piece, special or drop item; swaps involving an obstacle, a cocooned fragment, an empty cell or a piece under an overlay (IR-54), and diagonal swaps, are refused and change nothing (no move used).
+Applies to: Every swap attempt. Accepted swaps that make no match: IR-01 (snap-back) or IR-39 (special fires).
+Source: GDD › Rules clarifications › OQ-21 "Any two orthogonally adjacent pieces, including specials and drop items. Not obstacles, cocooned fragments, empty cells, or pieces locked under an overlay (moss, shutter)", OQ-29 "Locked: can't be swapped", OQ-30.
+Test cases:
+- Moves 10. Withered bramble (OB02) at (4,4), R at (4,5). Swap (4,5)→(4,4) → refused; board unchanged; moves = 10.
+- Moves 10. Swap (3,3)→(4,4) (diagonal) → refused; board unchanged; moves = 10.
+- Moves 10. Cocoon with a fragment (OB07) at (2,2), Y at (3,2). Swap (3,2)→(2,2) → refused; moves = 10.
+- Moves 10. Lost hatchling (OB11) at (4,4); R at (2,4),(3,4) and (4,5). Swap (4,5)→(4,4) → accepted; R at (2,4),(3,4),(4,4) clears; the hatchling is now at (4,5) (then falls, IR-51); moves = 9.
+- Moves 10. Creep moss (OB03) hp 1 over R at (4,4); Y at (4,5). Swap (4,5)→(4,4) → refused; swap (4,4)→(4,5) → refused; board unchanged; moves = 10.
+
+---
+
+## B. Match detection and special creation
+
+### IR-03 · Three or more in a line clears
+Rule: Three or more same-colour pieces in a row or column are a match and clear.
+Applies to: All plain pieces, and coloured specials (IR-50), on every level.
+Source: GDD › Core gameplay › Rules › "3+ in a row or column clears."
+Test cases:
+- R at (1,2),(2,2),(3,2) after a swap → those 3 cells are cleared.
+- R at (5,1),(5,2),(5,3) after a swap → those 3 cells are cleared.
+- R at (1,2),(2,2) and R at (3,3) (not in line) → no match; swap snaps back (IR-01).
+
+### IR-04 · A 2×2 square makes a Paper Crane
+Rule: Four same-colour pieces forming a 2×2 square are a match and make a Paper Crane.
+Applies to: Plain pieces. Placement: IR-40. Colour: IR-50. Crane effect: IR-20, IR-48, IR-49.
+Source: GDD › Core gameplay › Special pieces › "2×2 square | Paper Crane".
+Test cases:
+- R at (2,2),(3,2),(3,3), Y at (2,3), R at (1,3). Swap (1,3)→(2,3) → the 4 R pieces clear; one red Paper Crane is created at (2,3).
+
+### IR-05 · Four in a line makes a Bamboo Rocket that fires along that line
+Rule: Four same-colour pieces in a row or column make a Bamboo Rocket that fires along the line it was made from: a horizontal 4 makes a row Rocket, a vertical 4 makes a column Rocket (its icon shows the direction).
+Applies to: Plain pieces (player or cascade matches). Rockets made by Jade Orb + Rocket: IR-16, IR-25. Win-finale Rockets: IR-16 (random direction; replace a random uncovered plain piece).
+Source: GDD › Core gameplay › Special pieces › "4 in a line | Bamboo Rocket"; Rules clarifications › OQ-01 "a horizontal 4 clears its row, a vertical 4 clears its column. Its icon shows the direction".
+Test cases:
+- R at (1,4),(2,4),(4,4), Y at (3,4), R at (3,5). Swap (3,5)→(3,4) → 4 pieces clear; one red **row** Rocket at (3,4).
+- R at (5,1),(5,2),(5,4), Y at (5,3), R at (4,3). Swap (4,3)→(5,3) → 4 pieces clear; one red **column** Rocket at (5,3).
+
+### IR-06 · An L, T or "+" of five makes a Firecracker (CHANGED)
+Rule: Five same-colour pieces in an L, T or "+" shape (a line of 3 and a line of 3 at right angles sharing one cell) make a Firecracker.
+Applies to: Plain pieces. Larger mixed shapes: IR-08. Placement: IR-40 (crossing cell in cascades). A "+" can only form in a cascade: every neighbour of its centre is part of the shape, so no single swap can complete it without a match already existing.
+Source: GDD › Core gameplay › Special pieces › "L or T shape (5) | Firecracker"; Rules clarifications › OQ-06 "Mixed shapes follow the shape-priority rule", OQ-28 "Counts as an L/T and makes a Firecracker", OQ-25 "(the crossing cell for an L, T or '+')".
+Test cases:
+- L by swap: R at (2,2),(2,3),(3,4),(4,4), Y at (2,4), R at (1,4). Swap (1,4)→(2,4) → 5 pieces clear; one red Firecracker at (2,4).
+- T by cascade: R lands at (2,2),(3,2),(4,2),(3,3),(3,4) → 5 pieces clear; one red Firecracker at (3,2) (IR-40 crossing cell).
+- "+" by cascade: R lands at (3,1),(2,2),(3,2),(4,2),(3,3) → 5 pieces clear; exactly one red Firecracker at (3,2) (the crossing cell); no other special.
+
+### IR-07 · Five or more in a line makes a Jade Orb
+Rule: Five or more same-colour pieces in a single row or column make one Jade Orb.
+Applies to: Plain pieces. Orb effects: IR-18, IR-19, IR-25, IR-26. Placement: IR-40.
+Source: GDD › Core gameplay › Special pieces › "5 in a line | Jade Orb"; Rules clarifications › OQ-06 "6 or more in a line | Makes a Jade Orb".
+Test cases:
+- R at (0,6),(1,6),(3,6),(4,6), Y at (2,6), R at (2,7). Swap (2,7)→(2,6) → 5 pieces clear; one Jade Orb at (2,6).
+- A fall lines up R at (0,6)…(5,6) (6 in a row) → 6 pieces clear; exactly one Jade Orb at (0,6) (IR-40) and no other special.
+- A fall lines up R at (0,6)…(6,6) (7 in a row) → 7 pieces clear; exactly one Jade Orb.
+(A single swap can't make a 6+ line without a match already existing, so 6+ lines are tested through cascades.)
+
+### IR-08 · Shape priority: only the strongest special is made
+Rule: When one match fits the shapes of two or more specials, only the strongest is made, in the order Jade Orb > Firecracker > Bamboo Rocket > Paper Crane.
+Applies to: Every match that fits more than one special shape, including longer or mixed shapes.
+Source: GDD › Interaction rules › "One match fits two specials | Make only the strongest: Jade Orb (5 in a line) > Firecracker (L or T) > Bamboo Rocket (4 in a line) > Paper Crane (2×2)"; Rules clarifications › OQ-06 "Mixed shapes follow the shape-priority rule".
+Test cases:
+- R at (2,4),(3,4),(4,4),(5,4),(6,4) plus R at (4,3),(4,2) (5-line that also forms a T) → exactly one Jade Orb, no Firecracker.
+- R at (2,4),(3,4),(4,4),(5,4) plus R at (2,3),(2,2) (4-line that also forms an L) → exactly one Firecracker, no Rocket.
+- R at (2,4),(3,4),(4,4),(5,4) plus R at (2,3),(3,3) (4-line that also contains a 2×2) → exactly one Bamboo Rocket, no Crane.
+
+### IR-40 · Where a new special appears (CHANGED)
+Rule: A special made by a player match that contains the swap's target cell appears on the target cell; any other special (cascade matches, and a player match that doesn't contain the target cell, such as the start-cell match of IR-43) appears on the lowest, then left-most, cell of its match, except an L, T or "+", which puts it on the crossing cell (the cell shared by its two lines).
+Applies to: IR-04 to IR-07, IR-42, IR-43. The placement cell may be a covered cell whose overlay survived the match: the special appears there, locked (IR-54).
+Source: GDD › Rules clarifications › OQ-02 "On the cell the player moved into; in cascades, on the lowest then leftmost cell of the match (the crossing cell for an L or T)", OQ-25 "A special whose match doesn't include the player's cell | Uses the cascade placement: lowest, then left-most cell (the crossing cell for an L, T or '+')", OQ-28; Owner decision, chat 27 Nov 2026 › OQ-57 (Option A: "The special appears there, under the overlay, locked like any covered piece").
+Test cases:
+- Swap (3,5)→(3,4) completes R at (1,4),(2,4),(3,4),(4,4) → Rocket at (3,4).
+- R at (6,2),(6,3),(6,5), Y at (6,4), R at (5,4). Swap (5,4)→(6,4) → column Rocket at (6,4) (the target cell, not the lowest cell (6,5)).
+- Cascade: R lands at (2,6),(3,6),(4,6),(5,6) → row Rocket at (2,6). Cascade: R lands at (7,1),(7,2),(7,3),(7,4) → column Rocket at (7,4).
+- Cascade: Y 2×2 lands at (5,2),(6,2),(5,3),(6,3) → yellow Crane at (5,3).
+- Start-cell match, vertical: R at (4,1),(4,2),(4,4); Y at (3,1),(3,2),(3,4); R at (3,3), Y at (4,3). Swap (3,3)→(4,3) → red column Rocket at (4,3) (target cell); yellow column Rocket at (3,4) (lowest cell of the Y match (3,1)–(3,4)).
+- Start-cell match, horizontal: R at (2,3),(3,3),(5,3); Y at (2,4),(3,4),(5,4); Y at (4,3), R at (4,4). Swap (4,4)→(4,3) → red row Rocket at (4,3) (target cell); yellow row Rocket at (2,4) (left-most cell of the Y match (2,4)–(5,4)).
+- Cascade onto a covered cell: creep moss (OB03) hp 2 over R at (2,6); a fall lands R at (3,6),(4,6),(5,6) → R at (2,6)–(5,6) clear; moss at (2,6) hp 1; one red row Rocket appears at (2,6) (lowest, then left-most), under moss hp 1 (locked, IR-54).
+
+### IR-42 · Cascade matches make specials (NEW)
+Rule: Matches made by falling pieces make specials by exactly the same shape, direction and priority rules as player matches.
+Applies to: Every cascade match (IR-32). Placement: IR-40 (a special placed in a covered cell is locked, IR-54).
+Source: GDD › Rules clarifications › OQ-05 "Make specials by the same rules as player matches".
+Test cases:
+- A fall lines up B at (0,8),(1,8),(2,8),(3,8) → those 4 clear and one blue row Rocket appears at (0,8), without a move being used.
+- A fall lines up G at (4,2)…(4,6) (vertical 5) → one Jade Orb at (4,6).
+
+### IR-43 · One swap making two matches: both resolve, each makes its own special (CHANGED)
+Rule: When one swap makes two separate matches (one through each swapped piece), both matches clear and each makes its own special by IR-04 to IR-08, the start-cell match's special being placed by the cascade placement (IR-40).
+Applies to: Player swaps that create a match at both the start and the target cell. A start-cell special placed in a covered cell is locked (IR-54).
+Source: GDD › Rules clarifications › OQ-07 "Both resolve, and each can make its own special", OQ-25.
+Test cases:
+- R at (3,3); Y at (4,3); R at (4,1),(4,2),(4,4); Y at (3,4),(3,5). Swap (3,3)→(4,3) → R at (4,1),(4,2),(4,3),(4,4) (vertical 4) and Y at (3,3),(3,4),(3,5) (vertical 3) both clear; one red column Rocket at (4,3); no special from the Y match; moves −1.
+- R at (4,1),(4,2),(4,4); Y at (3,1),(3,2),(3,4); R at (3,3), Y at (4,3). Swap (3,3)→(4,3) → 8 pieces clear; exactly 2 specials: red column Rocket at (4,3) and yellow column Rocket at (3,4); moves −1.
+
+### IR-50 · Rockets, Firecrackers and Cranes keep a colour; the Jade Orb has none (CHANGED)
+Rule: A Bamboo Rocket, Firecracker or Paper Crane keeps the colour of the match that made it and matches like a plain piece of that colour; when such a match forms, the match resolves first (clears, neighbour hits, new specials) and the matched special is lifted off the board (like a set-off special, IR-41; its cell refills in the fall; a lifted special is not a cleared piece: it leaves the board via the lift, not as one of the match's cleared pieces), pieces fall and refill, and then the special fires from the cell where it was matched (IR-21); cascade matches wait until it has finished (IR-41); a Jade Orb has no colour and is never part of a match.
+Applies to: All specials. A special locked under an overlay can still be matched by colour (IR-54).
+Source: GDD › Rules clarifications › OQ-18 "Rockets, Firecrackers and Cranes keep the colour they were made from and match like normal pieces. The Jade Orb has no colour", OQ-26 "any match it makes resolves first, then each special fires from the cell it sits in"; Owner decision, chat 27 Nov 2026 › OQ-44 (Option A: only the fall and refill happen before a waiting special fires), OQ-54 (Option A: "Both are lifted off the board as the match resolves, like a set-off special (IR-41): their cells refill in the fall"), OQ-57 (Option A: a covered special "can still be … matched by colour (IR-50)"), OQ-61 (Option A: "The lifted special counts: every piece of a needed colour in the match, specials included, fills the shrine by one").
+Test cases:
+- R at (1,4); Y at (2,4); red row Rocket at (3,4); R at (2,5). Swap (2,5)→(2,4) → events in order: R 3-match (1,4),(2,4),(3,4) clear, fall, refill, then the Rocket fires along row 4 (all 9 cells of row 4 cleared).
+- Same set-up, counting pieces: the match clears 2 pieces, the R at (1,4) and (2,4), and lifts the Rocket from (3,4) (lifted, not cleared: the match's cleared pieces are (1,4),(2,4) only); fall: columns 1, 2 and 3 each drop by one (the piece from (3,3) falls into (3,4)); new pieces enter at (1,0),(2,0),(3,0); the Rocket fires along row 4 from (3,4) and clears 9 pieces, including the one now at (3,4) → 11 pieces cleared in total (2 + 9; the Rocket itself is not counted).
+- Lantern shrine: a lifted coloured special still counts as a piece of its colour for a shrine next to the match (Owner decision, chat 27 Nov 2026 › OQ-61 Option A); see IR-55's Rocket-in-match tests (shrine fills by 3, not 2). The piece count above stays 11.
+- Jade Orb at (3,4); R at (1,4),(2,4),(4,4),(5,4) → no match through (3,4); the Orb stays.
+- A Crane made from a Y 2×2 reports colour Y.
+
+---
+
+## C. Damage to layers and obstacles
+
+### IR-09 · A special clears the piece in each cell it covers and hits the top obstacle layer once (CHANGED)
+Rule: For each cell a special covers, it clears the piece in that cell (if any) and gives one hit to the top obstacle layer there: the overlay if there is one, else the content blocker or container, else the underlay (goo or dew).
+Applies to: Every special and combo effect, and every booster (IR-36). Fragments and drop items are never cleared (IR-28). Specials in covered cells are set off (IR-41). A Jade Orb covers every cell whose piece it clears (IR-18). A cell whose overlay survives refills (IR-54). Dew spreading: IR-53.
+Source: GDD › Interaction rules › "What a special hits | Each cell it covers takes one hit, on the top layer only (overlay, then content, then underlay)"; Rules clarifications › OQ-09 "Pieces are not obstacle layers. A special clears the piece and gives one hit to the top obstacle layer in that cell; with no overlay or blocker, the underlay (goo or dew) takes the hit", OQ-29 "A cell emptied under a surviving overlay refills by normal falling".
+Test cases:
+- Row Rocket fires along row 3; (5,3) holds a withered bramble (OB02) with 2 layers → bramble has 1 layer.
+- Row Rocket along row 3; (2,3) holds R on creep goo (OB10) hp 2 → R cleared; goo hp 1.
+- Row Rocket along row 3; (6,3) holds Y under creep moss (OB03) hp 1 → Y cleared; moss removed.
+- Row Rocket along row 3; (4,3) holds B under moss hp 1, on goo hp 1 → B cleared; moss removed; goo still hp 1.
+- Row Rocket along row 3; (6,3) holds Y under moss hp 2 → Y cleared; moss hp 1; after the board settles (6,3) holds the piece that was at (6,2), still under moss hp 1 (IR-54).
+
+### IR-10 · Multi-cell obstacles take at most one hit per special (CHANGED)
+Rule: An obstacle covering 2 or more cells takes at most one hit from a single special, however many of its cells the special covers; a whole combo counts as one special (IR-45).
+Applies to: Every multi-cell obstacle (IR-11). Not OB03 (one obstacle per cell).
+Source: GDD › Interaction rules › "Obstacles bigger than one cell | Take at most one hit per special, however many of their cells it covers"; Rules clarifications › OQ-12 "A combo counts as one special".
+Test cases:
+- Petrified pillar (OB06) at x=4, y=0–3 (w 1, h 4), hp 3. A column Rocket clears column 4 → pillar hp 2.
+- Pillar (OB06) 2×2 at (3,3)–(4,4), hp 3. Firecracker at (4,5) fires (its 3×3 covers (3,4) and (4,4)) → pillar hp 2 (with IR-12).
+- Pillar (OB06) 2×2 at (3,3)–(4,4), hp 3. A row Rocket clears row 3 (covers (3,3) and (4,3)) → pillar hp 2.
+- Pillar 2×2 at (3,3)–(4,4), hp 3. Rocket + Firecracker centred on (5,5): rows 4–6 cover (3,4),(4,4) and columns 4–6 cover (4,3),(4,4) → pillar hp 2 (one hit for the whole combo).
+
+### IR-11 · Which obstacles are multi-cell
+Rule: The petrified pillar (OB06) and any obstacle drawn across 2 or more cells are multi-cell; creep moss (OB03) is always one obstacle per cell.
+Applies to: OB06; any object in the level JSON with `w`×`h` ≥ 2 cells (e.g. OB05, OB16 per the brief's schema); OB03 is never multi-cell.
+Source: GDD › Interaction rules › "Which obstacles are multi-cell | Petrified pillar (OB06) and any obstacle drawn across 2 or more cells. Creep moss (OB03) is one obstacle per cell"; level_agent_brief.md §5 "Multi-cell objects (OB05, OB06, OB16) use w/h".
+Test cases:
+- Creep moss (OB03) hp 1 on (2,2),(3,2),(4,2),(5,2). A row Rocket clears row 2 → all 4 moss cells take one hit each (all 4 removed).
+- Lantern shrine (OB05) with w 2, h 2 → treated as multi-cell for IR-10.
+
+### IR-12 · The Firecracker's double blast counts as one hit (CHANGED)
+Rule: The Firecracker's two blasts together give at most one hit to any single obstacle: an obstacle hit by the first blast takes no hit from the second, while pieces in the area are cleared by both blasts.
+Applies to: Every obstacle inside the Firecracker's 3×3 area, single- or multi-cell. Timing between blasts: IR-17. Firecracker + Firecracker: IR-24 with IR-45.
+Source: GDD › Interaction rules › "Firecracker's double blast | The two blasts together count as one hit on any single obstacle"; Rules clarifications › OQ-11 "An obstacle hit by the first blast takes no hit from the second".
+Test cases:
+- Firecracker at (4,4) fires; withered bramble (OB02) with 2 layers at (5,4) → bramble has 1 layer.
+- Firecracker at (4,4) fires; frozen idol (OB12) with 2 hits left at (3,3) → idol has 1 hit left.
+- Firecracker at (4,4) fires; R on goo hp 2 at (4,5) → blast 1 clears R and goo becomes hp 1; a piece falls into (4,5); blast 2 clears that piece and goo stays hp 1.
+- Firecracker at (4,4) fires; Y under moss hp 1 at (3,3), on goo hp 1 → blast 1 clears Y and removes the moss (the goo is not hit); a piece falls into (3,3); blast 2 clears it and hits the goo (not hit before) → goo cleared.
+
+### IR-13 · Frozen idol: each adjacent match or each special is one hit (CHANGED)
+Rule: A frozen idol (OB12) needs 2 hits; each adjacent match gives it one hit (however many of the match's pieces touch it), and each special gives it one hit.
+Applies to: OB12 frozen idol (debut 41).
+Source: GDD › Interaction rules › "Two-hit obstacles (Frozen idol) | Each adjacent match or each special counts as one hit"; Obstacle set › "OB12 … Needs 2 adjacent matches"; Rules clarifications › OQ-08.
+Test cases:
+- Idol at (4,4), 2 hits left. A 3-match at (3,5),(4,5),(5,5) (touching it from below) → idol 1 hit left. Another such match → idol cleared.
+- Idol at (4,4), 2 hits left. A row Rocket clears row 4 → idol 1 hit left.
+- Idol at (4,4), 2 hits left. An L match R at (3,3),(3,4),(3,5),(4,5),(5,5) touches the idol from the left and from below → idol 1 hit left.
+
+### IR-14 · A match next to an obstacle gives it one hit (CHANGED)
+Rule: A match gives one hit to each adjacent-match obstacle or overlay that is orthogonally next to any of its pieces, at most one hit per obstacle per match, however many of its pieces (or of the obstacle's cells) touch it; diagonal contact never counts.
+Applies to: OB02 withered bramble, OB07 mummified creature / creep cocoon, OB03 creep moss, OB06 petrified pillar, OB12 frozen idol, and overlays (layer 3). Not underlays (IR-15). Pieces cleared by a special never count as a match (IR-44). A match that includes a covered piece also gives that cell's overlay one hit, still at most one hit per overlay per match (IR-54). Not OB05 lantern shrine: a match next to it fills the colours it needs and never lowers its `hp` (IR-55; Owner decision, chat 27 Nov 2026 › OQ-59 Option A (b)).
+Source: GDD › Board layers & obstacles › Cell layer model › "3 · Overlay … Cleared by Adjacent matches", "2 · Content … Matching / adjacent matches / specials"; Obstacle set › OB02 "Match next to it", OB07 "Match next to it to unwrap", OB03 "Match next to it to clear", OB06 "Ground down by adjacent matches"; Rules clarifications › OQ-08 "One hit to that obstacle. Only up, down, left and right count as 'next to', never diagonals", OQ-10 "Only matches hit neighbours"; Owner decision, chat 27 Nov 2026 › OQ-59 (Option A (b): "no, matches only fill colours; `hp` falls only from specials").
+Test cases:
+- Bramble (OB02) with 3 layers at (4,3). A 3-match at (3,4),(4,4),(5,4) → bramble has 2 layers.
+- Bramble with 1 layer at (4,3). A 3-match at (5,4),(6,4),(7,4) (touches only diagonally at (5,4)) → bramble unchanged.
+- Pillar (OB06) 1×4 at x=4, y=2–5, hp 3. A 3-match at (5,2),(5,3),(5,4) runs alongside 3 of its cells → pillar hp 2.
+- Brambles with 2 layers at (3,3) and (5,3). A 3-match at (3,4),(4,4),(5,4) → both brambles have 1 layer.
+- Mummified creature (OB07) hp 1 at (2,2). A 3-match at (3,1),(3,2),(3,3) → creature freed (goal +1).
+- Lantern shrine (OB05) 3×1 at (3,3)–(5,3), hp 1, still needs 1 B. G 3-match at (3,4),(4,4),(5,4) → shrine hp still 1; still needs 1 B; not lit (IR-55).
+
+### IR-15 · An underlay is hit by a match on top of it, or by a special with nothing above it (CHANGED)
+Rule: An underlay takes one hit when a match is made on top of it while the cell has no overlay, or when a special covers its cell and there is no overlay or blocker above it (IR-09).
+Applies to: OB10 creep goo (hp 1–3 per the brief's `underlay` field). OB04 healing dew: a match or special that clears a piece on dew spreads it instead (IR-53). A match through a covered piece hits the overlay, not the underlay (IR-54). Dew spreading onto a goo cell: the goo takes its hit first and blocks the dew if it survives (IR-53).
+Source: GDD › Board layers & obstacles › Cell layer model › "1 · Underlay … Cleared by Matching on top of it"; Obstacle set › OB10 "Make a match on top to clear it"; Rules clarifications › OQ-09 "with no overlay or blocker, the underlay (goo or dew) takes the hit", OQ-31; Owner decision, chat 27 Nov 2026 › OQ-41 (Option A (a): "the underlay below is not hit while the overlay was there").
+Test cases:
+- Goo hp 1 under (3,5). A 3-match at (2,5),(3,5),(4,5) → goo at (3,5) cleared.
+- Goo hp 2 under (3,5). Same match → goo hp 1.
+- Goo hp 1 under (3,5), plain piece on it. A column Rocket clears column 3 → piece cleared; goo cleared.
+- Moss hp 1 over R at (3,4), goo hp 1 under (3,4); R at (2,4); Y at (4,4); R at (4,5). Swap (4,5)→(4,4) → R at (2,4),(3,4),(4,4) clear; moss at (3,4) removed; goo at (3,4) still hp 1.
+
+### IR-44 · Pieces cleared by a special don't hit neighbouring obstacles (NEW)
+Rule: Only matches hit obstacles next to them; a special (or combo) hits only the cells it covers, and the pieces it clears give no hit to neighbouring cells.
+Applies to: All specials and combos; every adjacent-match obstacle and overlay (IR-14).
+Source: GDD › Rules clarifications › OQ-10 "Don't hit neighbouring obstacles. Only matches hit neighbours; specials hit only the cells they cover".
+Test cases:
+- Bramble (OB02) with 2 layers at (4,3). A row Rocket clears row 4 → bramble still 2 layers.
+- Mummified creature hp 1 at (2,2). Firecracker at (4,2) fires (area x 3–5, y 1–3) → creature still hp 1.
+- Moss hp 1 over a piece at (4,5). A row Rocket clears row 4 → moss unchanged.
+
+### IR-45 · A combo counts as one special for the one-hit rules (NEW)
+Rule: A whole combo (both swapped specials, and any specials it creates such as Jade Orb + special's converted pieces) counts as one special: each cell it covers takes at most one hit and each obstacle takes at most one hit from it, even where its areas overlap or it blasts twice.
+Applies to: IR-22 to IR-26. Specials set off by a combo (IR-41) are separate specials.
+Source: GDD › Rules clarifications › OQ-12 "A combo counts as one special"; Interaction rules › "Obstacles bigger than one cell | Take at most one hit per special".
+Test cases:
+- Rocket + Rocket centred on (4,4); goo hp 2 under (4,4) (covered by both row and column) → goo hp 1.
+- Firecracker + Firecracker centred on (4,4); bramble with 3 layers at (3,3) (inside both blasts) → bramble has 2 layers.
+- Rocket + Firecracker centred on (5,5); 2×2 pillar hp 3 at (3,3)–(4,4) → pillar hp 2.
+
+### IR-53 · Healing dew spreads to every cell covered with it (CHANGED)
+Rule: When a match or a special clears a piece on a healing-dew cell, every playable cell that same match or special covers gets dew, including cells where the special only hit an obstacle or held a fragment or drop item, except a cell with creep goo: the goo takes its hit from that match or special first, and the cell gets dew only if that hit removed the goo (if the goo survives, the cell gets no dew this time); a Paper Crane landing on an uncovered dew target cell clears the piece there (as a special covering the cell, IR-09) and gives that cell dew.
+Applies to: OB04 healing dew (underlay); OB10 creep goo cells reached by spreading dew. Matches next to dew (not on it) don't spread it. A Jade Orb covers only the cells whose piece it clears (IR-18). Crane landing: IR-48.
+Source: GDD › Board layers & obstacles › Obstacle set › OB04 "Matches made on dew spread it; cover the target cells"; Cell layer model › "1 · Underlay | Creep goo, healing dew"; Interaction rules › "Where the Paper Crane flies … Dew goal: an uncovered target cell"; Rules clarifications › OQ-31 "When a match or special clears a piece on a dew cell, every cell cleared by that match or special gets dew. A Crane landing on an uncovered target cell gives it dew"; Owner decision, chat 27 Nov 2026 › OQ-46 (Option B: "Every playable cell the special covers gets dew, including cells where it only hit an obstacle"), OQ-49 (Option B: "the landing counts as a special covering the cell (the piece there is cleared, IR-09) and the cell gets dew"), OQ-56 (Option A: "Goo blocks dew. The goo takes its hit first; if the goo survives, the cell gets no dew this time; if that hit cleared it, the cell gets dew").
+Test cases:
+- Dew under (3,5) only. A 3-match at (2,5),(3,5),(4,5) → (2,5),(3,5),(4,5) all have dew; no other cell has dew.
+- Dew under (5,2) only; row 2 holds 9 plain pieces and no obstacles. A row Rocket fires along row 2 → all 9 cells of row 2 have dew.
+- Dew under (3,6) only. A 3-match at (2,5),(3,5),(4,5) (dew is next to the match, not under it) → no new dew.
+- Dew under (5,2) only; withered bramble (OB02) with 2 layers at (7,2); the other 8 cells of row 2 hold plain pieces. A row Rocket fires along row 2 → all 9 cells of row 2 have dew, (7,2) included; the bramble has 1 layer.
+- Dew goal; only uncovered target cell left is (6,2), holding Y; no other goal. A Crane fires → it lands on (6,2); Y is cleared (then (6,2) refills, IR-51); (6,2) has dew; dew goal complete.
+- Dew under (3,5); creep goo (OB10) hp 2 under (4,5). A 3-match at (2,5),(3,5),(4,5) → (2,5) and (3,5) have dew; (4,5) has goo hp 1 and no dew.
+- Dew under (3,5); goo hp 1 under (4,5). The same 3-match → the goo at (4,5) is removed and (4,5) has dew.
+- Dew under (5,2); goo hp 1 under a piece at (1,2); goo hp 2 under a piece at (7,2); creep moss (OB03) hp 1 over a piece at (6,2), on goo hp 1; the other cells of row 2 hold plain pieces. A row Rocket fires along row 2 → (1,2): goo removed, dew; (7,2): goo hp 1, no dew; (6,2): moss removed, goo untouched (still hp 1, IR-09), no dew; the other 6 cells of row 2 have dew.
+
+### IR-54 · Pieces under an overlay are locked (CHANGED)
+Rule: A piece in a cell with an overlay (creep moss, shutters) is locked: it can't be swapped, doesn't fall, isn't moved by the free shuffle and counts as a blocker for the pieces above it, but it can be part of a match, which clears it and gives the overlay one hit (the underlay below is not hit by that match); when the piece in such a cell is cleared and the overlay survives, the cell refills by normal falling and the piece that falls in is then covered too; a special made in such a cell (IR-40) appears there under the overlay and is locked the same way, and also can't be tapped, but it can still be set off by another special (IR-41) or, if coloured, matched by colour (IR-50).
+Applies to: Every cell with an overlay (layer 3). Swaps: IR-52. Taps: IR-02. Gravity: IR-51. Shuffle: IR-33. Specials over covered cells: IR-09. Jade Orb colour effects ignore covered pieces (IR-18, IR-19, IR-25).
+Source: GDD › Board layers & obstacles › Cell layer model › "3 · Overlay"; Rules clarifications › OQ-29 "Pieces under an overlay (moss, shutter) | Locked: can't be swapped and don't fall, but can be part of a match. A cell emptied under a surviving overlay refills by normal falling", OQ-19 "Pieces locked under an overlay (moss, shutter) don't fall", OQ-21; Owner decision, chat 27 Nov 2026 › OQ-41 (Option A: "(a) the piece is cleared and the overlay takes one hit; the underlay below is not hit while the overlay was there; (b) the shuffle leaves covered pieces where they are; (c) the locked piece counts as a blocker, so the cell below fills by a diagonal slide"), OQ-57 (Option A: "The special appears there, under the overlay, locked like any covered piece: it can't be swapped, doesn't fall and can't be tapped; it can still be set off by another special (IR-41) or matched by colour (IR-50)").
+Test cases:
+- Moves 10. Moss hp 1 over R at (4,4), Y at (4,5) → swaps (4,5)→(4,4) and (4,4)→(4,5) are both refused; moves = 10 (IR-52).
+- Moss hp 2 over Y at (6,3). A row Rocket fires along row 3 → Y cleared; moss hp 1; after the board settles (6,3) holds the piece that was at (6,2), under moss hp 1, and that piece can't be swapped.
+- Moss hp 2 over R at (3,4); R at (2,4); Y at (4,4); R at (4,5). Swap (4,5)→(4,4) → R at (2,4),(3,4),(4,4) clear; moss at (3,4) hp 1 (one hit, even though (2,4) and (4,4) also touch it, IR-14); after the board settles (3,4) holds the piece that was at (3,3), under moss hp 1.
+- Moss hp 2 over G at (4,3); (4,4) emptied directly; the board settles → G is still at (4,3) under moss hp 2; (4,4) is filled by the piece from (3,3) (diagonal slide from the upper-left, IR-51); no playable cell is empty.
+- Moves 10. Red row Rocket under moss hp 1 at (2,6) (as made in IR-40's covered-cell test); Y at (3,6). Swap (3,6)→(2,6) → refused; tap (2,6) → nothing; moves = 10. Then (2,7) is emptied directly and the board settles → the Rocket is still at (2,6).
+- Red row Rocket under moss hp 1 at (2,6). A column Rocket is tapped at (2,0) → column 2 cleared; the moss at (2,6) is removed; the red Rocket is set off and fires along row 6 after the fall (IR-41).
+- Red row Rocket under moss hp 2 at (2,6); R at (3,6); Y at (4,6); R at (4,7). Swap (4,7)→(4,6) → R 3-match (2,6),(3,6),(4,6): the covered Rocket is part of it and is lifted; moss at (2,6) hp 1; fall and refill ((2,6) refills and the new piece there is covered); the Rocket fires along row 6 from (2,6), which clears that piece and removes the moss. Events in order: match clear, fall, refill, Rocket fire (row 6).
+
+### IR-55 · Lantern shrine: matches next to it fill its colours, specials lower its hp; lit by either (CHANGED)
+Rule: When at least one piece of a match is next to a lantern shrine (OB05) (up, down, left or right), every piece of that match of a colour the shrine still needs, coloured specials in the match included (IR-50), fills it by one (a colour it no longer needs fills nothing), and the match never lowers the shrine's `hp`; a special covering the shrine lowers its `hp` by 1, at most once per special (IR-10, IR-12, IR-45), and doesn't change the colours it needs; a Paper Crane landing on it counts as one piece of a colour it needs (IR-49) and doesn't lower its `hp`; the shrine is lit when it needs no more colours or its `hp` reaches 0, whichever comes first, and a lit shrine is removed from the board: its cells become open cells that fill by normal falling.
+Applies to: OB05 lantern shrine (debut level 10); every match next to it, every special, combo and booster (IR-36), and Crane landings (IR-48, IR-49). A Jade Orb is never part of a match (IR-50), so it fills nothing. A removed shrine is no longer an obstacle, so the Crane never aims at its old cells for it (IR-49). Matches never hit the shrine (IR-14).
+Source: GDD › Board layers & obstacles › Obstacle set › OB05 "Lantern shrine … Collect the colours it shows to light it"; Interaction rules › "What a special hits | Each cell it covers takes one hit"; "Obstacles bigger than one cell | Take at most one hit per special"; "Where the Paper Crane flies … Lantern shrine: counts as one piece of a colour it still needs"; Rules clarifications › OQ-08 (only up, down, left, right count as "next to"); Owner decision, chat 27 Nov 2026 › OQ-50 (Option A (a): "a special's hit lowers the shrine's `hp` by 1 (one hit per special, IR-10) but doesn't change the colours it still needs"), OQ-55 (Option A: "(a) each piece of a needed colour in a match next to the shrine fills it by one; (b) the shrine is lit when every colour is collected or its `hp` reaches 0, whichever comes first; (c) the landing counts as one piece only, no `hp` loss"); Owner decision, chat 27 Nov 2026 › OQ-59 (Option A: "(a) every piece of a needed colour in the match counts, as long as at least one piece of the match touches the shrine; (b) no, matches only fill colours; `hp` falls only from specials; (c) the shrine is removed and its cells become open cells that fill by normal falling"), OQ-61 (Option A: "The lifted special counts: every piece of a needed colour in the match, specials included, fills the shrine by one").
+Test cases:
+- Shrine 2×2 at (3,3)–(4,4), hp 3, still needs 2 R and 1 B. A row Rocket fires along row 3 (covers (3,3) and (4,3)) → shrine hp 2; still needs 2 R and 1 B.
+- Same shrine. A Firecracker at (5,4) fires (both blasts cover (4,3) and (4,4)) → shrine hp 2 (one hit for the double blast); needs unchanged.
+- Same shrine. Rocket + Rocket centred on (4,5) (column 4 covers (4,3),(4,4)) → shrine hp 2.
+- Shrine 3×1 (w 3, h 1) at (3,3)–(5,3), hp 3, still needs 2 R and 1 B. R 3-match at (3,4),(4,4),(5,4) (every piece touches the shrine from below) → it needs 1 B only (two R fill it; the third R fills nothing); hp still 3 (a match never lowers `hp`); not lit.
+- Same shrine, still needs 3 R only. The same R 3-match → it needs nothing; a shrine-lit event; the shrine is removed; after the board settles (3,3),(4,3),(5,3) each hold a plain piece that can be swapped like any other, and no shrine is on the board.
+- Same shrine, still needs 1 Y. G 3-match at (3,4),(4,4),(5,4) → still needs 1 Y.
+- Shrine 3×1 at (3,3)–(5,3), still needs 2 R. R 3-match at (6,4),(7,4),(8,4) (touches only diagonally at (6,4)) → still needs 2 R.
+- Shrine 2×2 at (3,3)–(4,4), hp 1, still needs 2 R and 1 B. A row Rocket fires along row 3 → hp 0; a shrine-lit event, although colours were still needed; the shrine is removed; after the board settles (3,3),(4,3),(3,4),(4,4) each hold a plain piece.
+- Shrine 2×2, hp 2, still needs 3 R; it is the only goal. A Crane fires → it lands on a shrine cell; the shrine needs 2 R; hp 2.
+- Shrine 2×2, hp 3, still needs 1 B; it is the only goal. A Crane fires → it lands on a shrine cell; the shrine needs nothing; a shrine-lit event; hp 3; the shrine is removed and its 4 cells fill by falling.
+- Shrine 2×2 at (3,3)–(4,4), hp 3, still needs 3 R. R 3-match at (2,5),(3,5),(4,5) ((3,5) and (4,5) touch the shrine from below; (2,5) touches nothing) → all 3 R count: it needs nothing; a shrine-lit event.
+- Same shrine, hp 3, still needs 3 R and 1 B. R 3-match at (5,4),(6,4),(7,4) (only (5,4) touches the shrine, from the right) → all 3 R count: it needs 1 B; hp still 3; not lit.
+- Shrine 3×1 at (2,4)–(4,4), hp 3, still needs 3 R. R at (2,5); red row Rocket at (3,5); Y at (4,5); R at (5,5). Swap (5,5)→(4,5) → match R (2,5), Rocket (3,5), R (4,5): the lifted Rocket counts, so the shrine fills by 3, needs nothing, a shrine-lit event, hp 3; events in order: match clear (Rocket lifted), shrine lit, fall, refill, Rocket fires along row 5.
+- Shrine 2×2 at (3,3)–(4,4), hp 3, still needs 3 R. Red row Rocket at (5,4); R at (6,4); Y at (7,4); R at (7,5). Swap (7,5)→(7,4) → match Rocket (5,4), R (6,4), R (7,4); only the Rocket touches the shrine, and that is enough: all 3 count; a shrine-lit event; the shrine is removed; fall and refill fill (3,3)–(4,4); then the Rocket fires along row 4 and clears 9 pieces, including the ones now at (3,4) and (4,4); no shrine hit event.
+
+---
+
+## D. Special effects
+
+### IR-16 · A Bamboo Rocket clears its full row or its full column (CHANGED)
+Rule: A row Rocket hits every cell of its row and a column Rocket hits every cell of its column, as set when it was made (IR-05); Rockets made by Jade Orb + Rocket copy the direction of the Rocket that was swapped with the Orb; each win-finale Rocket (one per leftover move) gets its own direction, row or column, 50/50, picked independently by the level's seeded random number generator (all-row or all-column finales can happen), and then replaces an uncovered plain piece picked by a second draw from the same generator; if no uncovered plain piece is left, it still counts for coins and appears on a random playable cell (seeded) without replacing anything: it fires from that cell, and whatever is there is treated as IR-09 says; finale Rockets go one at a time: each is drawn, placed and fired, and the board settles fully (fall, refill, cascades, set-off specials) before the next Rocket's draws.
+Applies to: Bamboo Rocket. Hits follow IR-09/IR-10. Win-finale Rockets: Core gameplay › "Leftover moves become Bamboo Rockets"; Meta › Coins "Win = 20 + 5 per finale rocket". Fallback cell contents: a piece there is cleared, a special is set off (IR-41), a fragment or drop item stays (IR-28), and the top obstacle layer takes one hit (IR-09).
+Source: GDD › Core gameplay › Special pieces › "Bamboo Rocket | Clears its full row or column"; Core gameplay › Rules › "Leftover moves become Bamboo Rockets that fire for bonus coins"; Meta & economy › Coins "Win = 20 + 5 per finale rocket"; Rules clarifications › OQ-01, OQ-24 "Rockets made by Jade Orb + Rocket | Copy the direction of the Rocket swapped with the Orb"; Owner decision, chat 27 Nov 2026 › OQ-40 ("random rockets: some row, some column", confirmed), OQ-53 (Option A: "Each finale Rocket independently: row or column, 50/50, from the level's seeded random number generator; all-row or all-column finales can happen"), OQ-58 (Option A: "Each Rocket replaces a random uncovered plain piece, picked by the level's seeded random number generator (a second draw after the direction). If no uncovered plain piece is left, the Rocket still counts for coins but appears on any random playable cell"), OQ-60 (Option A: "(a) the Rocket doesn't replace anything: it fires from that cell, and whatever is there is treated as IR-09 says (piece cleared, special set off, fragment or drop item stays, top layer hit); (b) one at a time: each Rocket is drawn, placed and fired, and the board settles fully, before the next Rocket's draws").
+Test cases:
+- Tap a row Rocket at (4,4) on a plain 9×9 board → all 9 cells of row 4 cleared, nothing else.
+- Tap a column Rocket at (4,4) on a plain 9×9 board → all 9 cells of column 4 cleared, nothing else.
+- Jade Orb at (4,4), column Rocket at (4,5); R is the most common plain colour. Swap (4,5)→(4,4) → every converted Rocket is a column Rocket (every converted fire event reports "column"). With a row Rocket instead → every converted Rocket is a row Rocket.
+- Level won with 4 moves left → 4 finale Rocket fire events, each reporting "row" or "column". Replaying the same win with the same level seed gives the same 4 directions in the same order.
+- Level won with 3 moves left; the direction pick is stubbed to return row, column, column → the finale Rockets fire as row, column, column, in that order.
+- Level won with 3 moves left; the direction pick is stubbed to return row, row, row → 3 row Rockets; none is flipped to column.
+- Level seeds 1–1000, each won with 10 moves left (10,000 finale Rockets) → between 48% and 52% of them are row Rockets.
+- Level won with 1 move left; every playable cell holds a special, a covered piece (creep moss hp 2), a lost hatchling (OB11) or an obstacle, except (6,2), which holds the only uncovered plain piece (Y) → the finale Rocket appears at (6,2) (the Y is replaced); with the direction stubbed to column it clears column 6. For that Rocket the direction draw comes before the cell draw.
+- Level won with 1 move left on a board with plain pieces, a Firecracker at (1,1), a lost hatchling (OB11) at (2,2) and moss hp 1 over a piece at (3,3); level seeds 1–100 → the finale Rocket never appears at (1,1), (2,2) or (3,3).
+- Level won with 2 moves left and no uncovered plain piece on the board → 2 finale Rocket fire events; win coins = 20 + 5 × 2 = 30.
+- Level won with 1 move left; no uncovered plain piece on the board; the fallback cell draw is stubbed to (1,1), which holds a Firecracker; direction stubbed to row → the finale Rocket fires along row 1 from (1,1); the Firecracker is set off (not replaced) and blasts (1,1)'s 3×3 twice after the fall (IR-41, IR-17); win coins = 25.
+- Same, but (1,1) holds a fragment riding a drop item → the Rocket fires along row 1; the fragment is still on the board afterwards (IR-28), not collected by the Rocket.
+- Same, but (1,1) holds a piece under creep moss (OB03) hp 2 → the piece is cleared; moss hp 1 (one hit, IR-09); after the board settles (1,1) holds the piece that fell in, still covered.
+- Same, but (1,1) holds a withered bramble (OB02) with 2 layers → the bramble has 1 layer; the rest of row 1 is cleared as usual.
+- Level won with 2 moves left; directions stubbed to row, row; cell draws stubbed to (4,4) then (4,6); a Firecracker sits at (7,4) → events in order: Rocket 1 placed at (4,4), fires along row 4 (sets off the Firecracker), fall, refill, Firecracker blast 1, fall, refill, blast 2, fall, refill (and any cascades), then Rocket 2 placed at (4,6), fires along row 6, fall, refill. No Rocket 2 event comes before the last settling event of Rocket 1.
+- Level won with 2 moves left; the board after Rocket 1 has settled has no empty playable cell when Rocket 2's direction and cell are drawn, and Rocket 2's cell holds an uncovered plain piece of that settled board (not of the board before Rocket 1).
+
+### IR-17 · A Firecracker blasts the same 3×3 twice, with the board settling in between (CHANGED)
+Rule: A Firecracker blasts the 3×3 area centred on its cell, then pieces fall, new pieces refill and all cascade matches resolve, then it blasts the same 3×3 (same centre cell) a second time; obstacle hits follow IR-12.
+Applies to: Firecracker. Cells of the 3×3 that are off the board or not playable are skipped. Firecracker + Firecracker uses the same timing (IR-24).
+Source: GDD › Core gameplay › Special pieces › "Firecracker | 3×3 blast, twice"; Rules clarifications › OQ-11 "Hits the same centre cell after pieces have fallen", OQ-32 "Pieces fall, refill and all cascades resolve, then the second blast. Firecracker + Firecracker uses the same timing".
+Test cases:
+- Tap a Firecracker at (4,4) on a plain 9×9 board with no matches forming → blast 1 clears (3–5, 3–5); pieces from (3–5, 0–2) fall into (3–5, 3–5); 9 new pieces enter at (3–5, 0–2); blast 2 clears (3–5, 3–5) again → 18 pieces cleared in total; events in order: blast 1, fall, refill, blast 2.
+- Firecracker at (0,0) → each blast covers only (0–1, 0–1).
+- R at (1,5),(2,5); Y at (3,5); R at (3,2). Tap a Firecracker at (4,4) → blast 1 clears (3–5, 3–5); R from (3,2) falls to (3,5); the cascade match R (1,5),(2,5),(3,5) clears **before** blast 2; events in order: blast 1, fall, refill, match clear (1,5)–(3,5), fall, refill, blast 2.
+
+### IR-18 · Jade Orb swapped with a plain piece clears that colour (CHANGED)
+Rule: A Jade Orb swapped with a plain piece uses one move and clears every uncovered plain piece of that piece's colour (coloured specials of that colour, and plain pieces under an overlay, are left alone and their cells untouched), covering every cell whose piece it clears (IR-09); a Jade Orb swapped with a drop item acts as an Orb tap (IR-19).
+Applies to: Jade Orb + plain piece, Jade Orb + drop item. Orb + Rocket/Firecracker: IR-25. Orb + Orb: IR-26 (clears covered pieces too). Orb + Crane: IR-27.
+Source: GDD › Core gameplay › Special pieces › "Jade Orb | Clears every plain piece of the colour it's swapped with; specials are left alone"; Rules clarifications › OQ-03 "A Jade Orb swapped with a plain piece clears that piece's colour", OQ-09 "A Jade Orb covers every cell whose piece it clears", OQ-33 "only plain pieces are cleared", OQ-30 "a Jade Orb swapped with one acts as an Orb tap"; Owner decision, chat 27 Nov 2026 › OQ-42 (Option B: "Covered plain pieces neither count nor are cleared; their cells are untouched").
+Test cases:
+- Moves 15. Plain board, no obstacles, no specials. Orb at (4,4) swapped with B at (5,4) → every B cleared; the Orb is used up; moves = 14.
+- Same, with a B on goo hp 1 at (1,1) → that B cleared and the goo cleared.
+- Same, with bramble (OB02) at (2,2) next to a cleared B → bramble unchanged (IR-44).
+- Same, with a blue row Rocket at (6,6) → every plain B cleared; the blue Rocket is not cleared and does not fire (no Rocket fire event).
+- Moves 15. Plain pieces 20 R, 18 Y, 17 B, 16 G; Orb at (4,4), hatchling (OB11) at (4,5). Swap (4,5)→(4,4) → all 20 R cleared; the hatchling is not destroyed; moves = 14.
+- Orb at (4,4) swapped with B at (5,4); creep moss (OB03) hp 1 over a B at (1,1) → every uncovered B cleared; the B at (1,1) is still there, moss still hp 1.
+
+### IR-19 · Tapping a Jade Orb clears the most common colour (CHANGED)
+Rule: A tapped Jade Orb uses one move and clears every uncovered plain piece of the most common colour among uncovered plain pieces on the board (coloured specials and plain pieces under an overlay are neither counted nor cleared), ties broken by IR-47.
+Applies to: Jade Orb tap; also Orb + drop item (IR-18) and the Orb's effect in Orb + Crane (IR-27). A set-off Orb does nothing (IR-41).
+Source: GDD › Interaction rules › "Tapping a Jade Orb | Clears every piece of the most common colour on the board; costs a move like any tap"; Rules clarifications › OQ-14, OQ-33 "Only plain pieces count towards the most common colour, and only plain pieces are cleared"; Owner decision, chat 27 Nov 2026 › OQ-42 (Option B: "Covered plain pieces neither count nor are cleared; their cells are untouched").
+Test cases:
+- Moves 10. Plain pieces only: 20 R, 18 Y, 17 B, 16 G. Tap Orb → all 20 R cleared; moves = 9.
+- Plain pieces only: 18 R, 18 B, 17 Y, 17 G → R cleared (tie, IR-47).
+- Plain pieces: 17 R, 18 Y, 16 B, 16 G, plus 2 red Firecrackers → Y cleared (the Firecrackers don't count); both Firecrackers stay and don't fire.
+- Uncovered plain pieces: 17 R, 18 Y, 16 B, 16 G; plus 3 more R, each under creep moss hp 1 → Y cleared (only 17 R count); the 3 covered R stay and their moss is still hp 1.
+
+### IR-20 · The Paper Crane telegraphs its target, fragment first (CHANGED)
+Rule: When a Paper Crane fires, it chooses its target by IR-49 (an unfreed soul fragment always first) and shows it with a dotted path before it flies; it then takes off and lands by IR-48.
+Applies to: Paper Crane (IR-04).
+Source: GDD › Interaction rules › "Where the Paper Crane flies | To the remaining goal with the fewest hits left; an unfreed soul fragment always comes first. Dew goal: an uncovered target cell. Lantern shrine: counts as one piece of a colour it still needs"; Special pieces › "its target is shown with a dotted path before it flies".
+Test cases:
+- Goals: bramble (OB02) hp 1 and fragment in a cocoon hp 3. Crane fires → target is the cocoon, even though the bramble has fewer hits left.
+- Every Crane event list contains, in order: crane target (target cell), crane take-off (start cell), crane landing (target cell).
+
+### IR-21 · When a special fires (CHANGED)
+Rule: A special fires when it is part of a match (after the match resolves, IR-50), when it is swapped (IR-18, IR-22 to IR-27, IR-39), when it is tapped (IR-02), or when another special covers its cell (IR-41).
+Applies to: All four specials (the Jade Orb is never matched; a set-off Orb does nothing, IR-41).
+Source: GDD › Core gameplay › Rules › "Specials fire when matched, swapped or tapped (tap costs a move)"; Rules clarifications › OQ-03, OQ-04, OQ-18, OQ-26; Owner decision, chat 27 Nov 2026 › OQ-44 (Option A: fall and refill before a waiting special fires; cascades after).
+Test cases:
+- A red Firecracker in an R 3-match → the Firecracker fires (two blast events), after the match's clear event.
+- R at (1,4),(2,4); Y at (3,4); red Firecracker at (4,4); R at (3,5). Swap (3,5)→(3,4) → the 4-match (1,4)–(4,4) clears and makes a red row Rocket at (3,4); then the Firecracker fires centred on (4,4); its blast covers (3,4), so the new Rocket is set off and fires along row 4 after the Firecracker's second blast. Event order: match clear, Rocket created, fall, refill, blast 1, fall, refill, blast 2, fall, refill, Rocket fire (IR-39, IR-41).
+- Tap → see IR-02. Swap → see IR-39. Chain → see IR-41.
+
+### IR-41 · A special hit by another special fires too (chain) (CHANGED)
+Rule: When a special's effect covers a cell holding another special, that special is lifted off the board (it no longer falls or takes hits) and joins one shared waiting list; after the first special has completely finished, and again after each waiting special finishes, pieces fall and refill (cascade matches don't resolve yet), and then the waiting special that is lowest, then left-most, among all specials waiting (including ones set off by other set-off specials) fires from the cell where it was hit; cascade matches resolve only once the waiting list is empty; a set-off Jade Orb is removed without effect; each set-off special is a separate special for the one-hit rules.
+Applies to: All specials and combos as the first special. Jade Orb + Jade Orb clears other specials without firing them (IR-26). A Firecracker's own two blasts still have cascades in between (IR-17).
+Source: GDD › Rules clarifications › OQ-04 "It fires too (a chain), after the first special finishes. Set-off specials are lifted off the board and fire from their cell after pieces fall, lowest first, then left-most. A set-off Jade Orb is removed without effect", OQ-27 "A set-off Jade Orb does nothing; Orb + Orb clears other specials without firing them"; Owner decision, chat 27 Nov 2026 › OQ-44 (Option A: "Only the fall and refill happen before a waiting special fires; cascade matches resolve after it has fired (… chain: first special, fall, refill, set-off specials fire, then cascades)"), OQ-47 (Option A: "one shared waiting list; the lowest, then left-most waiting special always fires next").
+Test cases:
+- Tap a row Rocket at (1,4); a column Rocket at (6,4) → row 4 cleared (the column Rocket is lifted, not destroyed); pieces fall; then the column Rocket fires from (6,4) and column 6 is cleared; every event of the first Rocket comes before any event of the second.
+- Same, with bramble (OB02) 2 layers at (6,7) → bramble has 1 layer (hit by the set-off Rocket).
+- Tap a column Rocket at (4,0); Firecrackers at (4,2) and (4,6) → after column 4 is cleared and pieces fall, the Firecracker hit at (4,6) fires (both blasts centred on (4,6)) before the one hit at (4,2) (both blasts centred on (4,2)).
+- Tap a row Rocket at (0,4); column Rockets at (6,4) and (2,4) → the one hit at (2,4) fires before the one hit at (6,4) (same row: left-most first).
+- Tap a row Rocket at (0,4); a Jade Orb at (5,4) → the Orb is removed; no colour-clear event; only row 4 was cleared by the Rocket.
+- Tap a Firecracker at (4,4); a row Rocket at (5,5) → the Rocket is lifted at blast 1, is not hit again by blast 2, and fires exactly once, along row 5, after blast 2.
+- Tap a column Rocket at (4,0); a Crane at (4,6) → after column 4 is cleared, the Crane fires (crane take-off event at (4,6)).
+- Tap a row Rocket at (0,4); column Rocket A at (2,4); column Rocket C at (6,4); row Rocket B at (2,1). Row 4 cleared (A and C lifted); fall (B moves from (2,1) to (2,2)); refill; A fires along column 2, setting off B at (2,2); fall, refill; C fires along column 6 (row 4 is lower than row 2, so C goes before B although B was set off later); fall, refill; B fires along row 2. Fire events in order: row 4, column 2, column 6, row 2.
+- G at (1,3),(1,5),(1,6); nothing else lines up. Tap a row Rocket at (0,4); a column Rocket at (6,4) → events in order: Rocket fire (row 4), fall (G from (1,3) now at (1,4)), refill, Rocket fire (column 6), fall, refill, match clear (1,4),(1,5),(1,6). The G match does not clear before the column Rocket fires.
+
+### IR-47 · Colour ties are broken red, yellow, blue, green (CHANGED)
+Rule: When two or more colours tie for the Jade Orb's "most common colour" (counting uncovered plain pieces only), the first in the order red, yellow, blue, green is chosen.
+Applies to: Jade Orb tap (IR-19), Orb + drop item (IR-18), Jade Orb + special (IR-25), Jade Orb + Crane (IR-27). Not the Crane's shrine colour tie (IR-49: seeded random).
+Source: GDD › Rules clarifications › OQ-14 "Broken in a fixed order: red, yellow, blue, green", OQ-33; Owner decision, chat 27 Nov 2026 › OQ-42 (Option B: covered plain pieces don't count).
+Test cases:
+- Plain pieces only: 18 R, 18 Y, 17 B, 16 G → R.
+- Plain pieces only: 10 R, 19 Y, 19 B, 10 G → Y.
+- Plain pieces only: 12 R, 12 Y, 20 B, 20 G → B.
+- Plain pieces: 18 R, 18 Y, 17 B, 16 G, plus one yellow Rocket → R (the Rocket isn't counted).
+- Uncovered plain pieces: 18 R, 18 Y, 17 B, 16 G; plus 2 Y under creep moss → R (the covered Y aren't counted).
+
+### IR-48 · Paper Crane take-off and landing (CHANGED)
+Rule: When a Crane flies, its take-off counts as a special covering its starting cell (for a lifted Crane, the cell it was lifted from: where it was hit, IR-41; its cell right after a swap that made a match, IR-39; where it was matched, IR-50): the Crane is cleared, whatever is in that cell at take-off is treated exactly as IR-09 says (a piece that fell in after the Crane was lifted is cleared, a special there is set off by IR-41, a fragment or drop item stays, IR-28) and the top obstacle layer there takes one hit; at its target cell it then collects the fragment or drop item there, or, on a lantern shrine, counts as one piece of a colour the shrine needs without lowering its `hp` (IR-49, IR-55), or otherwise acts as a special covering that cell (IR-09: the piece there is cleared and the top obstacle layer takes one hit), and on an uncovered dew target cell it also gives that cell dew (IR-53).
+Applies to: Every Crane flight (tap, match, swap, chain, IR-27). A set-off Crane's take-off is a separate special from the one that set it off (IR-41).
+Source: GDD › Rules clarifications › OQ-16 "Gives one hit to its target cell, or collects the fragment or drop item there. It also clears its own starting cell when it takes off", OQ-09 "A special clears the piece and gives one hit to the top obstacle layer in that cell"; Interaction rules › "a drop item still has to reach the bottom row unless a Crane or Orb + Orb collects it"; Rules clarifications › OQ-34 "Take-off counts as a special on its own cell", OQ-04 "Set-off specials are lifted off the board and fire from their cell after pieces fall", OQ-31 "A Crane landing on an uncovered target cell gives it dew"; Owner decision, chat 27 Nov 2026 › OQ-49 (Option B: "the landing counts as a special covering the cell (the piece there is cleared, IR-09) and the cell gets dew"), OQ-54 (Option A: swapped and matched specials "are lifted off the board as the match resolves, like a set-off special (IR-41)"), OQ-55 (Option A (c): "the landing counts as one piece only, no `hp` loss").
+Test cases:
+- Tap a column Rocket at (4,0); Crane at (4,6) on goo hp 2; nothing else special on the board → column 4 cleared (goo hp 1, the Crane lifted); pieces fall, so a plain piece P is now in (4,6); the Crane takes off from (4,6) → P is cleared and the goo is hp 0 (removed); then the Crane lands on its target.
+- Crane at (1,7); only goal: bramble (OB02) hp 2 at (6,2) → bramble hp 1; (1,7) is emptied (then refilled, IR-51).
+- Only goal: lost hatchling (OB11) at (5,3) → hatchling collected; goal +1; it is not destroyed.
+- Only goal: fragment in a cocoon hp 1 at (4,1) → cocoon freed and fragment collected (IR-29).
+- Crane at (1,7) on goo hp 1; only goal: bramble hp 2 at (6,2) → take-off clears the Crane and the goo at (1,7); bramble hp 1.
+- Crane at (1,7) on goo hp 2 → after take-off, goo at (1,7) hp 1.
+- Dew goal; only uncovered target cell (6,2), holding B → the Crane lands there; B is cleared; (6,2) has dew (IR-53); after the board settles (6,2) holds the piece that was at (6,1).
+- G at (2,4); Y at (3,4); green Crane at (4,4); G at (3,5). Swap (3,5)→(3,4) → G 3-match (2,4),(3,4),(4,4): G at (2,4),(3,4) clear and the Crane is lifted from (4,4); fall: the piece P from (4,3) falls into (4,4); refill; the Crane takes off from (4,4) (take-off event at (4,4)) and P is cleared.
+- Only goal: lantern shrine 2×2, hp 2, still needing 3 R → the Crane lands on a shrine cell; the shrine needs 2 R; hp still 2 (IR-55).
+
+### IR-49 · Paper Crane targeting order and tie-breaks (CHANGED)
+Rule: The Crane aims at one cell of an unfinished goal: an unfreed fragment first, otherwise the goal with the fewest hits left (dew: uncovered target cells left; lantern shrine: pieces still needed; drop items: items still to collect); any tie (between goals or between cells) goes to the cell with the shortest straight-line distance to the Crane, then the top-most, then the left-most; with no goal left it aims at the nearest cell holding any remaining obstacle on any layer or an uncovered dew target cell (same tie-breaks), and with no obstacle left at a piece picked by the level's seeded random number generator; a landing on a lantern shrine counts as one piece of the colour the shrine needs most of (and doesn't lower its `hp`, IR-55), a tie between colours being broken by the level's seeded random number generator.
+Applies to: Every Crane flight. "Obstacle" means anything in the GDD's Obstacle set, so creep moss (OB03, overlay) and creep goo (OB10, underlay) both count for the no-goal case; the landing then hits that cell's top layer (IR-48 → IR-09). Uncovered dew target cells also count, and the landing gives the cell dew. A lit lantern shrine has been removed (IR-55), so it is neither a goal cell nor a remaining obstacle; its old cells are ordinary cells.
+Source: GDD › Interaction rules › "Where the Paper Crane flies"; Owner decision, chat 27 Nov 2026 › OQ-59 (Option A (c): "the shrine is removed and its cells become open cells"); Rules clarifications › OQ-17 "Aims at one obstacle cell of the goal with the fewest hits left (an unfreed fragment always first). Ties: closest to the Crane, then top-most, then left-most. No goal left: the nearest remaining obstacle; if none, a seeded random piece"; Board layers & obstacles › Obstacle set and Cell layer model; Rules clarifications › OQ-34 "Distance is straight-line. Hits left: dew = uncovered target cells, shrine = pieces still needed, drop items = items still to collect. A shrine landing counts as the colour it needs most", OQ-38 "Uncovered dew target cells count as remaining obstacles; landing there gives the cell dew"; Owner decision, chat 27 Nov 2026 › OQ-43 (Option B: "Ties broken by the level's seeded random number generator"), OQ-55 (Option A (c): the shrine landing "counts as one piece only, no `hp` loss").
+Test cases:
+- Crane at (4,4). Goals: brambles (two at hp 3 → 6 hits left) and mummified creatures (one at hp 1 → 1 hit left) → targets the creature's cell.
+- Crane at (4,4). Only goal: 2 creatures hp 1 at (2,4) and (6,4) (equal distance, same row) → targets (2,4) (left-most).
+- Crane at (4,4). Only goal: 2 creatures hp 1 at (4,1) and (4,7) → targets (4,1) (top-most).
+- Crane at (4,4). Only goal: creatures hp 1 at (5,4) and (1,4) → targets (5,4) (closest). All goals already complete, one bramble left at (4,2) → targets (4,2). No obstacle left → the same level seed gives the same target piece on every run.
+- Crane at (4,4). Only goal: creatures hp 1 at (6,6) (distance 2.83) and (4,1) (distance 3) → targets (6,6). (Counting steps along rows and columns would have picked (4,1).)
+- Crane at (4,4). Goals: dew with 2 uncovered target cells left, at (1,1) and (7,7); bramble goal with 3 hits left → targets (1,1) (2 < 3; equal distance; top-most); (1,1) gets dew.
+- Crane at (4,4). Goals: hatchlings with 1 still to collect, at (2,2); bramble hp 2 at (6,6) → targets (2,2); hatchling collected.
+- Crane at (4,4). Goals: lantern shrine (OB05) hp 3 still needing 3 R and 1 B (4 left); brambles with 5 hits left → targets a shrine cell; afterwards the shrine needs 2 R and 1 B, still hp 3 (IR-55).
+- Crane at (4,4). All goals complete; only obstacles left: creep goo (OB10) hp 1 under a piece at (4,5) and a bramble at (4,1) → targets (4,5) (goo counts; closest); piece cleared and goo removed.
+- Crane at (4,4). All goals complete; only obstacle left: creep moss (OB03) hp 1 at (1,1) → targets (1,1); moss removed.
+- Crane at (4,4). All goals complete; only things left: an uncovered dew target cell at (4,6) (distance 2), holding a plain piece, and a bramble at (4,1) (distance 3) → targets (4,6); the piece there is cleared and (4,6) gets dew (IR-48).
+- Crane at (4,4). Only goal: a lantern shrine still needing 2 R and 2 B (and no Y or G) → after the landing it needs either 1 R and 2 B or 2 R and 1 B. Running it again with the same level seed gives the same result. With the colour pick stubbed to return B → it needs 2 R and 1 B.
+- Crane at (4,4). The level's lantern shrine 2×2 at (3,2)–(4,3) was lit earlier (removed) and its goal is complete; all other goals complete; only obstacle left: a bramble at (4,8) (distance 4) → targets (4,8), never a cell of (3,2)–(4,3).
+
+---
+
+## E. Combos (swap two specials)
+
+### IR-22 · Rocket + Rocket: row and column cross (CHANGED)
+Rule: Swapping two Bamboo Rockets fires the full row and the full column through the swap's target cell (IR-46), as one special (IR-45).
+Applies to: Bamboo Rocket + Bamboo Rocket (taught at level 8), whatever their own directions.
+Source: GDD › Core gameplay › Combos › "Rocket + Rocket | Row and column cross"; Rules clarifications › OQ-12, OQ-13.
+Test cases:
+- Rocket at (4,4), Rocket at (4,5). Swap (4,5)→(4,4) on a plain 9×9 board → row 4 and column 4 cleared (17 cells), nothing else; moves −1.
+- Same, with goo hp 2 under (4,4) → goo hp 1 (crossing cell hit once).
+
+### IR-23 · Rocket + Firecracker: 3-wide row and 3-wide column (CHANGED)
+Rule: Swapping a Bamboo Rocket with a Firecracker hits rows y−1 to y+1 and columns x−1 to x+1 in full, where (x, y) is the swap's target cell, as one special.
+Applies to: Bamboo Rocket + Firecracker (taught at level 12).
+Source: GDD › Core gameplay › Combos › "Rocket + Firecracker | 3-wide row and 3-wide column"; Rules clarifications › OQ-12, OQ-13.
+Test cases:
+- Firecracker at (3,4), Rocket at (4,4). Swap (3,4)→(4,4) on a plain 9×9 board → rows 3–5 and columns 3–5 cleared (45 cells).
+- Same, with bramble (OB02) 2 layers at (3,3) (inside both bands) → bramble 1 layer.
+
+### IR-24 · Firecracker + Firecracker: 5×5 double blast (CHANGED)
+Rule: Swapping two Firecrackers blasts the 5×5 area centred on the swap's target cell, then pieces fall, refill and all cascades resolve, then it blasts the same 5×5 again; the whole combo gives any single obstacle at most one hit.
+Applies to: Firecracker + Firecracker (on the cut list, step 5).
+Source: GDD › Core gameplay › Combos › "Firecracker + Firecracker | 5×5 double blast"; Rules clarifications › OQ-12, OQ-13, OQ-32 "Firecracker + Firecracker uses the same timing".
+Test cases:
+- Firecrackers at (4,4) and (4,5). Swap (4,5)→(4,4) → first blast covers (2–6, 2–6); two blast events.
+- Same, with frozen idol (OB12) 2 hits left at (2,2) → idol 1 hit left.
+- Same swap on a plain 9×9 board with no matches forming → blast 1 clears 25 cells (2–6, 2–6); pieces from (2–6, 0–1) fall to (2–6, 5–6); 25 new pieces enter at (2–6, 0–4); blast 2 clears (2–6, 2–6) again → 50 pieces cleared in total; events in order: blast 1, fall, refill, blast 2.
+
+### IR-25 · Jade Orb + special: the most common colour becomes that special (CHANGED)
+Rule: Swapping a Jade Orb with a Rocket or Firecracker turns every uncovered plain piece of the most common uncovered plain colour (ties: IR-47; pieces under an overlay are neither counted nor converted) into that special (converted Rockets copy the swapped Rocket's direction); every converted piece leaves the board at once and its cell refills by normal falling; then they fire one at a time, each from the cell it was converted in, lowest first then left-most, each finishing (fall and refill included) before the next; cascade matches resolve only after the last one; the whole combo counts as one special (IR-45).
+Applies to: Jade Orb + Bamboo Rocket, Jade Orb + Firecracker (on the cut list, step 5). Not Orb + Crane (IR-27) or Orb + Orb (IR-26). A converted Firecracker still has cascades between its own two blasts (IR-17).
+Source: GDD › Core gameplay › Combos › "Jade Orb + special | Every piece of the most common colour becomes that special and fires"; Rules clarifications › OQ-12, OQ-14, OQ-24, OQ-27 "Set-off specials fire lowest first, then left-most", OQ-33; Owner decision, chat 27 Nov 2026 › OQ-42 (Option B: covered plain pieces neither count nor are cleared), OQ-44 (Option A: only fall and refill before a waiting special fires; cascades after), OQ-48 (Option A: "every converted piece leaves the board at once … and its cell refills by normal falling; each then fires from the cell it was converted in, lowest then left-most, each finishing (falls included) before the next").
+Test cases:
+- Plain pieces only besides the two specials: 20 R (most common). Orb swapped with a Firecracker → the 20 R become Firecrackers and each fires; the Orb and the swapped Firecracker are used up.
+- Same, with a 2×2 pillar hp 3 inside the areas of several converted Firecrackers → pillar hp 2.
+- Orb at (4,4), column Rocket at (4,5) → every converted Rocket is a column Rocket (IR-16).
+- R only at (2,1),(6,1),(2,7); Y, B, G two pieces each; Orb at (4,4), Firecracker at (4,5); every other cell holds a withered bramble (OB02). Swap (4,5)→(4,4) → converted Firecrackers fire in the order (2,7), (2,1), (6,1).
+- Plain 18 R, 19 Y, 17 B, 16 G, plus 3 red Rockets on the board → Y is converted (the red Rockets don't count and aren't converted).
+- Same set-up as the (2,7),(2,1),(6,1) test, plus creep moss hp 1 over an R at (6,7) → (6,7) is not converted; the fire order is still (2,7), (2,1), (6,1); the R at (6,7) is still there under moss hp 1.
+- Plain board; R is the most common colour; the only R in rows 7–8 are at (2,8) and (2,7). Orb at (4,4) swapped with a row Rocket at (4,5) → the first two converted Rocket fire events are row 8 (from (2,8)) and then row 7 (from (2,7)), with a fall and refill between them; the Rocket converted at (2,7) fires along row 7, not row 8, although pieces fell in column 2 before its turn.
+
+### IR-26 · Jade Orb + Jade Orb clears the whole board (CHANGED)
+Rule: Swapping two Jade Orbs clears every piece on the board (other specials are cleared without firing), collects every collectible goal item (fragments included) and gives the top obstacle layer of every cell one hit.
+Applies to: Jade Orb + Jade Orb. A multi-cell obstacle takes one hit in total (IR-10, a combo is one special). In a cell with moss over goo, only the moss is hit.
+Source: GDD › Core gameplay › Combos › "Jade Orb + Jade Orb | Clears the whole board and hits the top layer of every cell once"; Interaction rules › "Jade Orb + Jade Orb | Clears the whole board, collects every collectible goal item (fragments included) and hits the top obstacle layer of every cell once (goo under moss is not hit). Other specials are cleared without firing"; "Obstacles bigger than one cell | Take at most one hit per special"; Rules clarifications › OQ-12 "A combo counts as one special", OQ-27, OQ-37 "Top layer only: moss over goo loses one moss layer; the goo is untouched".
+Test cases:
+- Board with a lost hatchling (OB11) at (3,2) and a fragment drop item at (6,1) → both collected (goal counters +1 each), neither is "destroyed".
+- Bramble (OB02) with 3 layers at (1,1); 2×2 pillar (OB06) hp 3 → bramble has 2 layers, pillar hp 2.
+- Every plain piece on the board is cleared.
+- Creep moss (OB03) hp 2 alone at (2,5); creep goo (OB10) hp 2 under a plain piece at (7,5) → moss hp 1; goo hp 1.
+- Moss hp 1 over a piece, on goo hp 1, at (4,4) → piece cleared; moss removed; goo still hp 1.
+- Row Rocket at (2,2) and Firecracker at (6,6) on the board; bramble 3 layers at (7,2) → both specials cleared with no fire events; bramble has 2 layers.
+
+### IR-27 · Crane swapped with a special: no combo, the other special first, then the Crane (CHANGED)
+Rule: A Paper Crane swapped with any other special is never refused, uses one move and makes no combo: the other special fires first from the cell it sits in after the swap (a Jade Orb clears the most common colour, as for a tap), then the Crane flies once to whatever goal is left; in Crane + Crane, the Crane the player dragged flies first, then the other.
+Applies to: Crane + Rocket, Crane + Firecracker, Crane + Jade Orb, Crane + Crane. (The Crane + special combo is out of scope for the MVP; this rule is what happens instead.)
+Source: GDD › Interaction rules › "Crane swapped with another special (Jade Orb included) | No combo in the MVP and never refused: the other special fires first, then the Crane flies to whatever goal is left"; Rules clarifications › OQ-15 "The Orb clears the most common colour (as for a tap), then the Crane flies", OQ-26 "each special fires from the cell it sits in", OQ-34 "In Crane + Crane, the dragged Crane flies first".
+Test cases:
+- Moves 12. Crane at (4,4), Firecracker at (4,5); swap (4,5)→(4,4) → accepted; moves = 11; the Firecracker (now at (4,4)) blasts centred on (4,4); every Firecracker event comes before any Crane event; no combo event; the Crane (now at (4,5)) flies exactly once.
+- Crane at (4,4), row Rocket at (4,5); swap (4,5)→(4,4) → the Rocket fires from (4,4): row 4 cleared, row 5 not; then the Crane (at (4,5)) flies.
+- Goals: bramble hp 1 at (5,4) and a mummified creature hp 1 at (0,0). Swap as in test 1 → the Firecracker clears the bramble, then the Crane targets (0,0).
+- Plain pieces: 20 R, 18 Y, 17 B, 16 G. Orb swapped with a Crane → all R cleared, then the Crane flies.
+- Cranes at (4,4) and (4,5); only goal: creatures hp 1 at (4,0) and (4,8). Swap (4,5)→(4,4) → the dragged Crane (now at (4,4)) flies first: take-off (4,4), lands on (4,0) (equal distance 4; top-most); then the other Crane takes off from (4,5) and lands on (4,8); moves −1.
+
+### IR-46 · A combo is centred on the swap's target cell (NEW)
+Rule: A combo's area is centred on the cell the player moved the special into (the swap's target cell).
+Applies to: IR-22, IR-23, IR-24 (Orb combos have no centre).
+Source: GDD › Rules clarifications › OQ-13 "The cell the player moved the special into".
+Test cases:
+- Rockets at (4,4) and (4,5). Swap (4,5)→(4,4) → row 4 + column 4. Swap (4,4)→(4,5) instead → row 5 + column 4.
+- Firecracker at (2,3), Rocket at (3,3). Swap (2,3)→(3,3) → rows 2–4 and columns 2–4.
+
+---
+
+## F. Soul fragments and drop items
+
+### IR-28 · Fragments and drop items are never destroyed
+Rule: No special, combo or board clear ever destroys a soul fragment or a drop item.
+Applies to: Soul fragments (in a cocoon or riding a drop item), OB11 lost hatchlings. All specials and combos.
+Source: GDD › Interaction rules › "Soul fragments and drop items | Never destroyed by any special, combo or board clear"; Soul fragments › Rules › "no special can destroy it".
+Test cases:
+- Fragment drop item at (4,4). A row Rocket clears row 4 → the fragment is still on the board (at (4,4) or lower after falling); not collected; goal unchanged.
+- Hatchling (OB11) at (4,4). A Firecracker at (4,5) fires → hatchling still on the board.
+- Jade Orb + Jade Orb with a fragment on board → fragment is collected, not destroyed (IR-26).
+
+### IR-29 · A freed cocoon collects its fragment at once
+Rule: When a creep cocoon holding a fragment is freed, the fragment is collected immediately.
+Applies to: Fragments sealed in a cocoon (OB07 behaviour), levels 26–33 and later.
+Source: GDD › Interaction rules › "A freed cocoon collects its fragment at once"; Soul fragments › Rules › "sealed in a creep cocoon (OB07 behaviour) and freed by adjacent matches".
+Test cases:
+- Cocoon hp 1 with a fragment at (4,4). A 3-match at (3,5),(4,5),(5,5) → cocoon freed; fragment goal +1 in the same resolve; no fragment piece remains on the board.
+- Cocoon hp 1 at (4,4). A row Rocket clears row 4 → cocoon freed and fragment collected (the hit is on the cocoon, not the fragment).
+
+### IR-30 · Where and how a drop item is collected (CHANGED)
+Rule: A drop item is collected when it reaches the bottom playable cell of its column (only in the level's `exit_columns` if it lists them), or when a Paper Crane lands on it or Jade Orb + Jade Orb fires; other specials leave it in place.
+Applies to: OB11 lost hatchlings (from 34) and fragments riding drop items (from 38). Boosters: IR-34.
+Source: GDD › Interaction rules › "a drop item still has to reach the bottom row unless a Crane or Orb + Orb collects it"; Obstacle set › OB11 "Bring it to the bottom row to collect it"; Rules clarifications › OQ-20 "On reaching the bottom playable cell of their column. If a level lists `exit_columns`, only those columns collect".
+Test cases:
+- No `exit_columns`. Hatchling falls to (4,8) → collected; goal +1.
+- No `exit_columns`; (3,8) is not playable. Hatchling falls to (3,7) → collected.
+- `exit_columns` [2,6]. Hatchling falls to (4,8) → not collected; stays at (4,8). Another falls to (2,8) → collected.
+- Hatchling at (4,2). A Firecracker covers it → not collected; still on board. A Crane targets it → collected (IR-48).
+
+### IR-31 · A fragment always takes one of the level's goal slots
+Rule: On a fragment level the soul fragment is always one of the goals and uses one of the tier's goal slots, never an extra one.
+Applies to: Fragment levels 26, 30, 33, 35, 38, 40, 45, 50. (GoalTracker / LevelLoader / validator, not MatchResolver.)
+Source: GDD › Core gameplay › "On a fragment level the soul fragment is always one of the goals and uses one of the tier's slots, never an extra one, so a level cannot be won without it"; Technical design › Level format.
+Test cases:
+- Level 35 (hard, 3–4 goals) lists 4 goals, one of them the fragment → valid. Lists 4 goals plus the fragment as a 5th → validator rejects.
+- All non-fragment goals done, fragment not collected → level is not won.
+
+---
+
+## G. Gravity, refill, cascades and shuffle
+
+### IR-32 · Pieces fall, refill, and cascades chain until stable (CHANGED)
+Rule: After clears, pieces fall and refill (IR-51), and any new matches resolve automatically (making specials by IR-42) until no match remains, without using a move.
+Applies to: Every resolve after a swap, tap, combo or booster. Between a Firecracker's two blasts: IR-17.
+Source: GDD › Core gameplay › Rules › "Pieces fall, new ones drop from the top, cascades chain automatically."; Rules clarifications › OQ-05, OQ-19.
+Test cases:
+- Plain column 4: clear (4,6),(4,7),(4,8) → pieces formerly at (4,0)–(4,5) now at (4,3)–(4,8); 3 new pieces at (4,0)–(4,2); no empty cells.
+- A fall creates a new R line of 3 → it clears in the same resolve without another swap and without using a move; the board ends with no matches.
+
+### IR-33 · No possible move: free shuffle (CHANGED)
+Rule: When a stable board has no possible move (no swap that would be accepted and no uncovered special to tap), uncovered plain pieces and specials are shuffled for free, never moving obstacles, fragments, drop items or pieces and specials under an overlay, so that the result has at least one possible move and no ready-made match.
+Applies to: Any stable board. Independent of Feather Fan (IR-35). A special under an overlay can't be tapped (IR-02, IR-54), so it doesn't count as a possible move.
+Source: GDD › Core gameplay › Rules › "No possible move: free shuffle with a short animation"; Meta & economy › Feather Fan "the free auto-shuffle still happens when no move exists"; Rules clarifications › OQ-22 "Moves only plain pieces and specials, never obstacles, fragments or drop items; must leave at least one valid move and no ready-made matches"; Owner decision, chat 27 Nov 2026 › OQ-41 (Option A (b): "the shuffle leaves covered pieces where they are"), OQ-57 (Option A: a covered special "can't be swapped, doesn't fall and can't be tapped").
+Test cases:
+- Moves 8. Stable board of plain pieces with no valid swap → a shuffle event; moves = 8; the shuffled board has at least one valid swap and no match.
+- Same, with a bramble at (2,2), a cocoon at (5,5) and a hatchling at (7,1) → all three in the same cells after the shuffle.
+- Same, with creep moss hp 1 over a G at (3,6) → after the shuffle (3,6) still holds that G under moss hp 1.
+- A board where a plain-piece swap and a tappable special both exist → no shuffle.
+- Moves 8. Stable board with no valid swap; the only special is a row Rocket under creep moss hp 1 at (2,6) → a shuffle event; moves = 8; the Rocket is still at (2,6) under moss hp 1.
+
+### IR-51 · Gravity and refill (CHANGED)
+Rule: Pieces, specials and drop items first fall straight down into empty cells, passing straight through non-playable cells to the playable cells below them; then a cell that can't be filled from straight above because a blocker (an obstacle or a locked covered piece) is in the way is filled by a piece sliding in diagonally, from the upper-left first, then the upper-right; new pieces enter at the top playable cell of every column, and spawner cells add extra entry points on levels that have them.
+Applies to: Every fall step (IR-17, IR-32). Obstacles don't fall; locked covered pieces don't fall and count as blockers (IR-54).
+Source: GDD › Rules clarifications › OQ-19 "Pieces fall straight down; where a cell can't be filled from above because of a blocker, a piece may slide in diagonally. New pieces drop in at the top of each column, or at spawner cells where the level has them" (the row now opens "Pieces locked under an overlay (moss, shutter) don't fall. Other pieces fall straight down"), OQ-35 "Straight falls first, then diagonal slides (upper-left before upper-right). Every column refills at its top playable cell; spawners add extra entry points"; Owner decision, chat 27 Nov 2026 › OQ-41 (Option A (c): "the locked piece counts as a blocker, so the cell below fills by a diagonal slide"), OQ-45 (Option A: "Pieces pass straight through non-playable cells to the playable cells below them").
+Test cases:
+- Plain column 4: clear (4,6),(4,7),(4,8) → see IR-32 test 1.
+- Bramble (OB02) with 2 layers at (3,2); cells (3,3),(3,4),(3,5) are emptied directly (no match, no special) and the board settles → after the fall no playable cell is empty; the bramble is still at (3,2) (obstacles don't fall) with 2 layers. (Layer hits from a match are IR-14, not this rule.)
+- Bramble at (4,3); (4,4) emptied directly → (4,4) is filled by the piece from (3,3) (upper-left), not from (5,3); the piece at (5,3) has not moved; column 3 then falls by one and a new piece enters at (3,0).
+- Level with a spawner at (2,0) only; (6,8) emptied directly → pieces at (6,0)–(6,7) move to (6,1)–(6,8); a new piece enters at (6,0).
+- (5,0) and (5,1) not playable; (5,8) emptied directly → pieces at (5,2)–(5,7) move to (5,3)–(5,8); a new piece enters at (5,2).
+- (3,4) not playable; (3,5) emptied directly → the piece from (3,3) falls straight through (3,4) to (3,5); pieces at (3,0)–(3,2) move to (3,1)–(3,3); a new piece enters at (3,0); (3,4) stays empty (not playable); no diagonal slide happens.
+- Moss hp 2 over G at (4,3); (4,4) emptied directly → see IR-54 test 4: (4,4) filled from (3,3) by a diagonal slide; G stays at (4,3).
+
+---
+
+## H. Hero boosters (BoosterService, not MatchResolver; listed because they share the hit rules)
+
+### IR-34 · Boosters collect fragments and drop items, never delete them
+Rule: Hoof Tap, Tail Slam and Bamboo Dash collect any fragment or drop item they hit and never delete it.
+Applies to: Hoof Tap (11), Tail Slam (23), Bamboo Dash (29).
+Source: GDD › Interaction rules › "Hero boosters on fragments and drop items | Never deleted. Hoof Tap, Tail Slam and Bamboo Dash collect a fragment or drop item they hit".
+Test cases:
+- Hoof Tap on a hatchling (OB11) at (4,2) → collected; goal +1.
+- Bamboo Dash along row 3 passes a fragment drop item at (6,3) → fragment collected.
+
+### IR-35 · Feather Fan moves pieces only
+Rule: Feather Fan reshuffles pieces only and never moves fragments or drop items.
+Applies to: Feather Fan (36).
+Source: GDD › Interaction rules › "Feather Fan moves pieces only, never fragments or drop items"; Meta & economy › "Reshuffles the board".
+Test cases:
+- Fragment drop item at (2,3), hatchling at (6,1). Use Feather Fan → both still at (2,3) and (6,1); plain pieces have moved.
+
+### IR-36 · Boosters hit like a special (CHANGED)
+Rule: On everything other than fragments and drop items, every booster acts like a special on each cell it covers (IR-09): it clears the piece there and gives one hit to the top obstacle layer, and a multi-cell obstacle takes at most one hit per use (Bamboo Dash's diagonal included).
+Applies to: Hoof Tap (one cell of the player's choice), Tail Slam (3×3, one hit to every cell), Bamboo Dash (one full row, column or diagonal).
+Source: GDD › Interaction rules › "Hero boosters on everything else | Like a special: one hit per cell, top layer only; a multi-cell obstacle takes at most one hit per use. Bamboo Dash's diagonal follows the same rule"; Meta & economy › Booster unlocks › Hoof Tap "Clears the piece in one cell of the player's choice and gives that cell's top obstacle layer one hit", Tail Slam "one hit to every cell in it"; Rules clarifications › OQ-36 "Every booster clears the piece and gives the top obstacle layer one hit".
+Test cases:
+- Tail Slam centred on (4,4); 2×2 pillar (OB06) hp 3 covers (4,4),(5,4),(4,5),(5,5) → pillar hp 2.
+- Bamboo Dash on the diagonal (0,0)…(8,8) crossing a 1×4 pillar at x=4, y=2–5 → pillar loses 1 layer.
+- Hoof Tap on a plain piece with no obstacle layer at (3,3) → piece removed.
+- Hoof Tap on R on goo hp 2 at (3,3) → R cleared and goo hp 1 (both in one use).
+- Hoof Tap on Y under moss hp 1, on goo hp 1, at (3,3) → Y cleared; moss removed; goo still hp 1.
+- Hoof Tap on a bramble (OB02) with 2 layers → bramble 1 layer.
+- Tail Slam centred on (4,4); B on goo hp 1 at (5,5) → B cleared and goo cleared.
+
+---
+
+## I. Level flow (GoalTracker / UI, not MatchResolver)
+
+### IR-37 · Continue offer: always shown, up to 5 times per attempt (CHANGED)
+Rule: Each time moves run out, up to 5 times in one attempt, a "+5 moves" continue is offered whatever the state of the goals (even if they can no longer be reached): the 1st offer costs 300 coins and the 2nd to 5th cost 500 coins each; declining ends the attempt and goes to the retry screen; a player who has fewer coins than that offer's price still sees the offer, with the message "you have less than N coins" (N = that offer's price, 300 or 500), can't accept it and can only decline (→ retry screen); when moves run out a 6th time there is no offer and the attempt goes straight to the retry screen; quitting mid-level never shows the offer (IR-38).
+Applies to: Every level fail by running out of moves. Not quitting (IR-38).
+Source: GDD › Interaction rules › "Continue offer | Always shown after a fail, whether or not the goals can still be reached, and offered at least twice per attempt"; Rules clarifications › OQ-23; Core gameplay › Rules › Fail flow "an optional '+5 moves' for coins, offered at least twice per attempt whatever the board state, then the retry screen"; Meta & economy › Continue "Optional '+5 moves' for 300 coins, offered at least twice per attempt"; Owner decision, chat 27 Nov 2026 › OQ-39 ("39a: max 5, 39: 2nd-55h 500coins, 39c: attempt ends, goes back to retry screen, 39d: yes, shown but pop up says 'you have less than 300 coins' and hence cannot be accepted, eventually have decline and go back to retry screen"; the owner confirmed "2nd-55h" means 2nd–5th: "Q39 and Q40 is correct"), OQ-51 (Option A: "The offer appears only when moves run out; quitting goes straight to the fail result (life lost, first try used), with no offer"), OQ-52 (Option A: "The offer is shown; the message names that offer's price ('you have less than 500 coins'); only Decline works → retry screen").
+Test cases:
+- Moves hit 0; the only goal is "collect 5 hatchlings": 1 collected, 1 left on the board, none still to spawn (the goal can't be reached); 500 coins → the continue offer is shown, price 300.
+- 3000 coins, goals never completed. Moves hit 0 five times and the player accepts each offer → prices 300, 500, 500, 500, 500; coins after each accept 2700, 2200, 1700, 1200, 700; moves = 5 after each. Moves hit 0 a sixth time → no offer; retry screen; coins 700.
+- 1000 coins. Moves hit 0 → offer 1 (300); the player declines → the attempt ends; retry screen; coins 1000; moves are not added; no second offer for this fail.
+- 250 coins. Moves hit 0 → the offer is shown with the message "you have less than 300 coins"; accepting is not possible (coins stay 250, moves stay 0); the only action is decline → retry screen. With exactly 300 coins → the offer can be accepted; coins 0; moves 5.
+- 700 coins. Moves hit 0 → offer 1 (300) accepted; coins 400; moves 5. Moves hit 0 again → offer 2 is shown, price 500, with the message "you have less than 500 coins"; accepting is not possible (coins stay 400, moves stay 0); decline → retry screen; coins 400.
+- 500 coins. Offer 1 accepted (coins 200). Moves hit 0 again → offer 2 shown with "you have less than 500 coins"; only decline works → retry screen; coins 200.
+- 800 coins. Offer 1 accepted (coins 500). Moves hit 0 again → offer 2 can be accepted; coins 0; moves 5.
+- 1000 coins, 7 moves left. The player quits → no continue offer; the fail result is shown at once (IR-38); coins 1000.
+
+### IR-38 · Quitting mid-level counts as a fail (CHANGED)
+Rule: Quitting mid-level counts as a fail: it goes straight to the fail result with no continue offer, costs a life (except on chapter finales) and counts as that level's first try.
+Applies to: Every level 1–50. The continue offer is only for running out of moves (IR-37).
+Source: GDD › Interaction rules › "Quitting mid-level | Counts as a fail: costs a life (except on finales) and counts as that level's first try"; Meta & economy › Lives; Owner decision, chat 27 Nov 2026 › OQ-51 (Option A: "The offer appears only when moves run out; quitting goes straight to the fail result (life lost, first try used), with no offer").
+Test cases:
+- Level 12, 5 lives, first attempt. Quit after 3 moves → lives 4; attempt logged as a fail and as the first try.
+- Level 25 (finale), 3 lives. Quit → lives 3; attempt logged as a fail.
+- Level 12, 5 lives, 1000 coins, 7 moves left. Quit → no continue offer event; fail result shown; lives 4; coins 1000.
