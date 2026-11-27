@@ -200,6 +200,35 @@ Every special, obstacle and layer follows this one table. MatchResolver, the GUT
 | Continue offer | Not shown when the remaining goals can no longer be reached |
 | Quitting mid-level | Counts as a fail: costs a life (except on finales) and counts as that level's first try |
 
+### Rules clarifications (owner decisions, 27 Nov 2026)
+
+These answer the Rules Keeper's open questions OQ-01 to OQ-22 (`spec/open_questions.md`). OQ-23 belongs to GoalTracker and stays open.
+
+| OQ | Question | Rule |
+| --- | --- | --- |
+| 01 | Rocket direction | Fires along the line it was made from: a horizontal 4 clears its row, a vertical 4 clears its column. Its icon shows the direction |
+| 02 | Where a new special appears | On the cell the player moved into; in cascades, on the lowest then leftmost cell of the match (the crossing cell for an L or T) |
+| 03 | Special swapped with a plain piece, no match | The special fires and the swap costs a move. Snap-back applies only to two plain pieces. A Jade Orb swapped with a plain piece clears that piece's colour |
+| 04 | Special hit by another special | It fires too (a chain), after the first special finishes |
+| 05 | Cascade matches | Make specials by the same rules as player matches |
+| 06 | 6 or more in a line | Makes a Jade Orb. Mixed shapes follow the shape-priority rule |
+| 07 | One swap making two matches | Both resolve, and each can make its own special |
+| 08 | One match next to a multi-piece obstacle | One hit to that obstacle. Only up, down, left and right count as "next to", never diagonals |
+| 09 | Specials and underlays | Pieces are not obstacle layers. A special clears the piece and gives one hit to the top obstacle layer in that cell; with no overlay or blocker, the underlay (goo or dew) takes the hit. A Jade Orb covers every cell whose piece it clears |
+| 10 | Pieces cleared by a special | Don't hit neighbouring obstacles. Only matches hit neighbours; specials hit only the cells they cover |
+| 11 | Firecracker's second blast | Hits the same centre cell after pieces have fallen. An obstacle hit by the first blast takes no hit from the second |
+| 12 | Combos and the one-hit rule | A combo counts as one special |
+| 13 | Combo centre | The cell the player moved the special into |
+| 14 | Colour ties ("most common colour") | Broken in a fixed order: red, yellow, blue, green |
+| 15 | Jade Orb swapped with a Crane | The Orb clears the most common colour (as for a tap), then the Crane flies |
+| 16 | Crane landing | Gives one hit to its target cell, or collects the fragment or drop item there. It also clears its own starting cell when it takes off |
+| 17 | Crane targeting | Aims at one obstacle cell of the goal with the fewest hits left (an unfreed fragment always first). Ties: closest to the Crane, then top-most, then left-most. No goal left: the nearest remaining obstacle; if none, a seeded random piece |
+| 18 | Do specials keep a colour? | Rockets, Firecrackers and Cranes keep the colour they were made from and match like normal pieces. The Jade Orb has no colour |
+| 19 | Falling and refill | Pieces fall straight down; where a cell can't be filled from above because of a blocker, a piece may slide in diagonally. New pieces drop in at the top of each column, or at spawner cells where the level has them |
+| 20 | Where drop items are collected | On reaching the bottom playable cell of their column. If a level lists `exit_columns`, only those columns collect |
+| 21 | What can be swapped | Any two orthogonally adjacent pieces, including specials and drop items. Not obstacles, cocooned fragments or empty cells |
+| 22 | Free shuffle | Moves only plain pieces and specials, never obstacles, fragments or drop items; must leave at least one valid move and no ready-made matches |
+
 ## Board layers & obstacles
 
 Obstacles use the research pack's neutral behaviour IDs (OB02–OB17), each given an original Zodiac Forest look and one of five element families. 10 debut in the MVP (levels 1–50) and 6 more by level 96, following `levels_1_100_plan.csv`.
