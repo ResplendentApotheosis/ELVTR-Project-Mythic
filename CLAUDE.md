@@ -106,6 +106,10 @@ Levels 51+, Monkey's Staff, Rat's Nibble, Terracotta minion, the Crane + special
 - Every script starts with a 2–4 line comment saying what it does and how to check that it works.
 - Small files: one obstacle behaviour per script (`src/obstacles/ob02_withered_bramble.gd`, …).
 
+## Decision log
+
+`DECISION_LOG.md` records who decided and who made each thing: the owner (human) or AI. At the end of every task, the producer adds one row per decision or deliverable, newest first, using the labels defined at the top of that file. Be exact: an AI draft the owner approved is "AI → Human", not "Human". Provisional choices an agent makes in code are logged as "AI" with the open question they wait on. Agents never remove or rewrite earlier rows.
+
 ## Finishing a task
 
 End every task with this short report for the owner:
@@ -116,4 +120,5 @@ Files: <paths>
 Check: <the one command or click that proves it works>
 Rules touched: <IR-xx list, or "none">
 Needs you: <decisions or playtests, or "nothing">
+Logged: <rows added to DECISION_LOG.md>
 ```
