@@ -147,8 +147,8 @@ Standard swap-to-match on a board up to 9×9 with 4 colours, four special pieces
 - Every level starts with at least 3 valid moves, no pre-made matches, and one area where a special is easy to make.
 - No possible move: free shuffle with a short animation.
 - Specials fire when matched, swapped or tapped (tap costs a move).
-- Win: all goals done before moves run out. Leftover moves become Bamboo Rockets that fire for bonus coins ("Forest Festival" finale).
-- **Fail flow:** an optional "+5 moves" for coins, offered at least twice per attempt whatever the board state, then the retry screen. No "you'll lose event progress" warning.
+- Win: all goals done before moves run out. Leftover moves become Bamboo Rockets that fire for bonus coins ("Forest Festival" finale). Each finale Rocket is a row or column Rocket, 50/50, picked independently (seeded), and replaces a random uncovered plain piece (seeded); if none is left, it still pays 5 coins and fires from a random playable cell without replacing what is there. Finale Rockets go one at a time: the board settles fully (fall, refill, cascades, set-off specials) before the next one.
+- **Fail flow:** an optional "+5 moves" when moves run out, offered up to 5 times per attempt (300 coins, then 500 each) whatever the board state; declining goes to the retry screen. No "you'll lose event progress" warning.
 
 **Pieces (4 colours):** red peach, yellow bell, blue fan, green leaf. Shapes differ as well as colours, for colour-blind players.
 
@@ -159,7 +159,7 @@ Standard swap-to-match on a board up to 9×9 with 4 colours, four special pieces
 | 4 in a line | Bamboo Rocket | 2 | Clears its full row or column |
 | L or T shape (5) | Firecracker | 3 | 3×3 blast, twice (noise scares the Nian) |
 | 2×2 square | **Paper Crane** (signature) | 5 | Flies to a goal tile; its target is shown with a dotted path before it flies |
-| 5 in a line | Jade Orb | 6 | Clears every plain piece of the colour it's swapped with; specials are left alone |
+| 5 in a line | Jade Orb | 6 | Clears every uncovered plain piece of the colour it's swapped with; specials and pieces under an overlay are left alone |
 
 The Paper Crane is the one "signature, telegraphed" twist the research recommends: always helpful, and always shows where it will land.
 
@@ -170,7 +170,7 @@ The Paper Crane is the one "signature, telegraphed" twist the research recommend
 | Rocket + Rocket | Row and column cross |
 | Rocket + Firecracker | 3-wide row and 3-wide column |
 | Firecracker + Firecracker | 5×5 double blast |
-| Jade Orb + special | Every piece of the most common colour becomes that special and fires |
+| Jade Orb + special | Every uncovered plain piece of the most common colour becomes that special. The converted pieces leave the board at once and their cells refill; each fires from the cell it was converted in, lowest then left-most, one at a time |
 | Jade Orb + Jade Orb | Clears the whole board and hits the top layer of every cell once |
 
 Crane + special is held back until after the MVP; a Crane swapped with another special still works, but each fires on its own (see Interaction rules). Two combos get a tutorial: Rocket + Rocket at level 8 and Rocket + Firecracker at level 12. The others are found through play, and the idle hint shows a combo swap whenever one exists.
@@ -197,19 +197,19 @@ Every special, obstacle and layer follows this one table. MatchResolver, the GUT
 | Which obstacles are multi-cell | Petrified pillar (OB06) and any obstacle drawn across 2 or more cells. Creep moss (OB03) is one obstacle per cell |
 | Hero boosters on fragments and drop items | Never deleted. Hoof Tap, Tail Slam and Bamboo Dash collect a fragment or drop item they hit; Feather Fan moves pieces only, never fragments or drop items |
 | Hero boosters on everything else | Like a special: one hit per cell, top layer only; a multi-cell obstacle takes at most one hit per use. Bamboo Dash's diagonal follows the same rule |
-| Continue offer | Always shown after a fail, whether or not the goals can still be reached, and offered at least twice per attempt (count, price and decline flow: open question OQ-39) |
-| Quitting mid-level | Counts as a fail: costs a life (except on finales) and counts as that level's first try |
+| Continue offer | Always shown when moves run out (never after quitting), whether or not the goals can still be reached. Up to 5 offers per attempt: the 1st costs 300 coins, the 2nd to 5th cost 500 each. A player who can't pay still sees the offer with "you have less than N coins" (N = that offer's price) and can only decline. Declining ends the attempt and goes to the retry screen |
+| Quitting mid-level | Counts as a fail: costs a life (except on finales) and counts as that level's first try. Goes straight to the fail result, with no continue offer |
 
 ### Rules clarifications (owner decisions, 27 Nov 2026)
 
-These answer the Rules Keeper's open questions OQ-01 to OQ-38 (`spec/open_questions.md`). Later questions are tracked there until answered.
+These answer the Rules Keeper's open questions OQ-01 to OQ-61 (`spec/open_questions.md`). Later questions are tracked there until answered. Rows marked *trial* are trial decisions to revisit after playtesting.
 
 | OQ | Question | Rule |
 | --- | --- | --- |
 | 01 | Rocket direction | Fires along the line it was made from: a horizontal 4 clears its row, a vertical 4 clears its column. Its icon shows the direction |
 | 02 | Where a new special appears | On the cell the player moved into; in cascades, on the lowest then leftmost cell of the match (the crossing cell for an L or T) |
 | 03 | Special swapped with a plain piece, no match | The special fires and the swap costs a move. Snap-back applies to two plain pieces, and to a drop item swapped with a plain piece (no move used). A Jade Orb swapped with a plain piece clears that piece's colour |
-| 04 | Special hit by another special | It fires too (a chain), after the first special finishes. Set-off specials are lifted off the board and fire from their cell after pieces fall, lowest first, then left-most. A set-off Jade Orb is removed without effect |
+| 04 | Special hit by another special | It fires too (a chain). Set-off specials are lifted off the board and share one waiting list: the lowest, then left-most, fires next. Before each waiting special fires, pieces fall and refill; cascade matches wait until all waiting specials have fired (the Firecracker keeps full cascades between its two blasts). A set-off Jade Orb is removed without effect |
 | 05 | Cascade matches | Make specials by the same rules as player matches |
 | 06 | 6 or more in a line | Makes a Jade Orb. Mixed shapes follow the shape-priority rule |
 | 07 | One swap making two matches | Both resolve, and each can make its own special |
@@ -223,27 +223,50 @@ These answer the Rules Keeper's open questions OQ-01 to OQ-38 (`spec/open_questi
 | 15 | Jade Orb swapped with a Crane | The Orb clears the most common colour (as for a tap), then the Crane flies |
 | 16 | Crane landing | Gives one hit to its target cell, or collects the fragment or drop item there. It also clears its own starting cell when it takes off |
 | 17 | Crane targeting | Aims at one obstacle cell of the goal with the fewest hits left (an unfreed fragment always first). Ties: closest to the Crane, then top-most, then left-most. No goal left: the nearest remaining obstacle; if none, a seeded random piece |
-| 18 | Do specials keep a colour? | Rockets, Firecrackers and Cranes keep the colour they were made from and match like normal pieces. The Jade Orb has no colour |
-| 19 | Falling and refill | Pieces locked under an overlay (moss, shutter) don't fall. Other pieces fall straight down; where a cell can't be filled from above because of a blocker, a piece may slide in diagonally. New pieces drop in at the top of each column, or at spawner cells where the level has them |
+| 18 | Do specials keep a colour? | Rockets, Firecrackers and Cranes keep the colour they were made from, match like normal pieces and fill a lantern shrine like a piece of that colour. The Jade Orb has no colour |
+| 19 | Falling and refill | Pieces locked under an overlay (moss, shutter) don't fall. Other pieces fall straight down; where a cell can't be filled from above because of a blocker, a piece may slide in diagonally. New pieces drop in at the top of each column, or at spawner cells where the level has them. A locked piece counts as a blocker (the cell below fills by a diagonal slide). Pieces fall straight through non-playable cells |
 | 20 | Where drop items are collected | On reaching the bottom playable cell of their column. If a level lists `exit_columns`, only those columns collect |
 | 21 | What can be swapped | Any two orthogonally adjacent pieces, including specials and drop items. Not obstacles, cocooned fragments, empty cells, or pieces locked under an overlay (moss, shutter) |
-| 22 | Free shuffle | Moves only plain pieces and specials, never obstacles, fragments or drop items; must leave at least one valid move and no ready-made matches |
-| 23 | When the continue offer is shown | Always after a fail, whether or not the goals can still be reached, at least twice per attempt (details: OQ-39) |
+| 22 | Free shuffle | Moves only plain pieces and specials, never obstacles, fragments, drop items or pieces locked under an overlay; must leave at least one valid move and no ready-made matches |
+| 23 | When the continue offer is shown | Always when moves run out, whether or not the goals can still be reached (count and prices: row 39) |
 | 24 | Rockets made by Jade Orb + Rocket | Copy the direction of the Rocket swapped with the Orb |
 | 25 | A special whose match doesn't include the player's cell | Uses the cascade placement: lowest, then left-most cell (the crossing cell for an L, T or "+") |
-| 26 | Swapped specials that don't combo | The swap completes; any match it makes resolves first, then each special fires from the cell it sits in |
+| 26 | Swapped specials that don't combo | The swap completes; any match it makes resolves first, then each special fires from the cell it sits in. When a swap makes a match, the swapped special, and any coloured special in a match, is lifted off the board as the match resolves; its cell refills in the fall and it fires from the cell it was in right after the swap (or where it was matched) |
 | 27 | Chain order | Set-off specials fire lowest first, then left-most, from their cell after pieces fall. A set-off Jade Orb does nothing; Orb + Orb clears other specials without firing them |
 | 28 | The "+" shape | Counts as an L/T and makes a Firecracker |
-| 29 | Pieces under an overlay (moss, shutter) | Locked: can't be swapped and don't fall, but can be part of a match. A cell emptied under a surviving overlay refills by normal falling |
+| 29 | Pieces under an overlay (moss, shutter) | Locked: can't be swapped and don't fall, but can be part of a match. A match through a covered piece clears it and hits the overlay, not the underlay. A cell emptied under a surviving overlay refills by normal falling. A special made in a covered cell appears there under the overlay, locked (can't be swapped, fall or be tapped); another special can set it off and a coloured one can still be matched |
 | 30 | Drop item swaps | No match: snaps back with no move used. A Rocket, Firecracker or Crane swapped with a drop item fires as with a plain piece; a Jade Orb swapped with one acts as an Orb tap |
-| 31 | Healing dew | When a match or special clears a piece on a dew cell, every cell cleared by that match or special gets dew. A Crane landing on an uncovered target cell gives it dew |
+| 31 | Healing dew | When a match or special clears a piece on a dew cell, every cell cleared by that match, or every playable cell the special covers (obstacle cells included), gets dew. Goo blocks dew: the goo takes its hit first, and the cell gets dew only if that hit removed the goo. A Crane landing on an uncovered target cell clears the piece there and gives it dew |
 | 32 | Between the Firecracker's blasts | Pieces fall, refill and all cascades resolve, then the second blast. Firecracker + Firecracker uses the same timing |
-| 33 | "Of a colour" for the Jade Orb | Only plain pieces count towards the most common colour, and only plain pieces are cleared |
-| 34 | Paper Crane details | Distance is straight-line. Hits left: dew = uncovered target cells, shrine = pieces still needed, drop items = items still to collect. A shrine landing counts as the colour it needs most. Take-off counts as a special on its own cell. In Crane + Crane, the dragged Crane flies first |
+| 33 | "Of a colour" for the Jade Orb | Only uncovered plain pieces count towards the most common colour and are cleared or converted; pieces under an overlay are ignored (Orb + Orb still clears the whole board) |
+| 34 | Paper Crane details | Distance is straight-line. Hits left: dew = uncovered target cells, shrine = pieces still needed, drop items = items still to collect. A shrine landing counts as the colour it needs most (ties: seeded random). Take-off counts as a special on its own cell. In Crane + Crane, the dragged Crane flies first |
 | 35 | Gravity order | Straight falls first, then diagonal slides (upper-left before upper-right). Every column refills at its top playable cell; spawners add extra entry points |
 | 36 | Boosters on a cell with a piece and an obstacle | Every booster clears the piece and gives the top obstacle layer one hit |
 | 37 | Jade Orb + Jade Orb on two layers | Top layer only: moss over goo loses one moss layer; the goo is untouched |
 | 38 | Crane with no goal left | Uncovered dew target cells count as remaining obstacles; landing there gives the cell dew |
+| 39 | Continue offer count, price, decline | Up to 5 offers per attempt: 1st 300 coins, 2nd to 5th 500 each. Declining ends the attempt (retry screen). A player who can't pay sees "you have less than N coins" and can only decline |
+| 40 | Win-finale Rocket direction | Random per Rocket, row or column (seeded) |
+| 41 | Locked covered pieces | A match through one clears it and hits the overlay, not the underlay; the shuffle leaves it in place; it acts as a blocker, so the cell below fills by a diagonal slide |
+| 42 | Jade Orb and covered pieces | Ignores plain pieces under an overlay: they don't count, aren't cleared or converted, and their cells are untouched |
+| 43 | Crane on a shrine needing two colours equally | Seeded random picks the colour the landing counts as |
+| 44 | Falls before a waiting special fires | Pieces fall and refill before each waiting special fires; cascade matches wait until every waiting special has fired. The Firecracker keeps full cascades between its two blasts |
+| 45 | Holes in a column | Pieces fall straight through non-playable cells |
+| 46 | Dew from a special (*trial*) | Every playable cell the special covers gets dew, including cells where it only hit an obstacle or held a fragment or drop item |
+| 47 | Chain inside a chain (*trial*) | One shared waiting list: the lowest, then left-most set-off special fires next |
+| 48 | Jade Orb + Rocket/Firecracker waiting (*trial*) | Converted pieces leave at once and their cells refill; each fires from its converted cell, lowest then left-most, one finishing before the next |
+| 49 | Crane landing on an uncovered dew target | Acts like a special on that cell (the piece is cleared) and gives it dew |
+| 50 | Specials on a lantern shrine (*trial*) | A special covering a shrine lowers its hp by 1 (once per special) and doesn't change the colours it needs |
+| 51 | Continue offer after quitting | Never: quitting goes straight to the fail result |
+| 52 | Offers 2–5 for a player with 300–499 coins | The offer still shows; the message names that offer's price; only Decline works |
+| 53 | Finale Rocket odds | Each Rocket is its own 50/50 row-or-column pick (seeded); a finale can by chance be all rows or all columns |
+| 54 | Swapped and matched specials during the fall | Lifted off the board as the match resolves; their cells refill; each fires from the cell it was in right after the swap, or where it was matched |
+| 55 | How matches fill a lantern shrine | Each needed-colour piece in a match next to it fills it by one; lit when no colours are needed or hp reaches 0; a Crane landing counts as one needed piece and doesn't lower hp |
+| 56 | Dew onto creep goo | Goo blocks dew: the goo takes its hit first; the cell gets dew only if that hit removed the goo |
+| 57 | Cascade special made on a covered cell | Appears under the overlay, locked: can't be swapped, fall or be tapped; another special can set it off; a coloured one can still be matched |
+| 58 | Where a finale Rocket appears | Replaces a random uncovered plain piece (seeded); if none is left, it still pays 5 coins and appears on a random playable cell |
+| 59 | Shrine: which match pieces count | If any piece of a match touches it, every needed-colour piece in that match fills it. Matches never lower hp. A lit shrine is removed and its cells fill by falling |
+| 60 | Fallback finale Rocket and settling | It replaces nothing and fires from its cell, hitting what's there like any special. The board settles fully before the next finale Rocket |
+| 61 | Coloured special in a match next to a shrine | Counts like a plain piece of its colour |
 
 ## Board layers & obstacles
 
@@ -254,7 +277,7 @@ Obstacles use the research pack's neutral behaviour IDs (OB02–OB17), each give
 | Layer | Holds | Cleared by |
 | --- | --- | --- |
 | 3 · Overlay | Cover clusters, shutters | Adjacent matches |
-| 2 · Content | A piece, a blocker, a container or a drop item | Matching / adjacent matches / specials |
+| 2 · Content | A piece, a blocker, a container or a drop item | Matching / adjacent matches / specials (lantern shrine: adjacent matches fill its colours but never lower its hp) |
 | 1 · Underlay | Creep goo, healing dew | Matching on top of it |
 | 0 · Floor | Open cell, no cell, spawner, exit | Fixed by level design |
 
@@ -268,7 +291,7 @@ Obstacles use the research pack's neutral behaviour IDs (OB02–OB17), each give
 | 4 | OB04 · spread goal | Healing dew | Water | Matches made on dew spread it; cover the target cells (heals the forest) |
 | 7 | OB07 · container release | **Mummified creature** | Earth | Match next to it to unwrap and free the creature (the core rescue goal) |
 | 17 | OB03 · cover cluster | Creep moss | Earth | Match next to it to clear; fills whole areas |
-| 10 | OB05 · colour lock | Lantern shrine | Fire | Collect the colours it shows to light it |
+| 10 | OB05 · colour lock | Lantern shrine | Fire | Collect the colours it shows to light it. If any piece of a match touches it (up, down, left or right), every piece of that match of a colour it still needs, coloured specials included, fills it by one. Matches never lower its hp; a special lowers its hp by 1 without changing the colours; a Crane landing counts as one piece of a needed colour and doesn't lower hp. Lit when it needs no more colours or its hp reaches 0, whichever comes first; a lit shrine is removed and its cells fill by normal falling |
 | 13 | OB06 · tall column | Petrified pillar | Earth | Ground down by adjacent matches |
 | 22 | OB08 · shutter + colour | Paper-screen lantern | Fire | Open the screen, then match its colour to light it |
 | 28 | OB10 · underlay clear | Creep goo | Water | Make a match on top to clear it |
@@ -321,7 +344,7 @@ Each layer is pitched above the last, so every move resolves upwards; the quiet 
 | Special created | 0.25 s merge and glow |
 | Firecracker | 0.2 s blast, 4 px screen shake, short phone haptic |
 | Combo callouts | "Great!" / "Amazing!" / "Festival!" at 3 / 5 / 8 cascades, plus a quip from the hero whose colour made the combo (see The four heroes) |
-| Win finale | Leftover moves fire as rockets 0.15 s apart |
+| Win finale | Leftover moves fire as rockets one at a time; each launches 0.15 s after the board settles from the last |
 | Idle hint | After 5 s, a valid swap wiggles |
 
 **Godot setup:** a pool of 8–12 `AudioStreamPlayer` voices; one `AudioStreamRandomizer` per sound family; separate SFX and Music buses, with music ducked 3–6 dB during big combos; shard sequences scheduled by a small timer queue. Record real objects for sources (ceramic cups, a wooden box, stirring honey, a cork pop): free, and they sound more ASMR than synthesised tones.
@@ -387,7 +410,7 @@ The MVP economy is small and fair: coins, generous lives, four hero boosters tha
 | --- | --- |
 | Coins | Start 500. Win = 20 + 5 per finale rocket (about 40 a win). Spent on the continue, life refills and hero boosters; balance coin income against prices for each 5-level block in the economy sheet |
 | Lives | 5 max; lose one on fail, except on chapter finales, where a fail costs no life; refill 1 per 20 min, or buy all 5 back for 150 coins; 10 min of unlimited lives after each chapter finale |
-| Continue | Optional "+5 moves" for 300 coins, offered at least twice per attempt (exact count and later prices: OQ-39) |
+| Continue | Optional "+5 moves" when moves run out: 300 coins for the 1st offer, 500 for the 2nd to 5th; at most 5 per attempt |
 | Win streak | 6 wins in a row: a chest drops a free Rocket and Crane onto the next board |
 | Soul fragments | Not spendable; restore guardians |
 | Soul Dust | Cut from the MVP (see Soul fragments) |

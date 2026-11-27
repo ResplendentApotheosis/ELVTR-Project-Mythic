@@ -18,6 +18,13 @@ Who decided what, and who made what: the owner (human) or AI. Newest first. Use 
 
 | Date | What | Decided by | Made by | Where |
 |---|---|---|---|---|
+| 2026-11-27 | GDD (repo and live claude.ai doc) updated with OQ-39 to OQ-61: continue offer, quitting, win finale, lantern shrine, locked pieces, dew, chain timing, Jade Orb; 23 new clarification rows | AI → Human | AI | GDD › Core gameplay, Special pieces, Combos, Interaction rules, Board layers, Feel, Meta |
+| 2026-11-27 | Wording for the win-finale timing: "each launches 0.15 s after the board settles from the last". The crew flagged that the owner should word it; AI drafted this wording | AI (owner to confirm) | AI | GDD › Feel › Win finale |
+| 2026-11-27 | MatchResolver finished: 257 tests pass, none pending, no open questions | AI | rules-keeper, test-engineer, godot-engineer | branch `build/match-resolver` |
+| 2026-11-27 | Trial decisions to revisit after playtesting: OQ-46 (dew from specials), OQ-47 (chain order), OQ-48 (Orb + special waiting), OQ-50 (specials on shrines) | Human | — | GDD rows marked *trial* |
+| 2026-11-27 | Continue offer: up to 5 per attempt, 300 then 500 coins; shown without enough coins but only Decline works; never after quitting (OQ-39, OQ-51, OQ-52) | Human (OQ-39 in the owner's own wording; OQ-51 and OQ-52 chosen from AI options) | — | GDD › Interaction rules, Meta |
+| 2026-11-27 | Answers to OQ-40 to OQ-61 (finale Rockets random 50/50 row or column, shrine filling and hp, locked pieces, holes in columns, dew vs goo, waiting-special timing) | Human ← AI options (OQ-40 in the owner's own wording) | Options: rules-keeper | `spec/open_questions.md` |
+| 2026-11-27 | 23 more open questions, OQ-39 to OQ-61, raised while applying earlier answers and checking for gaps | AI | rules-keeper, godot-engineer | `spec/open_questions.md`; all answered |
 | 2026-11-27 | Started this log | Human | AI | `DECISION_LOG.md`, `CLAUDE.md` |
 | 2026-11-27 | GDD (repo and live claude.ai doc) updated with OQ-23 to OQ-38 and the continue-offer change: 14 edits plus a 38-row "Rules clarifications" table | AI → Human | AI | GDD › Interaction rules, Core gameplay, Special pieces, Meta & economy |
 | 2026-11-27 | Continue offer: shown after every fail, at least twice per attempt, whatever the board state. Reverses the GDD's "one optional continue, no second pop-up"; AI flagged the conflict with the fairness pitch and the owner confirmed | Human | — | OQ-23; count, price and decline flow still open (OQ-39) |
