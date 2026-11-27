@@ -231,3 +231,52 @@ static func has_match(board: BoardModel) -> bool:
 			if x + 1 < board.width and y + 1 < board.height and board.get_color(x + 1, y) == c and board.get_color(x, y + 1) == c and board.get_color(x + 1, y + 1) == c:
 				return true
 	return false
+
+
+# ---------------------------------------------------------------- dew and shrine helpers (round 2)
+
+## Healing dew (OB04) is an underlay with id "OB04" (API_CONTRACT.md section 2b).
+static func set_dew(board: BoardModel, x: int, y: int) -> void:
+	board.set_underlay(x, y, "OB04", 1)
+
+
+static func has_dew(board: BoardModel, x: int, y: int) -> bool:
+	return board.underlay_id(x, y) == "OB04" and board.underlay_hp(x, y) > 0
+
+
+static func dew_cells(board: BoardModel) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for y in range(board.height):
+		for x in range(board.width):
+			if has_dew(board, x, y):
+				out.append(Vector2i(x, y))
+	return out
+
+
+## Marks a dew-goal target cell (new API, contract section 2b). A missing API makes the test fail, not crash.
+static func set_dew_target(board: BoardModel, x: int, y: int) -> void:
+	if board.has_method("set_dew_target"):
+		board.call("set_dew_target", x, y)
+
+
+static func dew_targets_left(board: BoardModel) -> int:
+	if board.has_method("dew_targets_left"):
+		return int(board.call("dew_targets_left"))
+	return -1
+
+
+## Lantern shrine (OB05) needing pieces of given colours, e.g. {"R": 3, "B": 1} (new API, contract section 2b).
+static func add_shrine(board: BoardModel, x: int, y: int, needs: Dictionary, w: int = 1, h: int = 1) -> void:
+	var total: int = 0
+	for k in needs:
+		total += int(needs[k])
+	board.add_content("OB05", x, y, total, w, h)
+	if board.has_method("set_shrine_needs"):
+		board.call("set_shrine_needs", x, y, needs)
+
+
+static func shrine_need(board: BoardModel, x: int, y: int, color: String) -> int:
+	if board.has_method("shrine_needs"):
+		var needs: Dictionary = board.call("shrine_needs", x, y)
+		return int(needs.get(color, 0))
+	return -1

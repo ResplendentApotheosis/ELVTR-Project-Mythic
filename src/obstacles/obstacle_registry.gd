@@ -7,6 +7,7 @@ extends RefCounted
 const SCRIPTS: Dictionary = {
 	"OB02": preload("res://src/obstacles/ob02_withered_bramble.gd"),
 	"OB03": preload("res://src/obstacles/ob03_creep_moss.gd"),
+	"OB04": preload("res://src/obstacles/ob04_healing_dew.gd"),
 	"OB05": preload("res://src/obstacles/ob05_lantern_shrine.gd"),
 	"OB06": preload("res://src/obstacles/ob06_petrified_pillar.gd"),
 	"OB07": preload("res://src/obstacles/ob07_mummified_creature.gd"),

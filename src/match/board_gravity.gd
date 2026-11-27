@@ -1,6 +1,7 @@
 # Gravity and refill (IR-51, IR-32) and drop-item collection at the bottom (IR-30).
-# Items fall straight down; a cell a blocker hides from above is filled by a diagonal slide;
-# new pieces come from board.rng and never make a match. Check: test_collectibles_and_gravity.gd.
+# Items fall straight down first; then a cell a blocker hides from above is filled by a diagonal
+# slide (upper-left first); new pieces enter at each column's top playable cell and at spawners,
+# coloured from board.rng so they never make a match. Check: test_collectibles_and_gravity.gd.
 class_name BoardGravity
 extends RefCounted
 
@@ -18,28 +19,33 @@ static func apply(board: BoardModel, events: Array[BoardEvent]) -> void:
 			return
 
 
+## Owner decision OQ-35: straight falls first, then one diagonal slide at a time, then refill.
 static func _fill(board: BoardModel, events: Array[BoardEvent]) -> void:
 	for _guard in range(MAX_STEPS):
 		var moves: Array = []
 		_fall_straight(board, moves)
-		if _slide_one_pass(board, moves):
-			_add_fall_event(events, moves)
-			continue
+		var slid: bool = _slide_one(board, moves)
 		_add_fall_event(events, moves)
+		if slid:
+			continue
 		if not _refill(board, events):
 			_color_new_pieces(board)
 			return
 
 
-## Every column: items drop to the bottom of their stretch of cells. Content blockers split a
-## column into stretches; cells that are not playable are passed through.
-## Open question OQ-35: passing straight through non-playable gaps is a provisional choice.
+## True if this cell stops pieces from falling through it: a content blocker, or a piece locked
+## under an overlay (IR-54). An empty cell under an overlay is filled like any other cell.
+static func _is_stopper(board: BoardModel, x: int, y: int) -> bool:
+	return board.get_content(x, y) != null or board.is_locked(x, y)
+
+
+## Every column: items drop to the bottom of their stretch of cells. Stoppers split a column
+## into stretches. Open question OQ-45 (provisional): non-playable cells are passed through.
 static func _fall_straight(board: BoardModel, moves: Array) -> void:
 	for x in range(board.width):
 		var stretch: Array[Vector2i] = []
 		for y in range(board.height + 1):
-			var blocked: bool = y == board.height or board.get_content(x, y) != null
-			if blocked:
+			if y == board.height or _is_stopper(board, x, y):
 				_compact(board, stretch, moves)
 				stretch = []
 			elif board.is_playable(x, y):
@@ -58,38 +64,48 @@ static func _compact(board: BoardModel, stretch: Array[Vector2i], moves: Array) 
 			target -= 1
 
 
-## Fills empty cells that a blocker hides from above with an item sliding in diagonally.
-## Open question OQ-35: upper-left is tried before upper-right (provisional).
-static func _slide_one_pass(board: BoardModel, moves: Array) -> bool:
-	var slid: bool = false
+## Fills ONE empty cell that a stopper hides from above (lowest row first, then left-most) with
+## an item sliding in diagonally, upper-left before upper-right (owner decision OQ-35).
+## Open question OQ-41 (provisional): cells below a locked piece are filled the same way.
+static func _slide_one(board: BoardModel, moves: Array) -> bool:
 	for y in range(board.height - 1, 0, -1):
 		for x in range(board.width):
-			if not board.is_empty(x, y) or _fed_from_above(board, x, y):
+			if not board.is_empty(x, y) or not _blocked_above(board, x, y):
 				continue
 			for dx in [-1, 1]:
 				var src: Vector2i = Vector2i(x + dx, y - 1)
-				if board.has_item(src.x, src.y):
+				if board.has_item(src.x, src.y) and not board.is_locked(src.x, src.y):
 					board.move_piece(src, Vector2i(x, y))
 					moves.append({"from": src, "to": Vector2i(x, y)})
-					slid = true
-					break
-	return slid
+					return true
+	return false
+
+
+## True if a stopper sits above this cell with only empty or non-playable cells in between.
+static func _blocked_above(board: BoardModel, x: int, y: int) -> bool:
+	for yy in range(y - 1, -1, -1):
+		if _is_stopper(board, x, yy):
+			return true
+		if board.has_item(x, yy):
+			return false
+	return false
 
 
 ## True if nothing but empty or non-playable cells lie between this cell and the top edge.
-static func _fed_from_above(board: BoardModel, x: int, y: int) -> bool:
+static func _open_to_top(board: BoardModel, x: int, y: int) -> bool:
 	for yy in range(y - 1, -1, -1):
 		if board.get_content(x, yy) != null or board.has_item(x, yy):
 			return false
 	return true
 
 
-## New pieces for every empty cell that the top of its column can reach. Returns true if any.
+## New pieces for every empty cell that the top of its column can reach, and for empty spawner
+## cells (owner decision OQ-35). Returns true if any piece was added.
 static func _refill(board: BoardModel, events: Array[BoardEvent]) -> bool:
 	var filled: Array[Vector2i] = []
 	for x in range(board.width):
 		for y in range(board.height - 1, -1, -1):
-			if board.is_empty(x, y) and _fed_from_above(board, x, y):
+			if board.is_empty(x, y) and (_open_to_top(board, x, y) or board.spawners.has(Vector2i(x, y))):
 				# A unique stand-in colour; the real colour is picked once the piece has stopped moving.
 				_next_new_id += 1
 				board.set_piece(x, y, "plain", "%s%d" % [NEW_PIECE_MARK, _next_new_id])

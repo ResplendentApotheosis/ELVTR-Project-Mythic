@@ -26,6 +26,7 @@ var _overlay_id: PackedStringArray = PackedStringArray()
 var _overlay_hp: PackedInt32Array = PackedInt32Array()
 var _underlay_id: PackedStringArray = PackedStringArray()
 var _underlay_hp: PackedInt32Array = PackedInt32Array()
+var _dew_target: Array[bool] = []   # cells the dew goal wants covered with dew (OB04)
 var _collected: Dictionary = {}
 
 
@@ -38,6 +39,7 @@ func _init(board_width: int, board_height: int, seed_value: int = 1) -> void:
 	for i in range(n):
 		_playable.append(true)
 		_content.append(null)
+		_dew_target.append(false)
 	_kind.resize(n)
 	_color.resize(n)
 	_drop.resize(n)
@@ -61,6 +63,7 @@ func set_playable(x: int, y: int, playable: bool) -> void:
 		_overlay_hp[i] = 0
 		_underlay_id[i] = ""
 		_underlay_hp[i] = 0
+		_dew_target[i] = false
 
 
 func set_piece(x: int, y: int, kind: String, color: String = "") -> void:
@@ -101,6 +104,19 @@ func set_underlay(x: int, y: int, id: String, hp: int) -> void:
 		return
 	_underlay_id[_i(x, y)] = id if hp > 0 else ""
 	_underlay_hp[_i(x, y)] = maxi(hp, 0)
+
+
+## Marks a cell as a target of the healing-dew goal (OB04).
+func set_dew_target(x: int, y: int) -> void:
+	if in_bounds(x, y):
+		_dew_target[_i(x, y)] = true
+
+
+## Sets what a lantern shrine (OB05) at this cell still needs, e.g. {"R": 3, "B": 1}.
+func set_shrine_needs(x: int, y: int, needs: Dictionary) -> void:
+	var c: BoardContent = get_content(x, y)
+	if c != null:
+		c.needs = needs.duplicate()
 
 
 # ---------------------------------------------------------------- queries (contract)
@@ -153,6 +169,22 @@ func collected_count(key: String) -> int:
 	return int(_collected.get(key, 0))
 
 
+## Dew-goal target cells that do not have dew yet.
+func dew_targets_left() -> int:
+	var n: int = 0
+	for y in range(height):
+		for x in range(width):
+			if is_uncovered_dew_target(x, y):
+				n += 1
+	return n
+
+
+## What the lantern shrine at this cell still needs ({} if there is no shrine).
+func shrine_needs(x: int, y: int) -> Dictionary:
+	var c: BoardContent = get_content(x, y)
+	return c.needs.duplicate() if c != null else {}
+
+
 # ---------------------------------------------------------------- helpers used by the resolver
 
 func overlay_id(x: int, y: int) -> String:
@@ -169,6 +201,25 @@ func set_overlay_hp(x: int, y: int, hp: int) -> void:
 
 func set_underlay_hp(x: int, y: int, hp: int) -> void:
 	set_underlay(x, y, underlay_id(x, y), hp)
+
+
+## True if the cell has healing dew (an "OB04" underlay with hp left).
+func has_dew(x: int, y: int) -> bool:
+	return underlay_id(x, y) == "OB04" and underlay_hp(x, y) > 0
+
+
+func give_dew(x: int, y: int) -> void:
+	if is_playable(x, y):
+		set_underlay(x, y, "OB04", 1)
+
+
+func is_uncovered_dew_target(x: int, y: int) -> bool:
+	return is_playable(x, y) and _dew_target[_i(x, y)] and not has_dew(x, y)
+
+
+## A piece under an overlay is locked: it can't be swapped and doesn't fall (IR-54).
+func is_locked(x: int, y: int) -> bool:
+	return has_item(x, y) and overlay_hp(x, y) > 0
 
 
 func get_content(x: int, y: int) -> BoardContent:

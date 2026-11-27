@@ -117,8 +117,12 @@ func test_ir06_t_shape_by_cascade_makes_firecracker_on_crossing_cell() -> void:
 	_assert_created_one(events, "firecracker", "R", Vector2i(3, 2))
 
 
-func test_ir06_pending_plus_shape() -> void:
-	pending("OQ-28: a '+' shape (shared cell in the middle of both lines) is not named in the GDD")
+func test_ir06_plus_shape_by_cascade_makes_one_firecracker_on_the_crossing_cell() -> void:
+	var board: BoardModel = BB.blank()
+	BB.put(board, "R", [[3, 1], [2, 2], [3, 2], [4, 2], [3, 3]])
+	var events: Array[BoardEvent] = MatchResolver.settle(board)
+	assert_eq(EV.matched(events).size(), 5)
+	_assert_created_one(events, "firecracker", "R", Vector2i(3, 2))
 
 
 # ---------------------------------------------------------------- IR-07
@@ -217,8 +221,37 @@ func test_ir40_cascade_square_crane_on_lowest_then_leftmost_cell() -> void:
 	_assert_created_one(events, "crane", "Y", Vector2i(5, 3))
 
 
-func test_ir40_pending_player_match_without_target_cell() -> void:
-	pending("OQ-25: where a special appears when the player's match does not include the target cell")
+func _created_set(events: Array[BoardEvent]) -> Dictionary:
+	var out: Dictionary = {}
+	for e in _created(events):
+		out["%s|%s|%d,%d" % [e.kind, e.color, e.cell.x, e.cell.y]] = true
+	return out
+
+
+func test_ir40_start_cell_match_vertical_uses_the_lowest_cell() -> void:
+	var board: BoardModel = BB.blank()
+	BB.put(board, "R", [[4, 1], [4, 2], [4, 4], [3, 3]])
+	BB.put(board, "Y", [[3, 1], [3, 2], [3, 4], [4, 3]])
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(3, 3), Vector2i(4, 3))
+	var made: Dictionary = _created_set(events)
+	assert_eq(_created(events).size(), 2, "exactly two specials")
+	assert_true(made.has("rocket_col|R|4,3"), "red column Rocket on the target cell (4,3)")
+	assert_true(made.has("rocket_col|Y|3,4"), "yellow column Rocket on the lowest cell (3,4) of its match")
+
+
+func test_ir40_start_cell_match_horizontal_uses_the_leftmost_cell() -> void:
+	var board: BoardModel = BB.blank()
+	BB.put(board, "R", [[2, 3], [3, 3], [5, 3], [4, 4]])
+	BB.put(board, "Y", [[2, 4], [3, 4], [5, 4], [4, 3]])
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(4, 4), Vector2i(4, 3))
+	var made: Dictionary = _created_set(events)
+	assert_eq(_created(events).size(), 2, "exactly two specials")
+	assert_true(made.has("rocket_row|R|4,3"), "red row Rocket on the target cell (4,3)")
+	assert_true(made.has("rocket_row|Y|2,4"), "yellow row Rocket on the left-most cell (2,4) of its match")
+
+
+func test_ir40_pending_finale_rockets() -> void:
+	pending("OQ-40: direction (and placement) of the win-finale Rockets; not a match special")
 
 
 # ---------------------------------------------------------------- IR-42
@@ -257,22 +290,16 @@ func test_ir43_one_swap_two_matches_both_clear_and_first_special_on_target() -> 
 
 func test_ir43_two_four_lines_clear_eight_and_make_two_rockets() -> void:
 	var board: BoardModel = BB.blank()
-	BB.put(board, "R", [[3, 3], [4, 1], [4, 2], [4, 4]])
-	BB.put(board, "Y", [[4, 3], [3, 4], [3, 5], [3, 6]])
+	board.moves = 10
+	BB.put(board, "R", [[4, 1], [4, 2], [4, 4], [3, 3]])
+	BB.put(board, "Y", [[3, 1], [3, 2], [3, 4], [4, 3]])
 	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(3, 3), Vector2i(4, 3))
-	assert_eq(EV.matched(events).size(), 8)
-	var made: Array = _created(events)
-	assert_eq(made.size(), 2, "two rockets")
-	var at_target: int = 0
-	for m in made:
-		assert_eq(m.kind, "rocket_col")
-		if m.cell == Vector2i(4, 3):
-			at_target += 1
-	assert_eq(at_target, 1, "one rocket is on the target cell (position of the other: OQ-25)")
-
-
-func test_ir43_pending_second_special_position() -> void:
-	pending("OQ-25: position of the special made by the start-cell match")
+	assert_eq(EV.matched(events).size(), 8, "8 pieces in two matches")
+	var made: Dictionary = _created_set(events)
+	assert_eq(_created(events).size(), 2, "exactly two specials")
+	assert_true(made.has("rocket_col|R|4,3"), "red column Rocket at (4,3)")
+	assert_true(made.has("rocket_col|Y|3,4"), "yellow column Rocket at (3,4): lowest cell of the start-cell match (OQ-25)")
+	assert_eq(board.moves, 9)
 
 
 # ---------------------------------------------------------------- IR-50
@@ -289,6 +316,15 @@ func test_ir50_coloured_rocket_in_a_match_clears_and_fires() -> void:
 	var cleared: Dictionary = EV.cleared(events)
 	for c in EV.row_cells(4):
 		assert_true(cleared.has(c), "row 4 cleared by the fired rocket: %s" % c)
+	# OQ-26: the match resolves first, then the Rocket fires from (3,4).
+	var i_match_clear: int = EV.index_of_clear(events, "match")
+	var i_fire: int = EV.index_of(events, "rocket_fire")
+	assert_true(i_match_clear >= 0 and i_fire > i_match_clear, "match clear event comes before the Rocket fires")
+	if i_match_clear >= 0:
+		var first: Dictionary = EV.to_set(events[i_match_clear].cells)
+		for c in [Vector2i(1, 4), Vector2i(2, 4), Vector2i(3, 4)]:
+			assert_true(first.has(c), "the first clear is the 3-match, includes %s" % c)
+	assert_eq(EV.cells_of(events, "rocket_fire"), [Vector2i(3, 4)], "fires from (3,4)")
 
 
 func test_ir50_jade_orb_is_never_part_of_a_match() -> void:
@@ -309,6 +345,3 @@ func test_ir50_crane_reports_the_colour_it_was_made_from() -> void:
 	assert_eq(_kinds(events), ["crane"])
 	assert_eq(_colors(events), ["Y"])
 
-
-func test_ir50_pending_order_of_match_and_special_fire() -> void:
-	pending("OQ-26: order between a match clearing and the special in it firing")

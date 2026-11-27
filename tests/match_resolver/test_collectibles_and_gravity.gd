@@ -186,6 +186,10 @@ func test_ir33_no_shuffle_when_a_special_can_be_tapped() -> void:
 	assert_eq(EV.count(events, "shuffle"), 0)
 
 
+func test_ir33_pending_covered_pieces_in_a_shuffle() -> void:
+	pending("OQ-41: whether pieces under an overlay are shuffled")
+
+
 # ---------------------------------------------------------------- IR-51
 
 func test_ir51_blocker_stays_put_and_the_board_refills() -> void:
@@ -198,5 +202,45 @@ func test_ir51_blocker_stays_put_and_the_board_refills() -> void:
 	assert_eq(BB.empty_cells(board).size(), 0, "no playable cell left empty")
 
 
-func test_ir51_pending_slide_order_and_spawners() -> void:
-	pending("OQ-35: which diagonal is tried first, spawner columns, columns whose top cell is not playable")
+func test_ir51_slide_comes_from_the_upper_left_first() -> void:
+	var board: BoardModel = BB.blank()
+	board.add_content("OB02", 4, 3, 2)
+	BB.put(board, "X", [[4, 4]])
+	MatchResolver.settle(board)
+	assert_eq(board.get_color(4, 4), BB.filler_color(3, 3), "(4,4) is filled by the piece from (3,3), the upper-left")
+	assert_eq(board.get_color(5, 3), BB.filler_color(5, 3), "the piece at (5,3) did not move")
+	for y in [1, 2, 3]:
+		assert_eq(board.get_color(3, y), BB.filler_color(3, y - 1), "column 3 fell by one: (3,%d)" % y)
+	assert_ne(board.get_kind(3, 0), "", "a new piece entered at (3,0)")
+	assert_eq(board.content_hp(4, 3), 2, "the bramble did not move")
+	assert_eq(BB.empty_cells(board).size(), 0)
+
+
+func test_ir51_spawner_is_an_extra_entry_point_and_columns_still_refill_at_the_top() -> void:
+	var board: BoardModel = BB.blank()
+	board.spawners = [Vector2i(2, 0)]
+	BB.put(board, "X", [[6, 8]])
+	MatchResolver.settle(board)
+	for y in range(8):
+		assert_eq(board.get_color(6, y + 1), BB.filler_color(6, y), "piece from (6,%d) moved to (6,%d)" % [y, y + 1])
+	assert_ne(board.get_kind(6, 0), "", "a new piece entered at (6,0)")
+	assert_eq(BB.empty_cells(board).size(), 0)
+
+
+func test_ir51_column_refills_at_its_top_playable_cell() -> void:
+	var board: BoardModel = BB.blank()
+	BB.put(board, "#", [[5, 0], [5, 1]])
+	BB.put(board, "X", [[5, 8]])
+	MatchResolver.settle(board)
+	for y in range(2, 8):
+		assert_eq(board.get_color(5, y + 1), BB.filler_color(5, y), "piece from (5,%d) moved to (5,%d)" % [y, y + 1])
+	assert_ne(board.get_kind(5, 2), "", "a new piece entered at (5,2), the top playable cell")
+	assert_eq(BB.empty_cells(board).size(), 0)
+
+
+func test_ir51_pending_filling_below_a_locked_piece() -> void:
+	pending("OQ-41: how the cells below a locked covered piece are filled")
+
+
+func test_ir51_pending_hole_in_the_middle_of_a_column() -> void:
+	pending("OQ-45: columns with a non-playable cell in the middle (refill entry point)")

@@ -122,3 +122,27 @@ Hit events are optional; tests read hits from the board (`content_hp`, `overlay_
 - `tests/helpers/event_utils.gd`: queries over event arrays.
 
 Run: `"$GODOT_BIN" --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit` (run `"$GODOT_BIN" --headless --import` once so `class_name`s register).
+
+## 2b. Round 2 additions (OQ-23..OQ-38 answers: IR-53, IR-54 and changed IRs)
+
+New or newly relied-on `BoardModel` members (everything else in section 2 is unchanged):
+
+```gdscript
+func underlay_id(x: int, y: int) -> String        # already exists; now part of the contract. "" if none
+func overlay_id(x: int, y: int) -> String         # already exists; now part of the contract
+func set_dew_target(x: int, y: int) -> void       # NEW: marks a dew-goal target cell (OB04 goal)
+func dew_targets_left() -> int                    # NEW: target cells that do not have dew yet
+func set_shrine_needs(x: int, y: int, needs: Dictionary) -> void   # NEW: lantern shrine (OB05) at that cell still needs e.g. {"R": 3, "B": 1}
+func shrine_needs(x: int, y: int) -> Dictionary   # NEW: what it still needs (zero entries may be missing)
+```
+
+- **Healing dew (OB04)** is an underlay: `set_underlay(x, y, "OB04", 1)`. "Has dew" = `underlay_id == "OB04"` and `underlay_hp > 0`. A match or special that clears a piece on dew sets the same underlay (id "OB04", hp 1) on every cell it cleared (IR-53). Dew is never damaged. A Crane landing on an uncovered target cell sets dew there. A target cell counts as covered once it has dew. Goal id for the Crane: `"OB04"`.
+- **Shrine goal** id `"OB05"`: hits left = sum of `shrine_needs`. A Crane landing takes one piece off the colour needed most (tie: OQ-43, not tested). Tests create it with `add_content("OB05", x, y, total_needs, w, h)` then `set_shrine_needs`.
+- **Hatchling goal** `"OB11"`: hits left = drop items still on the board (OQ-34); **dew goal** `"OB04"`: uncovered target cells (counted by `dew_targets_left`).
+- **Locked pieces (IR-54):** a piece in a cell with `overlay_hp > 0` is refused by `swap` (either side), never falls, but can be matched. An emptied cell under a surviving overlay is refilled by normal falling.
+- **Spawners:** `board.spawners` (Array of Vector2i) are extra entry points; every column still refills at its top playable cell (IR-51).
+- **Event meaning for firing order** (no new event types): `rocket_fire.cell`, `blast.cell` (centre, `data.index` 1 or 2), `crane_takeoff.cell` and `orb_fire.cell` are the cell the special fires from: after a swap with a plain piece, its NEW cell (IR-39); for a set-off special, the cell where it was hit (IR-41); in Crane + special, the Crane's cell after the swap. `rocket_fire.kind` is `"rocket_row"` or `"rocket_col"` (also for Rockets converted by Orb + Rocket). Events appear in firing order: the swap's match (`match`, `clear`, `special_created`), then the swapped special, then set-off specials lowest cell first then left-most, each fully (fire events, then `clear`, `fall`, `refill`) before the next.
+- **Firecracker timing (IR-17, IR-24):** `blast(1)`, `clear`, `fall`, `refill`, then every cascade (`match`, `clear`, `fall`, `refill`...) until stable, then `blast(2)`. Same for the 5x5 combo.
+- **Orb + Orb (IR-26, IR-41):** other specials are cleared with no `rocket_fire` / `blast` / `crane_*` events; a set-off Orb is removed with no `orb_fire` event.
+- **Orb counting (IR-18/19/25/47):** only plain pieces are counted, cleared or converted; coloured specials are left alone. Orb + drop item behaves as an Orb tap. Plain pieces under an overlay: OQ-42 (not tested).
+- **Crane take-off (IR-48):** counts as a special covering its start cell, so the underlay under the Crane takes one hit when there is no overlay or blocker.

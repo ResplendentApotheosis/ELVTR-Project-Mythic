@@ -49,8 +49,16 @@ func test_ir09_top_layer_only_goo_under_moss_is_not_hit() -> void:
 	assert_eq(board.underlay_hp(4, 3), 1)
 
 
-func test_ir09_pending_overlay_survives_and_dew() -> void:
-	pending("OQ-29 (covered piece whose overlay survives the hit) and OQ-31 (what a hit does to healing dew)")
+func test_ir09_overlay_that_survives_keeps_the_cell_covered_and_refills() -> void:
+	var board: BoardModel = BB.blank()
+	BB.put(board, "R-", [[0, 3]])
+	BB.put(board, "Y", [[6, 3]])
+	board.set_overlay(6, 3, "OB03", 2)
+	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(0, 3))
+	assert_true(EV.cleared(events).has(Vector2i(6, 3)), "Y cleared")
+	assert_eq(board.overlay_hp(6, 3), 1, "moss hp 2 -> 1")
+	assert_eq(board.get_color(6, 3), BB.filler_color(6, 2), "the piece from (6,2) fell into (6,3), under the moss")
+	assert_eq(board.overlay_hp(6, 3), 1, "and the moss is still on it")
 
 
 # ---------------------------------------------------------------- IR-10
@@ -257,8 +265,13 @@ func test_ir15_special_with_nothing_above_hits_the_goo() -> void:
 	assert_eq(board.underlay_hp(3, 5), 0)
 
 
-func test_ir15_pending_dew() -> void:
-	pending("OQ-31: what a hit or a match on healing dew (OB04) does")
+func test_ir15_match_on_goo_hits_it_but_dew_is_not_damaged() -> void:
+	# Dew is not hit like goo: a match on dew spreads it (IR-53). The dew cell keeps its dew.
+	var board: BoardModel = BB.blank()
+	BB.set_dew(board, 3, 5)
+	BB.put(board, "R", [[2, 5], [4, 5], [3, 6]])
+	MatchResolver.swap(board, Vector2i(3, 6), Vector2i(3, 5))
+	assert_true(BB.has_dew(board, 3, 5), "dew stays under the cleared piece")
 
 
 # ---------------------------------------------------------------- IR-44
@@ -313,3 +326,9 @@ func test_ir45_rocket_firecracker_hits_a_square_pillar_once() -> void:
 	board.add_content("OB06", 3, 3, 3, 2, 2)
 	MatchResolver.swap(board, Vector2i(5, 6), Vector2i(5, 5))
 	assert_eq(board.content_hp(3, 3), 2)
+
+
+# ---------------------------------------------------------------- blocked by open questions
+
+func test_ir14_pending_match_through_a_covered_piece() -> void:
+	pending("OQ-41: what a match that includes a piece under an overlay does to the piece and to the overlay")

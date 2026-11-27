@@ -10,3 +10,24 @@
 - 2026-11-27 · OQ-24 to OQ-36 opened · New gaps found while applying the answers; owner to decide.
 - 2026-11-27 · IR-26 changed; OQ-37 opened · godot-engineer asked whether Orb + Orb hits every layer in a cell; GDD's "hits every obstacle once" reads against "top layer only" + "a combo counts as one special". Rule text unchanged; stacked-layer cells marked blocked; single-layer moss/goo test added.
 - 2026-11-27 · IR-49 changed; OQ-38 opened · Clarified from GDD Obstacle set + Cell layer model that "nearest remaining obstacle" includes overlays (moss) and underlays (goo); added two tests. Healing dew in the no-goal case left open.
+- 2026-11-27 · OQ-23 to OQ-38 marked ANSWERED · Owner answers in chat (OQ-23 own wording; 24 A, 25 B, 26 A, 27 B, 28 A, 29 A, 30 A, 31 A, 32 B, 33 A, 34 B, 35 A, 36 A, 37 B, 38 B). Not yet in the GDD; list of GDD lines to update added at the end of open_questions.md.
+- 2026-11-27 · IR-37 changed · OQ-23: continue always offered (even when goals can't be reached), at least twice per attempt; overrides GDD "not shown when…" and "no second pop-up". Hidden-offer test replaced; second-offer test added.
+- 2026-11-27 · IR-01, IR-39, IR-52, IR-18 changed · OQ-30 A: drop item swaps with no match snap back; Rocket/Firecracker/Crane + drop item fires; Orb + drop item = Orb tap.
+- 2026-11-27 · IR-39, IR-21, IR-50, IR-27 changed · OQ-26 A: swapped special fires from its cell after the swap; the swap's matches resolve first and may make a special it then sets off. Blocked-by lines removed; exact order tests added.
+- 2026-11-27 · IR-41, IR-25, IR-26, IR-19 changed · OQ-27 B: set-off specials lifted, fire after the fall lowest then left-most; set-off Orb does nothing; Orb + Orb clears specials without firing.
+- 2026-11-27 · IR-40, IR-43 changed · OQ-25 B: a player match not containing the target cell uses cascade placement; exact two-Rocket tests added.
+- 2026-11-27 · IR-06, IR-40 changed · OQ-28 A: "+" makes a Firecracker on the crossing cell; cascade test added.
+- 2026-11-27 · IR-54 added; IR-09, IR-52, IR-51, IR-14 changed · OQ-29 A: covered pieces locked (no swap, no fall, can match); cell under a surviving overlay refills.
+- 2026-11-27 · IR-53 added; IR-15, IR-48 changed · OQ-31 A: dew spreads to every cell cleared by the match or special that cleared a piece on dew; Crane landing on a dew target gives dew.
+- 2026-11-27 · IR-17, IR-24, IR-12 (applies-to) changed · OQ-32 B: fall, refill and all cascades between the two blasts (also 5×5); piece-count and cascade-between-blasts tests added.
+- 2026-11-27 · IR-18, IR-19, IR-25, IR-47 changed · OQ-33 A: only plain pieces counted and cleared by the Orb; tests with coloured specials added.
+- 2026-11-27 · IR-48, IR-49, IR-27 changed · OQ-34 B: straight-line distance; dew/shrine/drop-item goal counts; shrine colour = most needed; take-off hits the Crane's own cell; dragged Crane first in Crane + Crane.
+- 2026-11-27 · IR-51 changed · OQ-35 A: straight falls then slides (upper-left first); every column refills at its top playable cell; spawners extra. Slide, spawner and top-gap tests added.
+- 2026-11-27 · IR-36 changed · OQ-36 A: every booster (Hoof Tap included) clears the piece and hits the top layer; overrides GDD Hoof Tap "a piece, or the top layer".
+- 2026-11-27 · IR-26 changed · OQ-37 B: Orb + Orb hits the top layer only (goo under moss untouched); stacked-cell test added.
+- 2026-11-27 · IR-49 changed · OQ-38 B: uncovered dew target cells count as remaining obstacles for a Crane with no goal left.
+- 2026-11-27 · IR-05, IR-16, IR-25 changed · OQ-24 A: Orb + Rocket's converted Rockets copy the swapped Rocket's direction.
+- 2026-11-27 · IR-33 now blocked by OQ-41 · New gap from OQ-29 (are covered pieces shuffled?).
+- 2026-11-27 · OQ-39 to OQ-46 opened · Parts the owner's answers didn't settle: continue limits/price/decline/low coins (39), finale Rocket direction (40), covered pieces in matches/shuffle/gravity (41), Orb and covered pieces (42), shrine colour tie (43), falls/cascades before a waiting special fires (44), holes mid-column (45), dew on cells with no piece (46).
+- 2026-11-27 · IR-48 changed · Settled from GDD OQ-16 ("clears its own starting cell"), OQ-09 and owner OQ-34 B: a set-off Crane's take-off clears whatever piece has fallen into its start cell (sets off a special, leaves a fragment/drop item) and hits the top layer; test added. Code currently doesn't clear the fallen-in piece and must change.
+- 2026-11-27 · OQ-47 to OQ-50 opened; IR-41, IR-25, IR-48, IR-53 now blocked in part · godot-engineer's provisional choices the GDD doesn't settle: chain-in-chain order (47), converted Orb specials while waiting (48), piece under a Crane dew landing (49), lantern shrine vs specials and matches (50).

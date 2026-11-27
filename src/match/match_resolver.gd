@@ -77,9 +77,12 @@ static func has_possible_move(board: BoardModel) -> bool:
 
 # ---------------------------------------------------------------- internals
 
-## IR-52: two orthogonally adjacent cells, each holding a piece, a special or a drop item.
+## IR-52: two orthogonally adjacent cells, each holding a piece, a special or a drop item. Owner
+## decision OQ-29: a piece under an overlay is locked and can't be swapped (IR-54).
 static func _can_swap(board: BoardModel, from: Vector2i, to: Vector2i) -> bool:
 	if absi(from.x - to.x) + absi(from.y - to.y) != 1:
+		return false
+	if board.is_locked(from.x, from.y) or board.is_locked(to.x, to.y):
 		return false
 	return board.has_item(from.x, from.y) and board.has_item(to.x, to.y)
 
@@ -99,8 +102,9 @@ static func _invalid(from: Vector2i, to: Vector2i, reason: String) -> BoardEvent
 
 
 ## A single special swapped with a plain piece or drop item (IR-18, IR-39). The swap is done.
-## Open question OQ-26 (provisional): matches made by the swap resolve first, then the special fires
-## from the cell it now sits in. OQ-30 (provisional): an Orb swapped with a drop item acts as a tap.
+## Owner decision OQ-26: matches made by the swap resolve first, then the special fires from the
+## cell it now sits in. Owner decision OQ-30: an Orb swapped with a drop item acts as a tap.
+## Open question OQ-44 (provisional): nothing falls between the swap's match and the special firing.
 static func _special_with_piece(board: BoardModel, from: Vector2i, to: Vector2i, special_cell: Vector2i, events: Array[BoardEvent]) -> void:
 	var other: Vector2i = from if special_cell == to else to
 	var kind: String = board.get_kind(special_cell.x, special_cell.y)
@@ -162,23 +166,27 @@ static func _queued(queue: Array[FireOrder], cell: Vector2i) -> bool:
 
 
 ## IR-40: a player's match puts its special on the swap's target cell; a cascade match on its lowest,
-## then left-most cell (an L/T on its crossing cell). Open question OQ-25 (provisional): a player
-## match that misses the target cell uses the swap's start cell.
-static func _special_cell(g: MatchGroup, from: Vector2i, to: Vector2i) -> Vector2i:
+## then left-most cell (an L/T/+ on its crossing cell). Owner decision OQ-25: a player match that
+## doesn't contain the target cell uses the cascade placement too.
+static func _special_cell(g: MatchGroup, _from: Vector2i, to: Vector2i) -> Vector2i:
 	if to != NO_CELL and g.has_cell(to):
 		return to
-	if from != NO_CELL and g.has_cell(from):
-		return from
 	return g.cascade_cell()
 
 
-## Falls, refills and cascade matches until nothing matches, then the free shuffle (IR-32, IR-33).
-static func _stabilise(board: BoardModel, events: Array[BoardEvent]) -> void:
+## Falls, refills and cascade matches until nothing matches (IR-32). Also used between a
+## Firecracker's two blasts (owner decision OQ-32). Never shuffles.
+static func cascade(board: BoardModel, events: Array[BoardEvent]) -> void:
 	for _guard in range(MAX_CASCADES):
 		BoardGravity.apply(board, events)
 		var groups: Array[MatchGroup] = MatchFinder.find_groups(board)
 		if groups.is_empty():
-			break
+			return
 		_resolve_matches(board, groups, NO_CELL, NO_CELL, [] as Array[FireOrder], events)
+
+
+## Cascades until stable, then the free shuffle if there is no possible move (IR-32, IR-33).
+static func _stabilise(board: BoardModel, events: Array[BoardEvent]) -> void:
+	cascade(board, events)
 	if board.auto_shuffle and not has_possible_move(board):
 		BoardShuffle.shuffle(board, events)

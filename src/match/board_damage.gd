@@ -4,8 +4,10 @@
 class_name BoardDamage
 extends RefCounted
 
+const HealingDew: GDScript = preload("res://src/obstacles/ob04_healing_dew.gd")
 
-## A special covering this cell: one hit to its top obstacle layer (IR-09).
+
+## A special covering this cell: one hit to its top obstacle layer (IR-09). Dew is never hit.
 static func hit_top_layer(board: BoardModel, cell: Vector2i, hitset: Dictionary, events: Array[BoardEvent]) -> void:
 	if board.overlay_hp(cell.x, cell.y) > 0:
 		hit_overlay(board, cell, hitset, events)
@@ -15,15 +17,28 @@ static func hit_top_layer(board: BoardModel, cell: Vector2i, hitset: Dictionary,
 		hit_underlay(board, cell, hitset, events)
 
 
+## Records the cells one special (or combo) has cleared so far in its hitset. If any of them is on
+## healing dew, all of them get dew (IR-53), including cells cleared earlier by the same special.
+static func note_cleared(board: BoardModel, cells: Array[Vector2i], hitset: Dictionary) -> void:
+	if not hitset.has("cleared_cells"):
+		hitset["cleared_cells"] = [] as Array[Vector2i]
+	var all: Array[Vector2i] = hitset["cleared_cells"]
+	all.append_array(cells)
+	HealingDew.spread(board, all)
+
+
 ## Hits a match gives: the layer under/over its own pieces (IR-15) and every adjacent-match
 ## obstacle or overlay next to any of its pieces, once each (IR-14). Diagonals never count.
+## A match on dew spreads it to all its cells (IR-53).
 static func hit_by_match(board: BoardModel, match_cells: Array[Vector2i], events: Array[BoardEvent]) -> void:
 	var hitset: Dictionary = {}
 	var in_match: Dictionary = {}
 	for c in match_cells:
 		in_match[c] = true
+	HealingDew.spread(board, match_cells)
 	for c in match_cells:
-		# Open question OQ-29: a matched piece under an overlay hits the overlay, not the underlay.
+		# Open question OQ-41 (provisional): a matched piece under an overlay is cleared and hits
+		# the overlay, not the underlay below it.
 		if board.overlay_hp(c.x, c.y) > 0:
 			hit_overlay(board, c, hitset, events)
 		elif board.underlay_hp(c.x, c.y) > 0:
@@ -55,11 +70,13 @@ static func hit_overlay(board: BoardModel, cell: Vector2i, hitset: Dictionary, e
 
 
 static func hit_underlay(board: BoardModel, cell: Vector2i, hitset: Dictionary, events: Array[BoardEvent]) -> void:
+	var id: String = board.underlay_id(cell.x, cell.y)
+	if not ObstacleRegistry.behaviour(id).takes_hits():
+		return   # healing dew is never damaged (IR-53)
 	var key: String = "underlay:%d,%d" % [cell.x, cell.y]
 	if hitset.has(key):
 		return
 	hitset[key] = true
-	var id: String = board.underlay_id(cell.x, cell.y)
 	var hp: int = board.underlay_hp(cell.x, cell.y) - 1
 	board.set_underlay_hp(cell.x, cell.y, hp)
 	events.append(_hit_event(cell, "underlay", id, hp))

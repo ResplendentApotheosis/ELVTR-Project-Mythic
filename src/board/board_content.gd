@@ -8,6 +8,7 @@ var id: String = ""
 var hp: int = 0
 var rect: Rect2i = Rect2i()      # top-left cell and size in cells
 var fragment: bool = false       # true = a soul fragment is sealed inside (cocoon, IR-29)
+var needs: Dictionary = {}       # lantern shrine (OB05) only: pieces still needed per colour, e.g. {"R": 3}
 
 
 func _init(content_id: String = "", content_hp: int = 0, area: Rect2i = Rect2i(), has_fragment: bool = false) -> void:

@@ -102,3 +102,37 @@ static func union(lists: Array) -> Dictionary:
 		for c in l:
 			out[c] = true
 	return out
+
+
+## The `cell` of every event of this type, in order (untyped Array of Vector2i).
+static func cells_of(events: Array, type: String) -> Array:
+	var out: Array = []
+	for e in events:
+		if e.type == type:
+			out.append(e.cell)
+	return out
+
+
+## The `cell` of every blast event with this data.index (1 or 2), in order.
+static func blast_centres(events: Array, index: int) -> Array:
+	var out: Array = []
+	for e in events:
+		if e.type == "blast" and int(e.data.get("index", 0)) == index:
+			out.append(e.cell)
+	return out
+
+
+## Index of the first event of this type after position `after`, or -1.
+static func index_after(events: Array, type: String, after: int) -> int:
+	for i in range(after + 1, events.size()):
+		if events[i].type == type:
+			return i
+	return -1
+
+
+## Index of the first `clear` event with the given source, or -1.
+static func index_of_clear(events: Array, source: String) -> int:
+	for i in range(events.size()):
+		if events[i].type == "clear" and events[i].source == source:
+			return i
+	return -1

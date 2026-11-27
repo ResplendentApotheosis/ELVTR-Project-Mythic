@@ -1,8 +1,10 @@
 # Chooses the Paper Crane's target cell (IR-49): an unfreed fragment first, else the goal with the
-# fewest hits left; ties go to the closest cell, then top-most, then left-most. No goal left: the
-# nearest obstacle; none: a piece picked with board.rng. Check: test_special_effects.gd IR-20, IR-49.
+# fewest hits left; ties go to the closest cell (straight-line), then top-most, then left-most. No goal
+# left: the nearest obstacle or uncovered dew target; none: a piece picked with board.rng. Check: test_special_effects.gd IR-20, IR-49.
 class_name CraneTargeting
 extends RefCounted
+
+const LanternShrine: GDScript = preload("res://src/obstacles/ob05_lantern_shrine.gd")
 
 
 ## `start` is the Crane's cell (used for distance); `exclude` cells are never chosen.
@@ -30,14 +32,17 @@ static func choose(board: BoardModel, start: Vector2i, exclude: Array[Vector2i])
 			best_cells.append_array(cells)
 	if not best_cells.is_empty():
 		return _closest(best_cells, start)
-	# 3. No goal left: the nearest remaining obstacle.
+	# 3. No goal left: the nearest remaining obstacle on any layer, or uncovered dew target
+	#    (owner decision OQ-38). Dew itself is not an obstacle to hit.
 	var obstacles: Array[Vector2i] = []
 	for y in range(board.height):
 		for x in range(board.width):
 			var c: Vector2i = Vector2i(x, y)
 			if exclude.has(c):
 				continue
-			if board.overlay_hp(x, y) > 0 or board.get_content(x, y) != null or board.underlay_hp(x, y) > 0:
+			var hittable_underlay: bool = board.underlay_hp(x, y) > 0 and not board.has_dew(x, y)
+			if board.overlay_hp(x, y) > 0 or board.get_content(x, y) != null or hittable_underlay \
+					or board.is_uncovered_dew_target(x, y):
 				obstacles.append(c)
 	if not obstacles.is_empty():
 		return _closest(obstacles, start)
@@ -54,8 +59,8 @@ static func choose(board: BoardModel, start: Vector2i, exclude: Array[Vector2i])
 	return pieces[board.rng.randi_range(0, pieces.size() - 1)]
 
 
-## Cells still holding something of this goal: obstacles with that id, a cocoon with a fragment
-## or a fragment drop item for "fragment", a drop item for "OB11".
+## Cells still holding something of this goal: uncovered target cells for dew ("OB04"), a cocoon
+## with a fragment or a fragment drop item for "fragment", a drop item for "OB11", else obstacles with that id.
 static func _goal_cells(board: BoardModel, goal: String, exclude: Array[Vector2i]) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
 	for y in range(board.height):
@@ -65,7 +70,9 @@ static func _goal_cells(board: BoardModel, goal: String, exclude: Array[Vector2i
 				continue
 			var content: BoardContent = board.get_content(x, y)
 			var hit: bool = false
-			if goal == "fragment":
+			if goal == "OB04":
+				hit = board.is_uncovered_dew_target(x, y)
+			elif goal == "fragment":
 				hit = (content != null and content.fragment) or board.get_drop_item(x, y) == "fragment"
 			elif board.get_drop_item(x, y) == goal:
 				hit = true
@@ -78,13 +85,16 @@ static func _goal_cells(board: BoardModel, goal: String, exclude: Array[Vector2i
 	return out
 
 
-## Hits left for a goal: the sum of hp of its obstacles (each multi-cell obstacle once).
-## Drop-item goals count one per item (open question OQ-34).
+## Hits left for a goal (owner decision OQ-34): dew = uncovered target cells; lantern shrine =
+## pieces still needed; drop items = items still on the board; others = the sum of hp of its
+## obstacles (each multi-cell obstacle once).
 static func _hits_left(board: BoardModel, goal: String) -> int:
+	if goal == "OB04":
+		return board.dew_targets_left()
 	var total: int = 0
 	for content in board.all_contents():
 		if content.id == goal:
-			total += content.hp
+			total += LanternShrine.pieces_needed(content) if goal == "OB05" else content.hp
 	for y in range(board.height):
 		for x in range(board.width):
 			if board.overlay_id(x, y) == goal:
@@ -96,17 +106,18 @@ static func _hits_left(board: BoardModel, goal: String) -> int:
 	return total
 
 
-## Closest cell (steps along rows and columns, open question OQ-34), then top-most, then left-most.
+## Closest cell by straight-line distance (owner decision OQ-34), then top-most, then left-most.
 static func _closest(cells: Array[Vector2i], start: Vector2i) -> Vector2i:
 	var best: Vector2i = cells[0]
-	var best_d: int = _distance(best, start)
+	var best_d: int = _distance_squared(best, start)
 	for c in cells:
-		var d: int = _distance(c, start)
+		var d: int = _distance_squared(c, start)
 		if d < best_d or (d == best_d and (c.y < best.y or (c.y == best.y and c.x < best.x))):
 			best = c
 			best_d = d
 	return best
 
 
-static func _distance(a: Vector2i, b: Vector2i) -> int:
-	return absi(a.x - b.x) + absi(a.y - b.y)
+## Squared straight-line distance: compares the same way as the real distance, with whole numbers.
+static func _distance_squared(a: Vector2i, b: Vector2i) -> int:
+	return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)

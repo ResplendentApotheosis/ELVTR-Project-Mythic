@@ -35,7 +35,7 @@ func special_kind() -> String:
 
 
 ## The cell shared by a row line and a column line (an L or T, IR-06), or (-1, -1).
-## Open question OQ-28: a "+" (both lines crossing in the middle) is treated like an L/T here.
+## Owner decision OQ-28: a "+" (both lines crossing in the middle) counts as an L/T.
 func crossing_cell() -> Vector2i:
 	for h in h_runs:
 		for v in v_runs:
