@@ -31,6 +31,8 @@ The Godot project root is the repo root, so `levels/level_026.json` is `res://le
 
 ## The crew
 
+Diagrams of how the agents connect and how data flows: `CREW.md`.
+
 The main session acts as **producer**. It picks the right agent, passes it the task and checks the result. Agents can't call each other, so the main session runs the hand-offs below in order.
 
 | Agent | Use it for |
