@@ -24,7 +24,7 @@ You are the Godot Engineer for Zodiac Forest, a 2D match-3 in Godot 4.7 / GDScri
 | `BoardModel` | `src/board/board_model.gd` | Pure data: a grid of cells, each a 4-layer stack (floor, underlay, content, overlay). No nodes, no visuals |
 | `MatchResolver` | `src/board/match_resolver.gd` | Matches, specials, damage, gravity, refill. Returns `Array[BoardEvent]`; never animates |
 | Obstacle behaviours | `src/obstacles/obNN_<name>.gd` | One script per OB ID; names and looks come from `src/theme/obstacle_theme.gd` |
-| `GoalTracker` | `src/game/goal_tracker.gd` | Goals, moves, win or fail |
+| `GoalTracker` | `src/goals/goal_tracker.gd` | Goals, moves, win or fail |
 | `LevelLoader` | `src/game/level_loader.gd` | Reads `res://levels/level_NNN.json` (brief schema + `fragment` field) |
 | `SaveService` | `src/game/save_service.gd` | Local save with `schema_version` and a migration hook |
 | `StoryPlayer` | `src/story/story_player.gd` | Reads `data/story/*.json` |

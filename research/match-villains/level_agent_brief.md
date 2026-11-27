@@ -30,14 +30,16 @@ You are the level designer for an original zodiac-themed match-3 game built in G
 - Make levels harder by raising goal counts and adding goals. Never starve moves below 16.
 
 **Goals**
-- Goal count must equal what is placed on the board (or what generators can produce).
-- OB04 spread goals must not exceed 90% of playable cells.
+- Goal count must equal what is placed on the board (or what generators can produce). One unit = one obstacle fully gone (not one hit).
+- Levels 1–50 have no colour goals: every goal is an obstacle goal.
+- OB04 goal: every playable cell is a target, and seed cells (`s`) count from the start. The count must not exceed 90% of playable cells and must be more than the number of seed cells, so at least one new dew cell is needed.
 - Drop items (OB11) need a clear fall path to a bottom exit.
 
 **Hazards**
 - Use at most one hazard type per level.
 - Never place a hazard where a goal can only be reached through its beam or range.
 - The OB09 beam must be visible: it must not be covered by any cell layer.
+- OB09 (Nian's Eye) is not used in levels 1–50.
 
 **Openings**
 - Leave at least 3 valid matches available at the start, and no pre-made matches.
@@ -88,9 +90,9 @@ You are the level designer for an original zodiac-themed match-3 game built in G
   "fixed_tiles": [],
   "spawn": {"drop_items": null, "generators": null},
   "goals": [
-    {"obstacle": "OB06", "count": 4},
+    {"obstacle": "OB06", "count": 2},
     {"obstacle": "OB02", "count": 26},
-    {"obstacle": "OB03", "count": 30}
+    {"obstacle": "OB03", "count": 1}
   ],
   "story_beat": "mini",
   "designer_notes": "Columns flank the board so side matches grind them; blockers are spread evenly to keep it open."
@@ -102,7 +104,8 @@ You are the level designer for an original zodiac-themed match-3 game built in G
 - `underlay`: `.` = none; `1`–`3` = OB10 with that many hp; `s` = OB04 already covering that cell (a seed).
 - `objects`: one entry per blocker. Multi-cell objects (OB05, OB06, OB16) use `w`/`h`, with `x`/`y` as the top-left cell.
 - `fixed_tiles`: optional pre-placed colours or power-ups, e.g. `{"x":4,"y":8,"tile":"line_h"}`.
-- `spawn.drop_items`: e.g. `{"type":"OB11","total":3,"max_on_board":1,"exit_columns":[2,6]}`.
+- `spawn.drop_items`: e.g. `{"type":"OB11","total":3,"max_on_board":1,"exit_columns":[2,6]}`. On a fragment level whose fragment rides a drop item, add `"fragment_item": n` (the n-th item spawned carries it), e.g. `{"type":"OB11","total":3,"max_on_board":1,"exit_columns":[2,6],"fragment_item":2}`.
+- Fragment levels: the fragment's cocoon is the OB07 entry in `objects` with `"fragment": true`, and `goals` lists the fragment as `{"obstacle": "OB07", "count": 1, "fragment": true}` (or `"OB11"` for a drop item). The fragment's cocoon or item also counts toward a plain OB07 / OB11 goal on the same level.
 - `spawn.generators`: generator settings, e.g. for OB17.
 - `story_beat`: `null`, `"mini"` (on hard levels) or `"chapter"` (on finales).
 
@@ -114,7 +117,8 @@ var level: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://l
 ## 6. Validation checklist (the agent runs this before outputting)
 - [ ] Every row in `cells` and `underlay` has length `width`, and there are `height` rows.
 - [ ] No object overlaps another object or a `.` cell, and multi-cell objects fit inside the board.
-- [ ] Each goal count is achievable: placed hp/items ≥ the goal; spawned items meet the goal; OB04 count ≤ 90% of playable cells.
+- [ ] Each obstacle goal's count equals the number of those obstacles placed; spawned items meet the goal; number of seed cells < OB04 count ≤ 90% of playable cells.
+- [ ] On a fragment level, exactly one OB07 entry has `"fragment": true`, or `spawn.drop_items` has a `fragment_item` between 1 and `total`; a plain OB07 / OB11 goal's count includes the fragment's cocoon or item.
 - [ ] Only introduced obstacle IDs are used, and there is at most one hazard type.
 - [ ] Hard/finale boards have no isolated pockets: every playable cell connects to the main area through at least 2 neighbours.
 - [ ] Drop items have an unblocked path to an exit column.

@@ -18,6 +18,12 @@ Who decided what, and who made what: the owner (human) or AI. Newest first. Use 
 
 | Date | What | Decided by | Made by | Where |
 |---|---|---|---|---|
+| 2026-11-28 | GDD (repo and live) and level brief updated with OQ-62 to OQ-74 (rounds 5–7): goal units, the winning move, dew goals, fragment fields in level files, boosters use no move, lives after continues; brief example goals fixed | AI → Human | AI | GDD; `research/match-villains/level_agent_brief.md` |
+| 2026-11-28 | godot-engineer's folder note changed from `src/game/` to `src/goals/` for GoalTracker | AI → Human | AI | `.claude/agents/godot-engineer.md` |
+| 2026-11-28 | Nian's Eye (OB09) is not in levels 1–50, replacing the 27 Nov "keep it at 46–50 for now"; plans for levels 46 and 50 still to decide | Human | — | GDD (already at 61); `levels_1_100_plan.csv` not yet changed |
+| 2026-11-28 | The winning move plays out in full before the win, for player satisfaction (OQ-72, changing the trial answer to OQ-64) | Human (own wording) | — | GDD › Core gameplay; row 72 |
+| 2026-11-28 | Answers to OQ-62 to OQ-74; OQ-62 and OQ-66 are trial decisions to revisit after playtesting | Human ← AI options | Options: rules-keeper | `spec/open_questions.md` |
+| 2026-11-28 | GoalTracker built: 398 tests pass, 0 fail, 7 pending until LevelLoader and SaveService exist | AI | rules-keeper, test-engineer, godot-engineer | branch `build/goal-tracker` |
 | 2026-11-27 | Merged PR #3 (MatchResolver, 257 tests passing) into `main` | Human | AI | GitHub |
 | 2026-11-27 | GDD (repo and live claude.ai doc) updated with OQ-39 to OQ-61: continue offer, quitting, win finale, lantern shrine, locked pieces, dew, chain timing, Jade Orb; 23 new clarification rows | AI → Human | AI | GDD › Core gameplay, Special pieces, Combos, Interaction rules, Board layers, Feel, Meta |
 | 2026-11-27 | Wording for the win-finale timing: "each launches 0.15 s after the board settles from the last". The crew flagged that the owner should word it; AI drafted this wording | AI (owner to confirm) | AI | GDD › Feel › Win finale |

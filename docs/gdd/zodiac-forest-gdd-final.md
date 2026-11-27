@@ -147,7 +147,7 @@ Standard swap-to-match on a board up to 9×9 with 4 colours, four special pieces
 - Every level starts with at least 3 valid moves, no pre-made matches, and one area where a special is easy to make.
 - No possible move: free shuffle with a short animation.
 - Specials fire when matched, swapped or tapped (tap costs a move).
-- Win: all goals done before moves run out. Leftover moves become Bamboo Rockets that fire for bonus coins ("Forest Festival" finale). Each finale Rocket is a row or column Rocket, 50/50, picked independently (seeded), and replaces a random uncovered plain piece (seeded); if none is left, it still pays 5 coins and fires from a random playable cell without replacing what is there. Finale Rockets go one at a time: the board settles fully (fall, refill, cascades, set-off specials) before the next one.
+- Win: all goals done before moves run out. Leftover moves become Bamboo Rockets that fire for bonus coins ("Forest Festival" finale). Each finale Rocket is a row or column Rocket, 50/50, picked independently (seeded), and replaces a random uncovered plain piece (seeded); if none is left, it still pays 5 coins and fires from a random playable cell without replacing what is there. Finale Rockets go one at a time: the board settles fully (fall, refill, cascades, set-off specials) before the next one. Everything a move does (matches, cascades, specials) counts for it, so finishing the goals on the last move is a win with 0 finale Rockets. When the last goal is done, the rest of that move still happens in full (the rest of the match or special, falls, refills, waiting specials, second blasts, cascades, any free shuffle); the win is declared once the move has fully settled, and the finale starts on that settled board. The fail is also checked only once the move has fully settled.
 - **Fail flow:** an optional "+5 moves" when moves run out, offered up to 5 times per attempt (300 coins, then 500 each) whatever the board state; declining goes to the retry screen. No "you'll lose event progress" warning.
 
 **Pieces (4 colours):** red peach, yellow bell, blue fan, green leaf. Shapes differ as well as colours, for colour-blind players.
@@ -175,7 +175,7 @@ The Paper Crane is the one "signature, telegraphed" twist the research recommend
 
 Crane + special is held back until after the MVP; a Crane swapped with another special still works, but each fires on its own (see Interaction rules). Two combos get a tutorial: Rocket + Rocket at level 8 and Rocket + Firecracker at level 12. The others are found through play, and the idle hint shows a combo swap whenever one exists.
 
-**Goals per level:** 1 on intro levels, 1–3 on regular levels, 3–4 on hard levels, 4 on finales. Goals are always obstacles to clear, free or collect (see the obstacle table); "collect N red" style goals are only used in tutorials. On a fragment level the soul fragment is always one of the goals and uses one of the tier's slots, never an extra one, so a level cannot be won without it.
+**Goals per level:** 1 on intro levels, 1–2 on easy levels, 2–3 on medium levels, 3–4 on hard levels, 4 on finales. Goals are always obstacles to clear, free or collect (see the obstacle table); No colour goals in levels 1–50; every goal is an obstacle goal. One unit of a goal is one obstacle fully gone (a bramble with no layers left, a moss or goo cell cleared, a pillar ground down, a creature freed, an idol cleared, a shrine lit, a drop item collected, a cell given dew); the count equals the number placed (trial). A goal's progress stops at its count. On a fragment level the soul fragment is always one of the goals and uses one of the tier's slots, never an extra one, so a level cannot be won without it.
 
 ## Interaction rules
 
@@ -202,7 +202,7 @@ Every special, obstacle and layer follows this one table. MatchResolver, the GUT
 
 ### Rules clarifications (owner decisions, 27 Nov 2026)
 
-These answer the Rules Keeper's open questions OQ-01 to OQ-61 (`spec/open_questions.md`). Later questions are tracked there until answered. Rows marked *trial* are trial decisions to revisit after playtesting.
+These answer the Rules Keeper's open questions OQ-01 to OQ-74 (`spec/open_questions.md`). Later questions are tracked there until answered. Rows marked *trial* are trial decisions to revisit after playtesting.
 
 | OQ | Question | Rule |
 | --- | --- | --- |
@@ -267,6 +267,19 @@ These answer the Rules Keeper's open questions OQ-01 to OQ-61 (`spec/open_questi
 | 59 | Shrine: which match pieces count | If any piece of a match touches it, every needed-colour piece in that match fills it. Matches never lower hp. A lit shrine is removed and its cells fill by falling |
 | 60 | Fallback finale Rocket and settling | It replaces nothing and fires from its cell, hitting what's there like any special. The board settles fully before the next finale Rocket |
 | 61 | Coloured special in a match next to a shrine | Counts like a plain piece of its colour |
+| 62 | One unit of a goal (*trial*) | One obstacle fully gone (a bramble with no layers left, a moss or goo cell cleared, a pillar ground down, a creature freed, an idol cleared, a shrine lit, a drop item collected, a cell given dew); the count equals the number placed |
+| 63 | Goals finished by the last move | Everything a move does counts for it; finishing on the last move is a win with 0 finale Rockets |
+| 64 | When win and fail are checked | Both only once the move has fully settled. The winning move plays out in full, then the finale starts on the settled board (changed by OQ-72) |
+| 65 | Fragment in `goals` | An obstacle goal with a flag, e.g. `{"obstacle": "OB07", "count": 1, "fragment": true}`; its cocoon or drop item also counts toward a plain OB07 / OB11 goal on the same level |
+| 66 | Dew goal targets (*trial*) | Every playable cell is a target; progress counts cells with dew, seed cells included from the start |
+| 67 | Boosters and moves | Using a hero booster uses no move |
+| 68 | Colour goals | None in levels 1–50; every goal is an obstacle goal |
+| 69 | Goals on easy and medium levels | Easy 1–2, medium 2–3 (the tier table) |
+| 70 | Continues and lives | A life is lost only when the attempt ends in a fail (declined offer, moves out a 6th time, or a quit); at most one per attempt; a win after continues costs no life |
+| 71 | Which cocoon or drop item holds the fragment | The OB07 entry in `objects` with `"fragment": true`, or `"fragment_item": n` in `spawn.drop_items` (the n-th item spawned) |
+| 72 | The winning move | The whole match or special that finishes the last goal applies, and the rest of the move continues (falls, refills, waiting specials, second blasts, cascades, free shuffle); the win comes once it has settled |
+| 73 | Progress past the count | Stops at the count (e.g. 72/72); extra dew is not counted |
+| 74 | Dew goal met by seed cells at the start | Not allowed: the count must be more than the number of seed cells |
 
 ## Board layers & obstacles
 
@@ -288,7 +301,7 @@ Obstacles use the research pack's neutral behaviour IDs (OB02–OB17), each give
 | Debut | ID · behaviour | Mythic obstacle | Element | Rule |
 | --- | --- | --- | --- | --- |
 | 1 | OB02 · breakable, layered | Withered bramble | Earth | Match next to it; up to 3 layers |
-| 4 | OB04 · spread goal | Healing dew | Water | Matches made on dew spread it; cover the target cells (heals the forest) |
+| 4 | OB04 · spread goal | Healing dew | Water | Matches made on dew spread it; cover the target cells (heals the forest). Every playable cell is a target; progress counts the playable cells that have dew, seed cells included from the start (trial). Progress stops at the count; extra dew is not counted. The count must be more than the number of seed cells |
 | 7 | OB07 · container release | **Mummified creature** | Earth | Match next to it to unwrap and free the creature (the core rescue goal) |
 | 17 | OB03 · cover cluster | Creep moss | Earth | Match next to it to clear; fills whole areas |
 | 10 | OB05 · colour lock | Lantern shrine | Fire | Collect the colours it shows to light it. If any piece of a match touches it (up, down, left or right), every piece of that match of a colour it still needs, coloured specials included, fills it by one. Matches never lower its hp; a special lowers its hp by 1 without changing the colours; a Crane landing counts as one piece of a needed colour and doesn't lower hp. Lit when it needs no more colours or its hp reaches 0, whichever comes first; a lit shrine is removed and its cells fill by normal falling |
@@ -344,7 +357,7 @@ Each layer is pitched above the last, so every move resolves upwards; the quiet 
 | Special created | 0.25 s merge and glow |
 | Firecracker | 0.2 s blast, 4 px screen shake, short phone haptic |
 | Combo callouts | "Great!" / "Amazing!" / "Festival!" at 3 / 5 / 8 cascades, plus a quip from the hero whose colour made the combo (see The four heroes) |
-| Win finale | Leftover moves fire as rockets one at a time; each launches 0.15 s after the board settles from the last |
+| Win finale | Starts once the winning move has fully settled. Leftover moves fire as rockets one at a time; each launches 0.15 s after the board settles from the last |
 | Idle hint | After 5 s, a valid swap wiggles |
 
 **Godot setup:** a pool of 8–12 `AudioStreamPlayer` voices; one `AudioStreamRandomizer` per sound family; separate SFX and Music buses, with music ducked 3–6 dB during big combos; shard sequences scheduled by a small timer queue. Record real objects for sources (ceramic cups, a wooden box, stirring honey, a cork pop): free, and they sound more ASMR than synthesised tones.
@@ -409,7 +422,7 @@ The MVP economy is small and fair: coins, generous lives, four hero boosters tha
 | Item | Rule |
 | --- | --- |
 | Coins | Start 500. Win = 20 + 5 per finale rocket (about 40 a win). Spent on the continue, life refills and hero boosters; balance coin income against prices for each 5-level block in the economy sheet |
-| Lives | 5 max; lose one on fail, except on chapter finales, where a fail costs no life; refill 1 per 20 min, or buy all 5 back for 150 coins; 10 min of unlimited lives after each chapter finale |
+| Lives | 5 max; lose one when an attempt ends in a fail (a declined offer, moves out a 6th time, or a quit), at most one per attempt; an attempt won after continues costs no life; chapter finales cost no life on a fail; refill 1 per 20 min, or buy all 5 back for 150 coins; 10 min of unlimited lives after each chapter finale |
 | Continue | Optional "+5 moves" when moves run out: 300 coins for the 1st offer, 500 for the 2nd to 5th; at most 5 per attempt |
 | Win streak | 6 wins in a row: a chest drops a free Rocket and Crane onto the next board |
 | Soul fragments | Not spendable; restore guardians |
@@ -428,7 +441,7 @@ The MVP economy is small and fair: coins, generous lives, four hero boosters tha
 | 50 | **Rat's Nibble** (first guardian power) | In-level | Rat gnaws through a whole row of obstacles | Post-MVP (first update) |
 | \~110 / \~165 / \~200 | Ox's Charge / Rabbit's Hop / Dog's Fetch | In-level | Column smash ignoring stone / swap any two pieces / pull a goal item to the counter | Post-MVP; 1 free charge every level |
 
-Prices are starting values for the economy sheet. Win targets assume no boosters, so a player who never buys one must still be able to hit every target.
+Using a booster uses no move. Prices are starting values for the economy sheet. Win targets assume no boosters, so a player who never buys one must still be able to hit every target.
 
 **Fairness rules (from the research)**
 
@@ -475,7 +488,7 @@ Build our own board core in Godot around the 4-layer cell model, with logic sepa
 | `StoryPlayer` | Dialogues and story cards from `data/story/*.json` |
 | `tools/level_bot` | Headless bot: plays each level 500× with a greedy, human-like policy that uses only taught specials and combos, no boosters, pre-level boosters, streak-chest specials or continues; reports first-try win rate |
 
-**Level format:** exactly the schema in `level_agent_brief.md` section 5 (`id`, `chapter`, `tier`, `moves`, `colors`, `cells`, `underlay`, `objects` by OB ID, `fixed_tiles`, `spawn`, `goals`, `story_beat`, `designer_notes`), plus one Mythic field: `"fragment": {"guardian": "rat", "scripted": true}` on fragment levels. A fragment level also lists the fragment in goals, inside the tier's goal count.
+**Level format:** exactly the schema in `level_agent_brief.md` section 5 (`id`, `chapter`, `tier`, `moves`, `colors`, `cells`, `underlay`, `objects` by OB ID, `fixed_tiles`, `spawn`, `goals`, `story_beat`, `designer_notes`), plus one Mythic field: `"fragment": {"guardian": "rat", "scripted": true}` on fragment levels. A fragment level also lists the fragment in goals, inside the tier's goal count, as an obstacle goal with a flag, e.g. `{"obstacle": "OB07", "count": 1, "fragment": true}`; the fragment's cocoon or drop item also counts toward a plain OB07 / OB11 goal on the same level. The fragment's cocoon is the OB07 entry in `objects` with `"fragment": true`; a fragment drop item is set by `"fragment_item": n` in `spawn.drop_items` (the n-th item spawned carries it).
 
 **Level pipeline**
 
