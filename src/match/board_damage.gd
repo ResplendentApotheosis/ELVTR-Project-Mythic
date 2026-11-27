@@ -17,14 +17,20 @@ static func hit_top_layer(board: BoardModel, cell: Vector2i, hitset: Dictionary,
 		hit_underlay(board, cell, hitset, events)
 
 
-## Records the cells one special (or combo) has cleared so far in its hitset. If any of them is on
-## healing dew, all of them get dew (IR-53), including cells cleared earlier by the same special.
-static func note_cleared(board: BoardModel, cells: Array[Vector2i], hitset: Dictionary) -> void:
+## Records the cells one special (or combo) has cleared and covered so far in its hitset. If any
+## cleared cell is on healing dew, every covered cell gets dew (IR-53, owner decision OQ-46),
+## including cells covered earlier by the same special.
+static func note_cleared(board: BoardModel, cleared: Array[Vector2i], covered: Array[Vector2i], hitset: Dictionary) -> void:
 	if not hitset.has("cleared_cells"):
 		hitset["cleared_cells"] = [] as Array[Vector2i]
-	var all: Array[Vector2i] = hitset["cleared_cells"]
-	all.append_array(cells)
-	HealingDew.spread(board, all)
+		hitset["covered_cells"] = [] as Array[Vector2i]
+	var all_cleared: Array[Vector2i] = hitset["cleared_cells"]
+	all_cleared.append_array(cleared)
+	var all_covered: Array[Vector2i] = hitset["covered_cells"]
+	for c in covered:
+		if not all_covered.has(c):
+			all_covered.append(c)
+	HealingDew.spread(board, all_cleared, all_covered)
 
 
 ## Hits a match gives: the layer under/over its own pieces (IR-15) and every adjacent-match
@@ -35,10 +41,10 @@ static func hit_by_match(board: BoardModel, match_cells: Array[Vector2i], events
 	var in_match: Dictionary = {}
 	for c in match_cells:
 		in_match[c] = true
-	HealingDew.spread(board, match_cells)
+	HealingDew.spread(board, match_cells, match_cells)
 	for c in match_cells:
-		# Open question OQ-41 (provisional): a matched piece under an overlay is cleared and hits
-		# the overlay, not the underlay below it.
+		# Owner decision OQ-41 (chat 27 Nov 2026): a matched piece under an overlay is cleared and
+		# hits the overlay only, not the underlay below it.
 		if board.overlay_hp(c.x, c.y) > 0:
 			hit_overlay(board, c, hitset, events)
 		elif board.underlay_hp(c.x, c.y) > 0:

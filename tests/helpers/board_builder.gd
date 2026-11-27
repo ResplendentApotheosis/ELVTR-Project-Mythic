@@ -280,3 +280,10 @@ static func shrine_need(board: BoardModel, x: int, y: int, color: String) -> int
 		var needs: Dictionary = board.call("shrine_needs", x, y)
 		return int(needs.get(color, 0))
 	return -1
+
+
+## Twelve refill colours, none of them R/Y/B/G. Set `board.palette` to this when a test must not
+## see random refills line up into a cascade (a refill never matches what is already placed, and
+## with 12 colours a fall rarely lines up either).
+static func spread_palette() -> Array:
+	return ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12"]

@@ -18,10 +18,11 @@ static func run(board: BoardModel, queue: Array[FireOrder], events: Array[BoardE
 
 ## Owner decision OQ-27: set-off specials were lifted off the board when hit. Once the special
 ## that hit them has finished, pieces fall, then they fire one at a time from the cell where they
-## were hit, lowest first then left-most, each finishing (and falling) before the next. Open
-## question OQ-47 (provisional): specials they set off join the same waiting list, so the lowest,
-## then left-most waiting special always fires next. Open question OQ-44 (provisional): cascade
-## matches wait until every set-off special has fired.
+## were hit, lowest first then left-most, each finishing (and falling) before the next. Owner
+## decision OQ-47 (chat 27 Nov 2026, trial, revisit after playtest): specials they set off join the
+## same waiting list, so the lowest, then left-most waiting special always fires next. Owner
+## decision OQ-44 (chat 27 Nov 2026): pieces fall and refill before each one fires; cascade
+## matches wait until every waiting special has fired.
 static func fire_set_offs(board: BoardModel, waiting: Array[FireOrder], events: Array[BoardEvent]) -> void:
 	var fired: int = 0
 	while not waiting.is_empty() and fired < MAX_FIRES:
@@ -87,9 +88,9 @@ static func double_blast(board: BoardModel, area: Array[Vector2i], centre: Vecto
 			MatchResolver.cascade(board, events)
 
 
-## Clears every plain piece of `color` (IR-18, IR-19). Owner decision OQ-33: only plain pieces are
-## cleared; coloured specials are left alone. Open question OQ-42 (provisional): plain pieces under
-## an overlay are cleared like any other.
+## Clears every plain piece of `color` (IR-18, IR-19). Owner decisions: only plain pieces are
+## cleared, coloured specials are left alone (OQ-33); plain pieces under an overlay are ignored,
+## so neither they nor their overlay are touched (OQ-42, chat 27 Nov 2026).
 static func fire_orb(board: BoardModel, order: FireOrder, color: String, waiting: Array[FireOrder], events: Array[BoardEvent]) -> void:
 	var own: Array[Vector2i] = take_off_board(board, order)
 	var cells: Array[Vector2i] = plain_cells_of(board, color)
@@ -104,8 +105,9 @@ static func fire_orb(board: BoardModel, order: FireOrder, color: String, waiting
 ## Target shown, take-off, landing (IR-48). Owner decision OQ-34: take-off counts as a special
 ## covering the Crane's own cell: a piece that fell in is cleared, a special there is set off, the
 ## top layer takes one hit. Landing: collects a drop item, gives an uncovered dew target dew, puts
-## one piece into a lantern shrine, or else hits the cell. Open question OQ-49 (provisional): a dew
-## landing gives dew only; the piece there stays.
+## one piece into a lantern shrine, or else hits the cell. Owner decision OQ-49 (chat 27 Nov 2026):
+## a dew landing clears the piece there like any special AND gives the cell dew. Open question
+## OQ-55 (provisional): a shrine landing counts as one piece and one hp, not a separate special hit.
 static func fire_crane(board: BoardModel, order: FireOrder, waiting: Array[FireOrder], events: Array[BoardEvent]) -> void:
 	var target: Vector2i = CraneTargeting.choose(board, order.cell, [order.cell] as Array[Vector2i])
 	var e_target: BoardEvent = BoardEvent.new("crane_target")
@@ -127,7 +129,8 @@ static func fire_crane(board: BoardModel, order: FireOrder, waiting: Array[FireO
 	if board.get_drop_item(target.x, target.y) != "":
 		BoardGravity.collect_drop(board, target, events)
 	elif board.is_uncovered_dew_target(target.x, target.y):
-		board.give_dew(target.x, target.y)   # OQ-49 (provisional): dew only, no clear
+		cover(board, [target] as Array[Vector2i], hitset, "crane", waiting, events)
+		board.give_dew(target.x, target.y)   # OQ-49: clear the piece, then give dew
 	elif content != null and content.id == "OB05" and not content.needs.is_empty():
 		LanternShrine.take_one_piece(board, content, hitset, events)
 	else:
@@ -154,7 +157,9 @@ static func cover(board: BoardModel, cells: Array[Vector2i], hitset: Dictionary,
 		board.clear_piece(c.x, c.y)
 		cleared.append(c)
 	_clear_event(events, cleared, source)
-	BoardDamage.note_cleared(board, cleared, hitset)
+	var covered: Array[Vector2i] = own.duplicate()
+	covered.append_array(cells)
+	BoardDamage.note_cleared(board, cleared, covered, hitset)
 	for c in cells:
 		BoardDamage.hit_top_layer(board, c, hitset, events)
 
@@ -188,13 +193,13 @@ static func _pop_lowest(waiting: Array[FireOrder]) -> FireOrder:
 
 
 ## Most common colour among plain pieces; ties go R, Y, B, G, then other colours A-Z (IR-19, IR-47).
-## Owner decision OQ-33: coloured specials are not counted. Open question OQ-42 (provisional):
-## plain pieces under an overlay are counted.
+## Owner decisions: coloured specials are not counted (OQ-33); plain pieces under an overlay are
+## not counted (OQ-42, chat 27 Nov 2026).
 static func most_common_color(board: BoardModel) -> String:
 	var counts: Dictionary = {}
 	for y in range(board.height):
 		for x in range(board.width):
-			if board.get_kind(x, y) == "plain":
+			if _orb_can_take(board, x, y):
 				var c: String = board.get_color(x, y)
 				counts[c] = int(counts.get(c, 0)) + 1
 	var order: Array[String] = ["R", "Y", "B", "G"]
@@ -214,15 +219,22 @@ static func most_common_color(board: BoardModel) -> String:
 	return best
 
 
+## Cells the Jade Orb clears or converts for this colour: uncovered plain pieces only (OQ-33, OQ-42).
 static func plain_cells_of(board: BoardModel, color: String) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
 	if color == "":
 		return out
 	for y in range(board.height):
 		for x in range(board.width):
-			if board.get_kind(x, y) == "plain" and board.get_color(x, y) == color:
+			if _orb_can_take(board, x, y) and board.get_color(x, y) == color:
 				out.append(Vector2i(x, y))
 	return out
+
+
+## A plain piece with no overlay on it: the only kind of piece the Jade Orb counts, clears or
+## converts (owner decisions OQ-33, OQ-42 chat 27 Nov 2026).
+static func _orb_can_take(board: BoardModel, x: int, y: int) -> bool:
+	return board.get_kind(x, y) == "plain" and board.overlay_hp(x, y) <= 0
 
 
 static func row_cells(board: BoardModel, y: int) -> Array[Vector2i]:

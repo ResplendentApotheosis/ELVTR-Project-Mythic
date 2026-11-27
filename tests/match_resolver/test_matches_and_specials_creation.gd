@@ -250,9 +250,7 @@ func test_ir40_start_cell_match_horizontal_uses_the_leftmost_cell() -> void:
 	assert_true(made.has("rocket_row|Y|2,4"), "yellow row Rocket on the left-most cell (2,4) of its match")
 
 
-func test_ir40_pending_finale_rockets() -> void:
-	pending("OQ-40: direction (and placement) of the win-finale Rockets; not a match special")
-
+# Win-finale Rockets are not match specials; see test_finale_rockets.gd (IR-16).
 
 # ---------------------------------------------------------------- IR-42
 
@@ -325,6 +323,10 @@ func test_ir50_coloured_rocket_in_a_match_clears_and_fires() -> void:
 		for c in [Vector2i(1, 4), Vector2i(2, 4), Vector2i(3, 4)]:
 			assert_true(first.has(c), "the first clear is the 3-match, includes %s" % c)
 	assert_eq(EV.cells_of(events, "rocket_fire"), [Vector2i(3, 4)], "fires from (3,4)")
+	# OQ-44 A: only the fall and refill happen between the match clear and the Rocket firing.
+	var i_fall: int = EV.index_after(events, "fall", i_match_clear)
+	var i_refill: int = EV.index_after(events, "refill", i_fall)
+	assert_true(i_fall > i_match_clear and i_refill > i_fall and i_refill < i_fire, "match clear, fall, refill, then the Rocket fires")
 
 
 func test_ir50_jade_orb_is_never_part_of_a_match() -> void:
@@ -345,3 +347,7 @@ func test_ir50_crane_reports_the_colour_it_was_made_from() -> void:
 	assert_eq(_kinds(events), ["crane"])
 	assert_eq(_colors(events), ["Y"])
 
+
+
+func test_ir50_pending_matched_special_leaves_its_cell_or_stays() -> void:
+	pending("OQ-54 (b): does a matched coloured special leave its cell (pieces fall into it before it fires) or stay on the board as a piece")

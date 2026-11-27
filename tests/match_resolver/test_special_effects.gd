@@ -55,8 +55,8 @@ func test_ir16_orb_plus_row_rocket_makes_only_row_rockets() -> void:
 	_all_fires_have_kind(events, "rocket_row")
 
 
-func test_ir16_pending_finale_rockets() -> void:
-	pending("OQ-40: direction of the win-finale Rockets (leftover moves)")
+# Win-finale Rockets (random row/column per Rocket, OQ-40) are in test_finale_rockets.gd.
+# Their odds and mix are pending on OQ-53.
 
 
 # ---------------------------------------------------------------- IR-17
@@ -189,8 +189,24 @@ func test_ir18_orb_swapped_with_a_hatchling_acts_as_a_tap() -> void:
 	assert_eq(board.moves, 14)
 
 
-func test_ir18_pending_plain_pieces_under_an_overlay() -> void:
-	pending("OQ-42: are plain pieces under an overlay cleared (and counted) by the Orb")
+func test_ir18_orb_ignores_a_plain_piece_under_an_overlay() -> void:
+	# OQ-42 B: the covered B is not cleared; its moss is not hit; the cell is untouched.
+	var board: BoardModel = BB.blank()
+	board.moves = 15
+	BB.put(board, "O", [[4, 4]])
+	BB.put(board, "B", [[5, 4], [1, 7], [7, 2], [1, 1]])
+	board.set_overlay(1, 1, "OB03", 1)
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(4, 4), Vector2i(5, 4))
+	var cleared: Dictionary = EV.cleared(events)
+	for c in [Vector2i(4, 4), Vector2i(1, 7), Vector2i(7, 2)]:
+		assert_true(cleared.has(c), "uncovered B at %s cleared" % c)
+	assert_false(cleared.has(Vector2i(1, 1)), "the covered B is not cleared")
+	assert_eq(board.get_color(1, 1), "B", "the covered B is still there")
+	assert_eq(board.overlay_hp(1, 1), 1, "moss still hp 1")
+	var fires: Array = EV.of_type(events, "orb_fire")
+	assert_eq(fires.size(), 1)
+	if fires.size() == 1:
+		assert_false(EV.to_set(fires[0].cells).has(Vector2i(1, 1)), "the Orb does not cover the covered cell")
 
 
 # ---------------------------------------------------------------- IR-19
@@ -233,8 +249,33 @@ func test_ir19_coloured_specials_are_not_counted_and_not_cleared() -> void:
 	assert_eq(BB.find_kind(board, "firecracker").size(), 2, "both Firecrackers stay on the board")
 
 
-func test_ir19_pending_plain_pieces_under_an_overlay() -> void:
-	pending("OQ-42: are plain pieces under an overlay counted for 'most common' and cleared")
+func _covered_r_board(uncovered: Dictionary, covered_color: String, covered_x: Array) -> BoardModel:
+	# Rows 7-8 are fixed fillers (except the covered pieces on row 8), so no cascade can match a covered piece.
+	var reserved: Dictionary = {Vector2i(4, 4): "O"}
+	for x in range(9):
+		reserved[Vector2i(x, 7)] = "."
+		reserved[Vector2i(x, 8)] = "."
+	for x in covered_x:
+		reserved[Vector2i(int(x), 8)] = covered_color
+	var board: BoardModel = BB.with_counts(uncovered, reserved)
+	board.moves = 10
+	for x in covered_x:
+		board.set_overlay(int(x), 8, "OB03", 1)
+	return board
+
+
+func test_ir19_covered_pieces_are_neither_counted_nor_cleared() -> void:
+	# OQ-42 B. Uncovered: Y 15 beats R 14; 3 more R are covered (R would win at 17 if they counted).
+	var board: BoardModel = _covered_r_board({"R": 14, "Y": 15, "B": 12, "G": 12}, "R", [0, 4, 8])
+	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(4, 4))
+	var fires: Array = EV.of_type(events, "orb_fire")
+	assert_eq(fires.size(), 1)
+	if fires.size() == 1:
+		assert_eq(fires[0].color, "Y", "only the 14 uncovered R count, so Y wins")
+	assert_eq(board.moves, 9)
+	for x in [0, 4, 8]:
+		assert_eq(board.get_color(x, 8), "R", "the covered R at (%d,8) stays" % x)
+		assert_eq(board.overlay_hp(x, 8), 1, "its moss is still hp 1")
 
 
 # ---------------------------------------------------------------- IR-20
@@ -300,6 +341,13 @@ func test_ir21_match_makes_a_rocket_that_the_firecracker_then_sets_off() -> void
 		assert_eq(events[i_made].kind, "rocket_row")
 		assert_eq(events[i_made].cell, Vector2i(3, 4))
 	assert_eq(EV.cells_of(events, "blast"), [Vector2i(4, 4), Vector2i(4, 4)], "centred on (4,4)")
+	# OQ-44 A: fall and refill before each fire. Expected: created, fall, refill, blast 1, fall, refill, blast 2, fall, refill, Rocket, fall, refill (row 4 cleared, pieces above fall in).
+	var wanted: Array[String] = ["special_created", "fall", "refill", "blast", "fall", "refill", "blast", "fall", "refill", "rocket_fire", "fall", "refill"]
+	var seen: Array[String] = []
+	for e in events:
+		if wanted.has(e.type):
+			seen.append(e.type)
+	assert_eq(seen, wanted, "event order (OQ-44 A)")
 	if i_rocket >= 0:
 		assert_eq(events[i_rocket].cell, Vector2i(3, 4), "the Rocket fires from where it was hit")
 		assert_true(EV.same_set(EV.to_set(events[i_rocket].cells), EV.to_set(EV.row_cells(4))), "along row 4")
@@ -393,12 +441,56 @@ func test_ir41_firecracker_lifts_a_rocket_which_fires_once_after_blast_two() -> 
 	assert_true(EV.index_of(events, "rocket_fire") > EV.index_of(events, "blast", 1), "after blast 2")
 
 
-func test_ir41_pending_cascades_before_a_set_off_special_fires() -> void:
-	pending("OQ-44: whether cascade matches resolve before or after the set-off specials fire")
+func test_ir41_fall_and_refill_before_each_set_off_special_but_cascades_only_after_the_last() -> void:
+	# OQ-44 A. G at (1,3),(1,5),(1,6); row 4 is cleared, so the G from (1,3) lands on (1,4) and
+	# lines up with (1,5),(1,6). That match must wait until the column Rocket has fired.
+	var board: BoardModel = BB.blank()
+	BB.put(board, "G", [[1, 3], [1, 5], [1, 6]])
+	BB.put(board, "R-", [[0, 4]])
+	BB.put(board, "R|", [[6, 4]])
+	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(0, 4))
+	var i_fire1: int = EV.index_of(events, "rocket_fire", 0)
+	var i_fall1: int = EV.index_after(events, "fall", i_fire1)
+	var i_refill1: int = EV.index_after(events, "refill", i_fall1)
+	var i_fire2: int = EV.index_of(events, "rocket_fire", 1)
+	# The column Rocket clears its whole column, so nothing can fall: only a refill follows it.
+	var i_refill2: int = EV.index_after(events, "refill", i_fire2)
+	var i_match: int = EV.index_of(events, "match", 0)
+	assert_true(i_fire1 >= 0 and i_fall1 > i_fire1 and i_refill1 > i_fall1 and i_fire2 > i_refill1, "row Rocket, fall, refill, then column Rocket")
+	assert_true(i_refill2 > i_fire2, "column Rocket, then refill (no fall: the whole column is empty)")
+	assert_true(i_match > i_refill2, "the G match comes only after the column Rocket and its refill")
+	if i_match >= 0:
+		var m: Dictionary = EV.to_set(events[i_match].cells)
+		for c in [Vector2i(1, 4), Vector2i(1, 5), Vector2i(1, 6)]:
+			assert_true(m.has(c), "match includes %s" % c)
+	if i_fall1 >= 0:
+		var moved_to_14: bool = false
+		for m2 in events[i_fall1].data.get("moves", []):
+			if m2["from"] == Vector2i(1, 3) and m2["to"] == Vector2i(1, 4):
+				moved_to_14 = true
+		assert_true(moved_to_14, "the first fall moves G from (1,3) to (1,4)")
 
 
-func test_ir41_pending_chain_inside_a_chain_order() -> void:
-	pending("OQ-47: when a set-off special sets off another, does it join the same waiting list or fire before the others")
+func test_ir41_chain_inside_a_chain_joins_one_shared_waiting_list() -> void:
+	# OQ-47 A. A and C are lifted by the row 4 Rocket; after the fall A fires and sets off B;
+	# C (row 4) is lower than B (row 2), so C fires before B.
+	var board: BoardModel = BB.blank()
+	BB.put(board, "R-", [[0, 4]])
+	BB.put(board, "R|", [[2, 4], [6, 4]])
+	BB.put(board, "R-", [[2, 1]])
+	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(0, 4))
+	var fires: Array = EV.of_type(events, "rocket_fire")
+	assert_eq(fires.size(), 4)
+	if fires.size() != 4:
+		return
+	assert_eq(fires[0].cell, Vector2i(0, 4))
+	assert_eq(fires[1].cell, Vector2i(2, 4), "A fires first (left-most of the two lifted)")
+	assert_eq(fires[1].kind, "rocket_col")
+	assert_eq(fires[2].cell, Vector2i(6, 4), "C before B, although B was set off later")
+	assert_eq(fires[2].kind, "rocket_col")
+	assert_eq(fires[3].cell, Vector2i(2, 2), "B fires from where it was hit, (2,2), after falling from (2,1)")
+	assert_eq(fires[3].kind, "rocket_row")
+	assert_true(EV.same_set(EV.to_set(fires[3].cells), EV.to_set(EV.row_cells(2))), "along row 2")
 
 
 # ---------------------------------------------------------------- IR-47
@@ -428,8 +520,14 @@ func test_ir47_a_yellow_rocket_is_not_counted() -> void:
 	assert_eq(_tap_orb_colour({"R": 18, "Y": 18, "B": 17, "G": 16}, {Vector2i(0, 8): "Y-"}), "R")
 
 
-func test_ir47_pending_plain_pieces_under_an_overlay() -> void:
-	pending("OQ-42: are plain pieces under an overlay counted when breaking colour ties")
+func test_ir47_covered_pieces_do_not_count_towards_a_tie_or_a_win() -> void:
+	# OQ-42 B. Uncovered R 10, Y 10, B 9, G 8; 2 more Y are covered (Y would win at 12 if they counted).
+	var board: BoardModel = _covered_r_board({"R": 10, "Y": 10, "B": 9, "G": 8}, "Y", [0, 8])
+	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(4, 4))
+	var fires: Array = EV.of_type(events, "orb_fire")
+	assert_eq(fires.size(), 1)
+	if fires.size() == 1:
+		assert_eq(fires[0].color, "R", "R and Y tie on uncovered pieces, so R")
 
 
 # ---------------------------------------------------------------- IR-48
@@ -485,14 +583,18 @@ func test_ir48_takeoff_takes_one_layer_off_goo_hp2() -> void:
 	assert_eq(board.underlay_hp(1, 7), 1)
 
 
-func test_ir48_landing_on_an_uncovered_dew_target_gives_it_dew() -> void:
+func test_ir48_landing_on_an_uncovered_dew_target_clears_the_piece_and_gives_dew() -> void:
+	# OQ-49 B: the landing is a special covering the cell, so the piece there is cleared (IR-09).
 	var board: BoardModel = BB.blank()
 	BB.put(board, "GC", [[1, 7]])
+	BB.put(board, "B", [[6, 2]])
 	BB.set_dew_target(board, 6, 2)
 	board.goals = ["OB04"]
 	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(1, 7))
 	assert_eq(EV.cells_of(events, "crane_landing"), [Vector2i(6, 2)])
+	assert_true(EV.cleared(events).has(Vector2i(6, 2)), "the B on the target cell is cleared")
 	assert_true(BB.has_dew(board, 6, 2), "the target cell now has dew")
+	assert_eq(board.get_color(6, 2), BB.filler_color(6, 1), "after the board settles (6,2) holds the piece that was at (6,1)")
 
 
 func test_ir48_set_off_crane_takeoff_clears_the_piece_that_fell_into_its_cell() -> void:
@@ -518,8 +620,8 @@ func test_ir48_set_off_crane_takeoff_clears_the_piece_that_fell_into_its_cell() 
 	assert_eq(board.content_hp(6, 2), 1, "then the Crane lands on its target")
 
 
-func test_ir48_pending_crane_landing_on_dew_target_clears_the_piece() -> void:
-	pending("OQ-49: does a Crane landing on an uncovered dew target also clear the piece there")
+func test_ir48_pending_crane_landing_on_a_lantern_shrine_and_its_hp() -> void:
+	pending("OQ-55 (c): does a Crane landing on a lantern shrine also lower its hp")
 
 
 # ---------------------------------------------------------------- IR-49
@@ -628,8 +730,13 @@ func test_ir49_no_goal_left_uncovered_dew_target_counts_as_an_obstacle() -> void
 	BB.set_dew_target(board, 4, 6)
 	board.add_content("OB02", 4, 1, 1)
 	board.goals = []
-	assert_eq(_crane_target(board), Vector2i(4, 6), "dew target at distance 2 beats the bramble at 3")
+	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(4, 4))
+	var targets: Array = EV.of_type(events, "crane_target")
+	assert_eq(targets.size(), 1)
+	if targets.size() == 1:
+		assert_eq(targets[0].cell, Vector2i(4, 6), "dew target at distance 2 beats the bramble at 3")
 	assert_true(BB.has_dew(board, 4, 6), "the landing gives the cell dew")
+	assert_true(EV.cleared(events).has(Vector2i(4, 6)), "OQ-49 B: the piece on the target cell is cleared")
 
 
 func test_ir49_dew_goal_counts_uncovered_target_cells_as_hits_left() -> void:
@@ -664,5 +771,29 @@ func test_ir49_shrine_goal_counts_pieces_still_needed_and_takes_the_most_needed_
 	assert_eq(BB.shrine_need(board, 1, 1, "B"), 1)
 
 
-func test_ir49_pending_shrine_colour_tie() -> void:
-	pending("OQ-43: a shrine that needs two colours equally; which colour a Crane landing counts as")
+func _tie_shrine_result(seed_value: int) -> String:
+	var board: BoardModel = BB.blank(9, 9, seed_value)
+	BB.put(board, "GC", [[4, 4]])
+	BB.add_shrine(board, 1, 1, {"R": 2, "B": 2})
+	board.goals = ["OB05"]
+	MatchResolver.tap(board, Vector2i(4, 4))
+	return "%d,%d,%d,%d" % [BB.shrine_need(board, 1, 1, "R"), BB.shrine_need(board, 1, 1, "B"),
+		BB.shrine_need(board, 1, 1, "Y"), BB.shrine_need(board, 1, 1, "G")]
+
+
+func test_ir49_shrine_colour_tie_takes_one_of_the_two_tied_colours() -> void:
+	# OQ-43 B: the tie is broken by the level's seeded RNG (board.rng), so either outcome is legal.
+	var r: String = _tie_shrine_result(1)
+	assert_true(r == "1,2,0,0" or r == "2,1,0,0", "needs 1 R + 2 B or 2 R + 1 B, got %s" % r)
+
+
+func test_ir49_shrine_colour_tie_is_repeatable_for_one_seed() -> void:
+	assert_eq(_tie_shrine_result(42), _tie_shrine_result(42), "same seed, same result")
+
+
+func test_ir49_shrine_colour_tie_is_not_a_fixed_order() -> void:
+	# A fixed order (always red, or always blue) would give one outcome for every seed.
+	var seen: Dictionary = {}
+	for s in range(1, 25):
+		seen[_tie_shrine_result(s)] = true
+	assert_true(seen.has("1,2,0,0") and seen.has("2,1,0,0"), "across 24 seeds both colours get picked, got %s" % [seen.keys()])

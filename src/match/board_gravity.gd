@@ -40,7 +40,7 @@ static func _is_stopper(board: BoardModel, x: int, y: int) -> bool:
 
 
 ## Every column: items drop to the bottom of their stretch of cells. Stoppers split a column
-## into stretches. Open question OQ-45 (provisional): non-playable cells are passed through.
+## into stretches. Owner decision OQ-45 (chat 27 Nov 2026): non-playable cells are passed through.
 static func _fall_straight(board: BoardModel, moves: Array) -> void:
 	for x in range(board.width):
 		var stretch: Array[Vector2i] = []
@@ -66,7 +66,7 @@ static func _compact(board: BoardModel, stretch: Array[Vector2i], moves: Array) 
 
 ## Fills ONE empty cell that a stopper hides from above (lowest row first, then left-most) with
 ## an item sliding in diagonally, upper-left before upper-right (owner decision OQ-35).
-## Open question OQ-41 (provisional): cells below a locked piece are filled the same way.
+## Owner decision OQ-41 (chat 27 Nov 2026): a locked piece is a blocker, so cells below it fill the same way.
 static func _slide_one(board: BoardModel, moves: Array) -> bool:
 	for y in range(board.height - 1, 0, -1):
 		for x in range(board.width):

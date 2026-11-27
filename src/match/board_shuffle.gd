@@ -14,7 +14,7 @@ static func shuffle(board: BoardModel, events: Array[BoardEvent]) -> void:
 	for y in range(board.height):
 		for x in range(board.width):
 			var kind: String = board.get_kind(x, y)
-			# Open question OQ-41 (provisional): pieces under an overlay are not shuffled.
+			# Owner decision OQ-41 (chat 27 Nov 2026): pieces under an overlay are not shuffled.
 			if kind == "" or kind == "drop" or board.overlay_hp(x, y) > 0:
 				continue
 			cells.append(Vector2i(x, y))

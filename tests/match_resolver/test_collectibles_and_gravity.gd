@@ -186,8 +186,18 @@ func test_ir33_no_shuffle_when_a_special_can_be_tapped() -> void:
 	assert_eq(EV.count(events, "shuffle"), 0)
 
 
-func test_ir33_pending_covered_pieces_in_a_shuffle() -> void:
-	pending("OQ-41: whether pieces under an overlay are shuffled")
+func test_ir33_shuffle_leaves_a_covered_piece_where_it_is() -> void:
+	# OQ-41 A (b): creep moss hp 1 over the G at (3,6) (row 6 of the dead board is "R R Y G B Y R G").
+	var board: BoardModel = _dead_board()
+	board.set_overlay(3, 6, "OB03", 1)
+	assert_eq(board.get_color(3, 6), "G", "precondition")
+	assert_false(MatchResolver.has_possible_move(board), "precondition: still no move on this board")
+	var events: Array[BoardEvent] = MatchResolver.settle(board)
+	assert_eq(EV.count(events, "shuffle"), 1)
+	assert_eq(board.get_color(3, 6), "G", "(3,6) still holds the G")
+	assert_eq(board.overlay_hp(3, 6), 1, "under moss hp 1")
+	assert_true(MatchResolver.has_possible_move(board), "at least one valid move after the shuffle")
+	assert_false(BB.has_match(board), "no ready-made match after the shuffle")
 
 
 # ---------------------------------------------------------------- IR-51
@@ -238,9 +248,33 @@ func test_ir51_column_refills_at_its_top_playable_cell() -> void:
 	assert_eq(BB.empty_cells(board).size(), 0)
 
 
-func test_ir51_pending_filling_below_a_locked_piece() -> void:
-	pending("OQ-41: how the cells below a locked covered piece are filled")
+func test_ir51_locked_piece_is_a_blocker_so_the_cell_below_fills_by_a_diagonal_slide() -> void:
+	# OQ-41 A (c). Same case as IR-54: moss hp 2 over G at (4,3); (4,4) emptied directly.
+	var board: BoardModel = BB.blank()
+	BB.put(board, "G", [[4, 3]])
+	board.set_overlay(4, 3, "OB03", 2)
+	BB.put(board, "X", [[4, 4]])
+	MatchResolver.settle(board)
+	assert_eq(board.get_color(4, 3), "G", "G stays at (4,3)")
+	assert_eq(board.overlay_hp(4, 3), 2, "moss still hp 2")
+	assert_eq(board.get_color(4, 4), BB.filler_color(3, 3), "(4,4) is filled from (3,3), the upper-left")
+	assert_eq(BB.empty_cells(board).size(), 0)
 
 
-func test_ir51_pending_hole_in_the_middle_of_a_column() -> void:
-	pending("OQ-45: columns with a non-playable cell in the middle (refill entry point)")
+func test_ir51_pieces_fall_straight_through_a_non_playable_cell_in_the_middle_of_a_column() -> void:
+	# OQ-45 A. (3,4) is a hole; (3,5) is emptied directly.
+	var board: BoardModel = BB.blank()
+	BB.put(board, "#", [[3, 4]])
+	BB.put(board, "X", [[3, 5]])
+	MatchResolver.settle(board)
+	assert_eq(board.get_color(3, 5), BB.filler_color(3, 3), "the piece from (3,3) fell straight through the hole to (3,5)")
+	for y in [1, 2, 3]:
+		assert_eq(board.get_color(3, y), BB.filler_color(3, y - 1), "the piece from (3,%d) moved to (3,%d)" % [y - 1, y])
+	assert_ne(board.get_kind(3, 0), "", "a new piece entered at (3,0)")
+	assert_eq(board.get_kind(3, 4), "", "the hole stays empty")
+	for x in range(9):
+		if x == 3:
+			continue
+		for y in range(9):
+			assert_eq(board.get_color(x, y), BB.filler_color(x, y), "no diagonal slide: (%d,%d) unchanged" % [x, y])
+	assert_eq(BB.empty_cells(board).size(), 0, "no playable cell is empty")

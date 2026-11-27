@@ -328,7 +328,72 @@ func test_ir45_rocket_firecracker_hits_a_square_pillar_once() -> void:
 	assert_eq(board.content_hp(3, 3), 2)
 
 
-# ---------------------------------------------------------------- blocked by open questions
 
-func test_ir14_pending_match_through_a_covered_piece() -> void:
-	pending("OQ-41: what a match that includes a piece under an overlay does to the piece and to the overlay")
+# ---------------------------------------------------------------- IR-14 / IR-15 with covered pieces (OQ-41 A)
+
+func test_ir14_match_next_to_a_moss_cell_hits_the_moss() -> void:
+	var board: BoardModel = BB.blank()
+	BB.put(board, "R", [[3, 4], [5, 4], [4, 5]])
+	BB.put(board, "Y", [[4, 3]])
+	board.set_overlay(4, 3, "OB03", 2)
+	MatchResolver.swap(board, Vector2i(4, 5), Vector2i(4, 4))
+	assert_eq(board.overlay_hp(4, 3), 1, "the match (3,4),(4,4),(5,4) touches the moss from below")
+	assert_eq(board.get_color(4, 3), "Y", "the covered piece is not part of the match and stays")
+
+
+func test_ir15_match_through_a_covered_piece_hits_the_moss_and_not_the_goo_below() -> void:
+	var board: BoardModel = BB.blank()
+	board.moves = 10
+	BB.put(board, "R", [[2, 4], [3, 4], [4, 5]])
+	BB.put(board, "Y", [[4, 4]])
+	board.set_overlay(3, 4, "OB03", 1)
+	board.set_underlay(3, 4, "OB10", 1)
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(4, 5), Vector2i(4, 4))
+	var cleared: Dictionary = EV.cleared(events)
+	for c in [Vector2i(2, 4), Vector2i(3, 4), Vector2i(4, 4)]:
+		assert_true(cleared.has(c), "match cell %s cleared" % c)
+	assert_eq(board.overlay_hp(3, 4), 0, "moss removed")
+	assert_eq(board.underlay_hp(3, 4), 1, "the goo below is not hit while the overlay was there")
+
+
+# ---------------------------------------------------------------- IR-55 (OQ-50 A, trial)
+
+func _shrine_board() -> BoardModel:
+	var board: BoardModel = BB.blank()
+	BB.add_shrine(board, 3, 3, {"R": 2, "B": 1}, 2, 2)
+	return board
+
+
+func _assert_shrine_needs_unchanged(board: BoardModel) -> void:
+	assert_eq(BB.shrine_need(board, 3, 3, "R"), 2, "still needs 2 R")
+	assert_eq(BB.shrine_need(board, 3, 3, "B"), 1, "still needs 1 B")
+
+
+func test_ir55_row_rocket_lowers_the_shrine_hp_but_not_its_needs() -> void:
+	var board: BoardModel = _shrine_board()
+	assert_eq(board.content_hp(3, 3), 3, "precondition: hp 3")
+	BB.put(board, "R-", [[0, 3]])
+	MatchResolver.tap(board, Vector2i(0, 3))
+	assert_eq(board.content_hp(3, 3), 2, "one hit although the Rocket covers (3,3) and (4,3)")
+	_assert_shrine_needs_unchanged(board)
+
+
+func test_ir55_firecracker_double_blast_is_one_hit_on_the_shrine() -> void:
+	var board: BoardModel = _shrine_board()
+	BB.put(board, "RF", [[5, 4]])
+	MatchResolver.tap(board, Vector2i(5, 4))
+	assert_eq(board.content_hp(3, 3), 2, "both blasts cover (4,3),(4,4) but give one hit")
+	_assert_shrine_needs_unchanged(board)
+
+
+func test_ir55_rocket_rocket_combo_is_one_hit_on_the_shrine() -> void:
+	var board: BoardModel = _shrine_board()
+	BB.put(board, "R-", [[4, 5]])
+	BB.put(board, "R|", [[4, 6]])
+	MatchResolver.swap(board, Vector2i(4, 6), Vector2i(4, 5))
+	assert_eq(board.content_hp(3, 3), 2, "column 4 covers (4,3),(4,4): one hit for the combo")
+	_assert_shrine_needs_unchanged(board)
+
+
+func test_ir55_pending_matches_hp_zero_and_crane_landing() -> void:
+	pending("OQ-55: how matches fill a shrine, what lights it (colours or hp 0), and whether a Crane landing lowers hp")

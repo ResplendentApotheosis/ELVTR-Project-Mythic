@@ -1,4 +1,4 @@
-# The board's rules engine: swaps, taps, matches, specials, damage, gravity, refill and cascades.
+# The board's rules engine: swaps, taps, matches, specials, damage, gravity, refill, cascades and the win finale.
 # Everything resolves instantly and returns Array[BoardEvent] for the presentation to play later.
 # Check: "$GODOT_BIN" --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 class_name MatchResolver
@@ -55,6 +55,48 @@ static func settle(board: BoardModel) -> Array[BoardEvent]:
 	return events
 
 
+## Win finale (IR-16, IR-05): each leftover move becomes one Bamboo Rocket, fired one after another,
+## each fully resolved (fall, refill, cascades) before the next; board.moves ends at 0.
+## Owner decision OQ-40 (chat 27 Nov 2026): each Rocket's direction is one board.rng draw, unless
+## `directions[i]` ("rocket_row" / "rocket_col") overrides it (a test seam).
+## Open question OQ-53 (provisional): each direction is an independent 50/50 pick.
+## Not in the spec (our choice): each Rocket replaces a random uncovered plain piece (a second
+## board.rng draw); with no such piece it fires from the board's middle cell.
+static func fire_finale(board: BoardModel, directions: Array = []) -> Array[BoardEvent]:
+	var events: Array[BoardEvent] = []
+	var index: int = 0
+	while board.moves > 0:
+		var kind: String = ""
+		if index < directions.size():
+			kind = String(directions[index])
+		else:
+			kind = "rocket_row" if board.rng.randi_range(0, 1) == 0 else "rocket_col"
+		board.moves -= 1
+		index += 1
+		var order: FireOrder = _place_finale_rocket(board, kind, events)
+		_fire_waiting(board, [order] as Array[FireOrder], events)
+		cascade(board, events)
+	return events
+
+
+static func _place_finale_rocket(board: BoardModel, kind: String, events: Array[BoardEvent]) -> FireOrder:
+	var options: Array[Vector2i] = []
+	for y in range(board.height):
+		for x in range(board.width):
+			if board.get_kind(x, y) == "plain" and not board.is_locked(x, y):
+				options.append(Vector2i(x, y))
+	if options.is_empty():
+		return FireOrder.new(kind, "", Vector2i(board.width / 2, board.height / 2), false)
+	var cell: Vector2i = options[board.rng.randi_range(0, options.size() - 1)]
+	board.set_piece(cell.x, cell.y, kind, "")
+	var made: BoardEvent = BoardEvent.new("special_created")
+	made.cell = cell
+	made.kind = kind
+	made.data = {"finale": true}
+	events.append(made)
+	return FireOrder.new(kind, "", cell, true)
+
+
 ## True if some swap would be accepted (makes a match or involves a special) or a special can be tapped.
 static func has_possible_move(board: BoardModel) -> bool:
 	for y in range(board.height):
@@ -104,7 +146,8 @@ static func _invalid(from: Vector2i, to: Vector2i, reason: String) -> BoardEvent
 ## A single special swapped with a plain piece or drop item (IR-18, IR-39). The swap is done.
 ## Owner decision OQ-26: matches made by the swap resolve first, then the special fires from the
 ## cell it now sits in. Owner decision OQ-30: an Orb swapped with a drop item acts as a tap.
-## Open question OQ-44 (provisional): nothing falls between the swap's match and the special firing.
+## Owner decision OQ-44 (chat 27 Nov 2026): pieces fall and refill between the swap's match and
+## the special firing; new matches from that fall wait until it has fired.
 static func _special_with_piece(board: BoardModel, from: Vector2i, to: Vector2i, special_cell: Vector2i, events: Array[BoardEvent]) -> void:
 	var other: Vector2i = from if special_cell == to else to
 	var kind: String = board.get_kind(special_cell.x, special_cell.y)
@@ -113,9 +156,9 @@ static func _special_with_piece(board: BoardModel, from: Vector2i, to: Vector2i,
 		var color: String = board.get_color(other.x, other.y)
 		if board.get_kind(other.x, other.y) != "plain":
 			color = SpecialFiring.most_common_color(board)
-		var queue: Array[FireOrder] = []
-		SpecialFiring.fire_orb(board, order, color, queue, events)
-		SpecialFiring.run(board, queue, events)
+		var waiting: Array[FireOrder] = []
+		SpecialFiring.fire_orb(board, order, color, waiting, events)
+		SpecialFiring.fire_set_offs(board, waiting, events)
 		return
 	var groups: Array[MatchGroup] = MatchFinder.find_groups(board)
 	var extra: Array[FireOrder] = [order]
@@ -155,7 +198,37 @@ static func _resolve_matches(board: BoardModel, groups: Array[MatchGroup], from:
 			made.kind = kind
 			made.color = color
 			events.append(made)
-	SpecialFiring.run(board, queue, events)
+	_fire_waiting(board, queue, events)
+
+
+## Fires the swapped and matched specials one after another (IR-21, IR-39, IR-50). Owner decision
+## OQ-44 (chat 27 Nov 2026): pieces fall and refill before each one fires, and the specials each
+## one sets off fire after it (IR-41); cascade matches wait until all have fired.
+## Open question OQ-54 (provisional): a swapped special still on the board falls with the other
+## pieces and fires from where it lands; a matched special already left the board with its match.
+static func _fire_waiting(board: BoardModel, queue: Array[FireOrder], events: Array[BoardEvent]) -> void:
+	var scanned: int = events.size()
+	for order in queue:
+		BoardGravity.apply(board, events)
+		scanned = _follow_falls(events, scanned, queue)
+		var waiting: Array[FireOrder] = []
+		SpecialFiring.fire(board, order, waiting, events)
+		SpecialFiring.fire_set_offs(board, waiting, events)
+		scanned = _follow_falls(events, scanned, queue)
+
+
+## Moves the cell of every still-on-board order along the `fall` events after index `start`, so
+## each special fires from where it landed. Returns the new end index.
+static func _follow_falls(events: Array[BoardEvent], start: int, queue: Array[FireOrder]) -> int:
+	for i in range(start, events.size()):
+		if events[i].type != "fall":
+			continue
+		for m in events[i].data.get("moves", []):
+			for o in queue:
+				if o.on_board and o.cell == m["from"]:
+					o.cell = m["to"]
+					break
+	return events.size()
 
 
 static func _queued(queue: Array[FireOrder], cell: Vector2i) -> bool:
@@ -167,7 +240,9 @@ static func _queued(queue: Array[FireOrder], cell: Vector2i) -> bool:
 
 ## IR-40: a player's match puts its special on the swap's target cell; a cascade match on its lowest,
 ## then left-most cell (an L/T/+ on its crossing cell). Owner decision OQ-25: a player match that
-## doesn't contain the target cell uses the cascade placement too.
+## doesn't contain the target cell uses the cascade placement too. Open question OQ-57
+## (provisional): if that cell is covered by an overlay that survived, the special is still placed
+## there; it is locked for swaps and falls (IR-54) but can still be tapped.
 static func _special_cell(g: MatchGroup, _from: Vector2i, to: Vector2i) -> Vector2i:
 	if to != NO_CELL and g.has_cell(to):
 		return to

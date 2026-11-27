@@ -168,8 +168,72 @@ func test_ir39_same_setups_with_two_plain_pieces_snap_back() -> void:
 	assert_eq(board.moves, 10)
 
 
-func test_ir39_pending_falls_before_the_special_fires() -> void:
-	pending("OQ-44: whether pieces fall and cascades resolve between the swap's match and the special firing")
+func test_ir39_pieces_fall_and_refill_before_the_swapped_firecracker_fires() -> void:
+	# OQ-44 A. R at (2,4),(3,4); yellow Firecracker at (4,4); R at (4,5).
+	var board: BoardModel = BB.blank()
+	board.moves = 10
+	BB.put(board, "R", [[2, 4], [3, 4], [4, 5]])
+	BB.put(board, "YF", [[4, 4]])
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(4, 5), Vector2i(4, 4))
+	assert_eq(board.moves, 9)
+	var i_clear: int = EV.index_of_clear(events, "match")
+	var i_fall: int = EV.index_after(events, "fall", i_clear)
+	var i_refill: int = EV.index_after(events, "refill", i_fall)
+	var i_blast: int = EV.index_of(events, "blast", 0)
+	assert_true(i_clear >= 0 and i_fall > i_clear and i_refill > i_fall and i_blast > i_refill, "events in order: match clear, fall, refill, blast 1")
+	if i_fall < 0 or i_refill < 0 or i_blast < 0:
+		return
+	var targets: Dictionary = {}
+	for m in events[i_fall].data.get("moves", []):
+		targets[m["to"]] = m["from"]
+	for x in [2, 3, 4]:
+		assert_eq(targets.get(Vector2i(x, 4)), Vector2i(x, 3), "the piece from (%d,3) fell into (%d,4)" % [x, x])
+	assert_true(EV.same_set(EV.to_set(events[i_refill].cells), EV.to_set([Vector2i(2, 0), Vector2i(3, 0), Vector2i(4, 0)])), "new pieces enter at (2,0),(3,0),(4,0)")
+	assert_eq(events[i_blast].cell, Vector2i(4, 5), "blast 1 is centred on (4,5)")
+	var i_blast_clear: int = EV.index_after(events, "clear", i_blast)
+	assert_true(i_blast_clear > i_blast, "blast 1 clears something")
+	if i_blast_clear > i_blast:
+		var cleared: Dictionary = EV.to_set(events[i_blast_clear].cells)
+		assert_true(cleared.has(Vector2i(3, 4)) and cleared.has(Vector2i(4, 4)), "blast 1 clears the pieces that fell into (3,4) and (4,4)")
+		assert_false(cleared.has(Vector2i(2, 4)), "(2,4) is outside the blast (x 3-5)")
+
+
+func test_ir39_a_cascade_made_by_the_fall_waits_until_the_swapped_rocket_has_fired() -> void:
+	# OQ-44 A. After the R match clears, G lines up at (4,6),(5,6),(6,6); that cascade resolves
+	# only after the column Rocket (now at (7,7)) has fired along column 7.
+	var board: BoardModel = BB.blank()
+	board.moves = 10
+	BB.put(board, "R", [[5, 6], [6, 6], [7, 7]])
+	BB.put(board, "B|", [[7, 6]])
+	BB.put(board, "G", [[4, 6], [5, 5], [6, 5]])
+	BB.put(board, "Y", [[4, 5], [7, 5]])
+	BB.put(board, "B", [[5, 4]])
+	BB.put(board, "R", [[6, 4]])
+	assert_false(BB.has_match(board), "precondition: no match before the swap")
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(7, 7), Vector2i(7, 6))
+	assert_eq(board.moves, 9)
+	var i_clear: int = EV.index_of_clear(events, "match")
+	var i_fall1: int = EV.index_after(events, "fall", i_clear)
+	var i_refill1: int = EV.index_after(events, "refill", i_fall1)
+	var i_fire: int = EV.index_of(events, "rocket_fire")
+	# The column Rocket clears its whole column, so nothing can fall: only a refill follows it.
+	var i_refill2: int = EV.index_after(events, "refill", i_fire)
+	var i_match2: int = EV.index_of(events, "match", 1)
+	assert_true(i_clear >= 0 and i_fall1 > i_clear and i_refill1 > i_fall1, "R match clear, fall, refill")
+	assert_true(i_fire > i_refill1, "then the Rocket fires")
+	assert_true(i_refill2 > i_fire, "refill after the Rocket (no fall: the whole column is empty)")
+	assert_true(i_match2 > i_refill2, "the G cascade match comes last")
+	if i_fire >= 0:
+		assert_eq(events[i_fire].cell, Vector2i(7, 7), "the Rocket fires from (7,7)")
+		assert_eq(events[i_fire].kind, "rocket_col")
+	if i_match2 >= 0:
+		var m: Dictionary = EV.to_set(events[i_match2].cells)
+		for c in [Vector2i(4, 6), Vector2i(5, 6), Vector2i(6, 6)]:
+			assert_true(m.has(c), "G match includes %s" % c)
+
+
+func test_ir39_pending_special_over_a_cleared_cell() -> void:
+	pending("OQ-54 (a): when the swap's match clears the cell below the swapped special, does the special fall before it fires")
 
 
 # ---------------------------------------------------------------- IR-52

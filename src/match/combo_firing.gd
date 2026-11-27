@@ -99,10 +99,10 @@ static func _orb_orb(board: BoardModel, target: Vector2i, own: Array[Vector2i], 
 ## IR-25: every plain piece of the most common colour becomes the swapped special; they fire one
 ## after another, lowest first then left-most; the whole combo is one special. Owner decisions:
 ## converted Rockets copy the swapped Rocket's direction (OQ-24), firing order (OQ-27), only plain
-## pieces are counted and converted (OQ-33). Open question OQ-48 (provisional): the converted
-## specials leave the board at once and fire from their cells, so falls between Firecracker blasts
-## can't move them.
-## Open question OQ-42 (provisional): plain pieces under an overlay are converted too.
+## pieces are counted and converted (OQ-33), plain pieces under an overlay are ignored (OQ-42).
+## Owner decision OQ-48 (chat 27 Nov 2026, trial, revisit after playtest): the converted pieces
+## leave the board at once; pieces fall and refill before the first fires and between each one
+## (OQ-44), and each fires from the cell it was converted in.
 static func _orb_special(board: BoardModel, target: Vector2i, kind: String, own: Array[Vector2i],
 		waiting: Array[FireOrder], events: Array[BoardEvent]) -> void:
 	var color: String = SpecialFiring.most_common_color(board)
@@ -118,8 +118,9 @@ static func _orb_special(board: BoardModel, target: Vector2i, kind: String, own:
 	clear.cells = lifted
 	clear.source = "combo"
 	events.append(clear)
-	BoardDamage.note_cleared(board, lifted, hitset)
+	BoardDamage.note_cleared(board, lifted, lifted, hitset)
 	for c in converted:
+		BoardGravity.apply(board, events)
 		var order: FireOrder = FireOrder.new(kind, color, c, false)
 		if kind == "firecracker":
 			SpecialFiring.double_blast(board, SpecialFiring.rect_cells(board, c, 1), c, hitset, "combo", waiting, events, [] as Array[Vector2i])

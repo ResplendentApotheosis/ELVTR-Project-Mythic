@@ -146,3 +146,27 @@ func shrine_needs(x: int, y: int) -> Dictionary   # NEW: what it still needs (ze
 - **Orb + Orb (IR-26, IR-41):** other specials are cleared with no `rocket_fire` / `blast` / `crane_*` events; a set-off Orb is removed with no `orb_fire` event.
 - **Orb counting (IR-18/19/25/47):** only plain pieces are counted, cleared or converted; coloured specials are left alone. Orb + drop item behaves as an Orb tap. Plain pieces under an overlay: OQ-42 (not tested).
 - **Crane take-off (IR-48):** counts as a special covering its start cell, so the underlay under the Crane takes one hit when there is no overlay or blocker.
+
+## 7. Round 3 additions (OQ-39..OQ-50 answers: IR-16 finale, IR-25, IR-41, IR-49, IR-53, IR-55)
+
+New API (one function; everything else in sections 2 to 2b is unchanged):
+
+```gdscript
+static func fire_finale(board: BoardModel, directions: Array = []) -> Array[BoardEvent]   # on MatchResolver
+```
+
+- **Win finale (IR-16, IR-05):** the level was just won; `board.moves` leftover moves each become one Bamboo Rocket and fire one after another, each fully resolved (fire, `clear`, `fall`, `refill`, cascades) before the next. `board.moves` is 0 afterwards. With 0 moves left it returns no events.
+- Each Rocket's direction is **row or column, picked from `board.rng`** (one draw per Rocket, in firing order). The same seed gives the same list. Odds and mix are OQ-53 (not tested).
+- `directions` is the test seam for "the direction pick is stubbed": when not empty, element `i` (`"rocket_row"` or `"rocket_col"`) is used for the `i`-th Rocket instead of the RNG. Missing entries fall back to the RNG.
+- Each Rocket emits a normal `rocket_fire` event: `kind` = `"rocket_row"` / `"rocket_col"`, `cell` = where it fires from, `cells` = the whole row or column. Where a finale Rocket is placed is the implementation's choice (not tested; the spec doesn't say).
+
+Behaviour changes the tests now expect (no new members):
+
+- **OQ-42 B:** the Orb (tap, swap, Orb + Rocket/Firecracker, tie-break counting) ignores plain pieces in a cell with `overlay_hp > 0`: not counted, not cleared (not in `orb_fire.cells`), not converted; their overlay is not hit.
+- **OQ-43 B:** a Crane landing on a shrine with tied colour needs picks the colour with `board.rng` (not a fixed order). The tests only check "one of the tied colours", "same seed, same pick", and "both colours occur across seeds".
+- **OQ-44 A:** for a swapped or matched special, `fall` and `refill` events come after the match's `clear` and before the special's first fire event; cascade `match` events come only after every waiting special has fired (set-off chains and converted Orb specials included).
+- **OQ-46 B:** a special or match that clears a piece on dew sets dew (id `"OB04"`, hp 1) on every playable cell it covers, including cells with a content blocker (e.g. a bramble) and cells holding a drop item or fragment.
+- **OQ-47 A:** one shared waiting list; the lowest, then left-most waiting special always fires next.
+- **OQ-48 A:** Orb + Rocket/Firecracker: every converted piece leaves the board at once, its cell refills, and each fires from the cell it was converted in, lowest then left-most, each finishing (fall and refill included) before the next.
+- **OQ-49 B:** a Crane landing on an uncovered dew target clears the piece there (it appears in a `clear` event with `source` `"crane"`) and the cell gets dew.
+- **OQ-50 A (IR-55):** a special covering any cell of a lantern shrine lowers its hp (`content_hp`) by 1, at most once per special; `shrine_needs` does not change.

@@ -122,12 +122,9 @@ func test_ir24_cascade_match_resolves_between_the_two_5x5_blasts() -> void:
 const ORB_PLUS_COUNTS: Dictionary = {"R": 20, "Y": 18, "B": 17, "G": 16}
 
 
-func test_ir25_pending_converted_pieces_fire_from_their_own_cells() -> void:
-	pending("OQ-48: do converted specials fire from the cell they were converted in, or from where they have fallen to")
-
-
-# Kept for when OQ-48 is answered (pins Option A: fire from the converted cell). Not run.
-func _blocked_oq48_orb_plus_firecracker_turns_every_common_piece_into_a_firecracker() -> void:
+# OQ-48 (Option A, trial): converted pieces leave the board at once, their cells refill, and each
+# fires from the cell it was converted in.
+func test_ir25_orb_plus_firecracker_turns_every_common_piece_into_a_firecracker() -> void:
 	var board: BoardModel = BB.with_counts(ORB_PLUS_COUNTS, {Vector2i(4, 4): "O", Vector2i(4, 5): "zF"})
 	board.moves = 10
 	var reds: Array[Vector2i] = BB.find_color(board, "R")
@@ -145,6 +142,7 @@ func _blocked_oq48_orb_plus_firecracker_turns_every_common_piece_into_a_firecrac
 func test_ir25_pillar_inside_several_converted_blasts_takes_one_hit() -> void:
 	var board: BoardModel = BB.blank()
 	board.moves = 10
+	board.palette = BB.spread_palette()
 	BB.put(board, "O", [[0, 8]])
 	BB.put(board, "zF", [[1, 8]])
 	BB.put(board, "R", [[2, 3], [5, 4], [3, 6]])
@@ -172,12 +170,7 @@ func test_ir25_converted_firecrackers_fire_lowest_then_leftmost() -> void:
 	assert_eq(EV.blast_centres(events, 1), [Vector2i(2, 7), Vector2i(2, 1), Vector2i(6, 1)], "(2,7) lowest, then (2,1) before (6,1)")
 
 
-func test_ir25_pending_red_rockets_not_converted_fire_from_own_cells() -> void:
-	pending("OQ-48: this case asserts converted pieces fire from their converted cells")
-
-
-# Kept for when OQ-48 is answered (pins Option A). Not run.
-func _blocked_oq48_red_rockets_are_neither_counted_nor_converted() -> void:
+func test_ir25_red_rockets_are_neither_counted_nor_converted() -> void:
 	var board: BoardModel = BB.with_counts({"R": 18, "Y": 19, "B": 17, "G": 16},
 		{Vector2i(4, 4): "O", Vector2i(4, 5): "zF", Vector2i(0, 0): "R-", Vector2i(8, 0): "R-", Vector2i(0, 8): "R-"})
 	board.moves = 10
@@ -192,8 +185,84 @@ func _blocked_oq48_red_rockets_are_neither_counted_nor_converted() -> void:
 		assert_false(centres.has(c), "the red Rocket at %s was not converted into a Firecracker" % c)
 
 
-func test_ir25_pending_plain_pieces_under_an_overlay() -> void:
-	pending("OQ-42: are plain pieces under an overlay counted and converted by Orb + special")
+func test_ir25_plain_piece_under_an_overlay_is_not_converted() -> void:
+	# OQ-42 B. Same set-up as the (2,7), (2,1), (6,1) test, plus moss hp 1 over an R at (6,7).
+	var board: BoardModel = BB.blank()
+	board.moves = 10
+	BB.put(board, "R", [[2, 1], [6, 1], [2, 7], [6, 7]])
+	BB.put(board, "Y", [[0, 0], [8, 8]])
+	BB.put(board, "B", [[0, 8], [8, 0]])
+	BB.put(board, "G", [[4, 0], [4, 8]])
+	BB.put(board, "O", [[4, 4]])
+	BB.put(board, "zF", [[4, 5]])
+	board.set_overlay(6, 7, "OB03", 1)
+	var keep: Dictionary = EV.to_set([Vector2i(2, 1), Vector2i(6, 1), Vector2i(2, 7), Vector2i(6, 7), Vector2i(0, 0), Vector2i(8, 8),
+		Vector2i(0, 8), Vector2i(8, 0), Vector2i(4, 0), Vector2i(4, 8), Vector2i(4, 4), Vector2i(4, 5)])
+	for y in range(9):
+		for x in range(9):
+			if not keep.has(Vector2i(x, y)):
+				board.add_content("OB02", x, y, 9)
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(4, 5), Vector2i(4, 4))
+	assert_eq(EV.blast_centres(events, 1), [Vector2i(2, 7), Vector2i(2, 1), Vector2i(6, 1)], "(6,7) is not converted: order is still (2,7), (2,1), (6,1)")
+	assert_eq(board.get_color(6, 7), "R", "the covered R is still there")
+	assert_eq(board.overlay_hp(6, 7), 1, "under moss hp 1")
+
+
+func test_ir25_covered_pieces_do_not_decide_the_most_common_colour() -> void:
+	# OQ-42 B. Uncovered: Y 12 beats R 11; 3 more R are covered (R would win at 14 if they counted).
+	# Rows 7-8 are fixed fillers except the covered R, to keep cascades off them.
+	var reserved: Dictionary = {Vector2i(4, 4): "O", Vector2i(4, 5): "zF"}
+	for x in range(9):
+		reserved[Vector2i(x, 7)] = "."
+		reserved[Vector2i(x, 8)] = "."
+	for x in [0, 4, 8]:
+		reserved[Vector2i(x, 8)] = "R"
+	var board: BoardModel = BB.with_counts({"R": 11, "Y": 12, "B": 10, "G": 10}, reserved)
+	board.moves = 10
+	board.palette = BB.spread_palette()
+	for x in [0, 4, 8]:
+		board.set_overlay(x, 8, "OB03", 1)
+	var yellows: Array[Vector2i] = BB.find_color(board, "Y")
+	assert_eq(yellows.size(), 12)
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(4, 5), Vector2i(4, 4))
+	var centres: Dictionary = EV.to_set(EV.blast_centres(events, 1))
+	for c in yellows:
+		assert_true(centres.has(c), "yellow piece at %s was converted (R wins only if covered pieces count)" % c)
+	for x in [0, 4, 8]:
+		assert_false(centres.has(Vector2i(x, 8)), "the covered R at (%d,8) was not converted" % x)
+		assert_eq(board.get_color(x, 8), "R")
+		assert_eq(board.overlay_hp(x, 8), 1)
+
+
+func test_ir25_lower_converted_rocket_fires_along_its_own_row_after_a_fall() -> void:
+	# OQ-48 A. R is the most common colour; the only R in rows 7-8 are at (2,8) and (2,7).
+	var reserved: Dictionary = {Vector2i(4, 4): "O", Vector2i(4, 5): "z-"}
+	for y in [7, 8]:
+		for x in range(9):
+			reserved[Vector2i(x, y)] = "."
+	reserved[Vector2i(2, 7)] = "R"
+	reserved[Vector2i(2, 8)] = "R"
+	var board: BoardModel = BB.with_counts({"R": 14, "Y": 12, "B": 11, "G": 10}, reserved)
+	board.moves = 10
+	board.palette = BB.spread_palette()
+	assert_false(BB.has_match(board), "precondition: the set-up board has no match")
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(4, 5), Vector2i(4, 4))
+	var fires: Array = EV.of_type(events, "rocket_fire")
+	assert_true(fires.size() >= 2, "converted Rockets fired")
+	if fires.size() < 2:
+		return
+	assert_eq(fires[0].cell, Vector2i(2, 8))
+	assert_true(EV.same_set(EV.to_set(fires[0].cells), EV.to_set(EV.row_cells(8))), "first: row 8")
+	assert_eq(fires[1].cell, Vector2i(2, 7), "second: converted at (2,7)")
+	assert_true(EV.same_set(EV.to_set(fires[1].cells), EV.to_set(EV.row_cells(7))), "row 7, not row 8, although pieces fell in column 2")
+	var i1: int = EV.index_of(events, "rocket_fire", 0)
+	var i2: int = EV.index_of(events, "rocket_fire", 1)
+	var i_combo: int = EV.index_of(events, "combo")
+	var i_fall0: int = EV.index_after(events, "fall", i_combo)
+	assert_true(i_fall0 > i_combo and i_fall0 < i1, "OQ-48 A: the converted pieces left at once, so a fall comes before the first fire")
+	var i_fall: int = EV.index_after(events, "fall", i1)
+	var i_refill: int = EV.index_after(events, "refill", i_fall)
+	assert_true(i_fall > i1 and i_refill > i_fall and i_refill < i2, "fall and refill between the two fires")
 
 
 # ---------------------------------------------------------------- IR-26
