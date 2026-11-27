@@ -18,6 +18,7 @@ Who decided what, and who made what: the owner (human) or AI. Newest first. Use 
 
 | Date | What | Decided by | Made by | Where |
 |---|---|---|---|---|
+| 2026-11-27 | Merged PR #3 (MatchResolver, 257 tests passing) into `main` | Human | AI | GitHub |
 | 2026-11-27 | GDD (repo and live claude.ai doc) updated with OQ-39 to OQ-61: continue offer, quitting, win finale, lantern shrine, locked pieces, dew, chain timing, Jade Orb; 23 new clarification rows | AI → Human | AI | GDD › Core gameplay, Special pieces, Combos, Interaction rules, Board layers, Feel, Meta |
 | 2026-11-27 | Wording for the win-finale timing: "each launches 0.15 s after the board settles from the last". The crew flagged that the owner should word it; AI drafted this wording | AI (owner to confirm) | AI | GDD › Feel › Win finale |
 | 2026-11-27 | MatchResolver finished: 257 tests pass, none pending, no open questions | AI | rules-keeper, test-engineer, godot-engineer | branch `build/match-resolver` |
