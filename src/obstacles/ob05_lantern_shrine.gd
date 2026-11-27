@@ -1,21 +1,21 @@
-# OB05 lantern shrine (multi-cell content). Owner decisions OQ-50 and OQ-55 (chat 27 Nov 2026):
-# matches next to it fill its needed colours, a special lowers its hp by 1 (once per special), a Crane
-# landing counts as one piece and takes no hp; it is lit (a `shrine_lit` event) at no needs or hp 0.
-# Check: test_damage_and_obstacles.gd test_ir55_* and test_special_effects.gd test_ir49_shrine_* tests.
+# OB05 lantern shrine (multi-cell content). Owner decisions OQ-50, OQ-55, OQ-59, OQ-61 (chat 27 Nov 2026):
+# matches touching it fill its needed colours, a special lowers its hp by 1 (once per special), a Crane
+# landing counts as one piece and takes no hp; at no needs or hp 0 it is lit (`shrine_lit`) and removed.
+# Check: test_damage_and_obstacles.gd test_ir55_* / test_ir14_* and test_special_effects.gd test_ir49_*shrine* tests.
 extends ObstacleBehaviour
 
 
-## Open question OQ-59 (b) (provisional): a match next to the shrine fills colours but doesn't lower its hp.
+## Owner decision, chat 27 Nov 2026 › OQ-59 (b): a match next to the shrine fills colours but never lowers its hp.
 func takes_adjacent_match_hits() -> bool:
 	return false
 
 
-## Open question OQ-59 (c) (provisional): a lit shrine stays on the board as a blocker nothing can hit.
+## A lit shrine is already off the board (OQ-59 (c)); this only guards against a second hit in the same step.
 func can_be_hit(content: BoardContent) -> bool:
 	return not content.lit
 
 
-## A special's hit (OQ-50): hp goes down; at hp 0 the shrine is lit but stays on the board (OQ-59 (c), provisional).
+## A special's hit (OQ-50): hp goes down; at hp 0 the shrine is lit and removed (OQ-59 (c)).
 func after_content_hit(board: BoardModel, content: BoardContent, events: Array[BoardEvent]) -> void:
 	check_lit(board, content, events)
 
@@ -63,25 +63,29 @@ static func take_one_piece(board: BoardModel, content: BoardContent, events: Arr
 	check_lit(board, content, events)
 
 
-## A match of `color` was made: each of `pieces` whose own cell is up/down/left/right of a shrine cell
-## fills one need of that colour (owner decision OQ-55 (a), chat 27 Nov 2026; IR-55).
-## Open question OQ-59 (a) (provisional): match pieces that don't themselves touch the shrine fill nothing.
-## Open question OQ-61 (provisional): the caller passes only the plain pieces the match clears, so a
-## lifted coloured special in the match fills nothing.
+## A match of `color` was made; `pieces` are all its cells (plain pieces AND coloured specials the match
+## lifted). Owner decision, chat 27 Nov 2026 › OQ-59 (a): if ANY piece touches a shrine cell
+## (up/down/left/right), every piece of the match fills one need of that colour. Owner decision,
+## chat 27 Nov 2026 › OQ-61: a lifted coloured special counts like a plain piece of its colour.
 static func fill_from_match(board: BoardModel, pieces: Array[Vector2i], color: String, events: Array[BoardEvent]) -> void:
 	for content in board.all_contents():
 		if content.id != "OB05" or content.lit:
 			continue
+		var touching: bool = false
 		for p in pieces:
-			if int(content.needs.get(color, 0)) <= 0:
-				break
 			if _touches(content, p):
-				content.needs[color] = int(content.needs[color]) - 1
+				touching = true
+		if not touching:
+			continue
+		var fill: int = mini(pieces.size(), int(content.needs.get(color, 0)))
+		if fill > 0:
+			content.needs[color] = int(content.needs[color]) - fill
 		check_lit(board, content, events)
 
 
 ## Lights the shrine once, when every needed colour is in (if it had needs) or its hp is 0 (OQ-55 (b)).
-## Lighting counts the OB05 goal once.
+## Lighting counts the OB05 goal once. Owner decision, chat 27 Nov 2026 › OQ-59 (c): the lit shrine is
+## removed; its cells become ordinary open cells that the next fall and refill fill.
 static func check_lit(board: BoardModel, content: BoardContent, events: Array[BoardEvent]) -> void:
 	if content.lit:
 		return
@@ -92,6 +96,7 @@ static func check_lit(board: BoardModel, content: BoardContent, events: Array[Bo
 	if not all_in and content.hp > 0:
 		return
 	content.lit = true
+	board.remove_content(content)
 	board.add_collected(content.id)
 	var e: BoardEvent = BoardEvent.new("shrine_lit")
 	e.cell = content.rect.position

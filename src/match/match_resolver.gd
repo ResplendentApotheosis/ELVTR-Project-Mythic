@@ -61,9 +61,10 @@ static func settle(board: BoardModel) -> Array[BoardEvent]:
 ## board.moves ends at 0. Owner decisions OQ-40 and OQ-53 (chat 27 Nov 2026): each Rocket's
 ## direction is an independent 50/50 pick, the FIRST board.rng draw of that Rocket, unless
 ## `directions[i]` ("rocket_row" / "rocket_col") overrides it (a test seam). Owner decision OQ-58
-## (chat 27 Nov 2026): it then replaces a random uncovered plain piece (the second draw).
-## Open question OQ-60 (provisional): each Rocket fully resolves (fall, refill, cascades) before the next.
-static func fire_finale(board: BoardModel, directions: Array = []) -> Array[BoardEvent]:
+## (chat 27 Nov 2026): it then replaces a random uncovered plain piece (the second draw);
+## `cells[i]` (a Vector2i) overrides that cell (a test seam). Owner decision, chat 27 Nov 2026 ›
+## OQ-60 (b): one Rocket at a time; each fully resolves (fall, refill, cascades) before the next draws.
+static func fire_finale(board: BoardModel, directions: Array = [], cells: Array = []) -> Array[BoardEvent]:
 	var events: Array[BoardEvent] = []
 	var index: int = 0
 	while board.moves > 0:
@@ -72,18 +73,23 @@ static func fire_finale(board: BoardModel, directions: Array = []) -> Array[Boar
 			kind = String(directions[index])
 		else:
 			kind = "rocket_row" if board.rng.randi_range(0, 1) == 0 else "rocket_col"   # first draw
+		var stub: Vector2i = NO_CELL
+		if index < cells.size():
+			stub = cells[index]
 		board.moves -= 1
 		index += 1
-		var order: FireOrder = _place_finale_rocket(board, kind, events)
+		var order: FireOrder = _place_finale_rocket(board, kind, stub, events)
 		_fire_waiting(board, [order] as Array[FireOrder], events)
 		cascade(board, events)
 	return events
 
 
 ## Owner decision OQ-58 (chat 27 Nov 2026): the Rocket replaces a seeded random uncovered plain piece.
-## With no such piece it appears on a seeded random playable cell (OQ-58). Open question OQ-60
-## (provisional): there it replaces nothing; whatever is in that cell is treated like any covered cell (IR-09).
-static func _place_finale_rocket(board: BoardModel, kind: String, events: Array[BoardEvent]) -> FireOrder:
+## With no such piece it appears on a seeded random playable cell (OQ-58). Owner decision, chat
+## 27 Nov 2026 › OQ-60 (a): there it replaces nothing; whatever is in that cell is hit as IR-09 says
+## (piece cleared, special set off, fragment or drop item stays, top layer hit).
+## `stub` (not NO_CELL) replaces the drawn cell in either case (test seam).
+static func _place_finale_rocket(board: BoardModel, kind: String, stub: Vector2i, events: Array[BoardEvent]) -> FireOrder:
 	var options: Array[Vector2i] = []
 	var playable: Array[Vector2i] = []
 	for y in range(board.height):
@@ -93,10 +99,14 @@ static func _place_finale_rocket(board: BoardModel, kind: String, events: Array[
 			if board.get_kind(x, y) == "plain" and not board.is_locked(x, y):
 				options.append(Vector2i(x, y))
 	if options.is_empty():
+		if stub != NO_CELL:
+			return FireOrder.new(kind, "", stub, false)
 		if playable.is_empty():
 			return FireOrder.new(kind, "", Vector2i(board.width / 2, board.height / 2), false)
 		return FireOrder.new(kind, "", playable[board.rng.randi_range(0, playable.size() - 1)], false)
-	var cell: Vector2i = options[board.rng.randi_range(0, options.size() - 1)]
+	var cell: Vector2i = stub
+	if cell == NO_CELL:
+		cell = options[board.rng.randi_range(0, options.size() - 1)]
 	board.set_piece(cell.x, cell.y, kind, "")
 	var made: BoardEvent = BoardEvent.new("special_created")
 	made.cell = cell
@@ -210,7 +220,7 @@ static func _resolve_matches(board: BoardModel, groups: Array[MatchGroup], from:
 		clear.source = "match"
 		events.append(clear)
 		BoardDamage.hit_by_match(board, g.cells, events)
-		LanternShrine.fill_from_match(board, cleared, g.color, events)
+		LanternShrine.fill_from_match(board, g.cells, g.color, events)   # lifted specials count too (OQ-61)
 		var kind: String = g.special_kind()
 		if kind != "":
 			var cell: Vector2i = _special_cell(g, from, to)

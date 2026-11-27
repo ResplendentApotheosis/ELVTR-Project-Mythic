@@ -395,6 +395,14 @@ func test_ir55_rocket_rocket_combo_is_one_hit_on_the_shrine() -> void:
 	_assert_shrine_needs_unchanged(board)
 
 
+## OQ-59 A (c): a lit shrine is removed; its cells are ordinary open cells that fill by falling.
+func _assert_shrine_removed_and_open(board: BoardModel, cells: Array) -> void:
+	for c in cells:
+		assert_eq(board.content_id(c[0], c[1]), "", "no shrine at (%d,%d)" % [c[0], c[1]])
+		assert_eq(board.get_kind(c[0], c[1]), "plain", "(%d,%d) holds a plain piece after the board settles" % [c[0], c[1]])
+	assert_eq(BB.empty_cells(board).size(), 0, "no playable cell is left empty")
+
+
 func _lit_events(events: Array[BoardEvent]) -> Array:
 	return EV.of_type(events, "shrine_lit")
 
@@ -411,7 +419,7 @@ func _flat_shrine_board(needs: Dictionary) -> BoardModel:
 	var board: BoardModel = BB.blank()
 	board.palette = BB.spread_palette()
 	board.moves = 10
-	BB.add_shrine(board, 3, 3, needs, 3, 1, 5)
+	BB.add_shrine(board, 3, 3, needs, 3, 1, 3)
 	return board
 
 
@@ -420,6 +428,7 @@ func test_ir55_match_next_to_the_shrine_fills_needed_colours_one_per_piece() -> 
 	var events: Array[BoardEvent] = _three_r_below(board, 3)
 	assert_eq(BB.shrine_need(board, 3, 3, "R"), 0, "two R pieces fill both red needs; the third fills nothing")
 	assert_eq(BB.shrine_need(board, 3, 3, "B"), 1, "still needs 1 B")
+	assert_eq(board.content_hp(3, 3), 3, "a match never lowers hp (OQ-59 A b)")
 	assert_eq(_lit_events(events).size(), 0, "not lit")
 
 
@@ -428,6 +437,13 @@ func test_ir55_match_that_fills_the_last_need_lights_the_shrine() -> void:
 	var events: Array[BoardEvent] = _three_r_below(board, 3)
 	assert_eq(BB.shrine_need(board, 3, 3, "R"), 0, "it needs nothing")
 	assert_eq(_lit_events(events).size(), 1, "a shrine-lit event")
+	_assert_shrine_removed_and_open(board, [[3, 3], [4, 3], [5, 3]])
+	# the new cells are ordinary: a swap there makes a match like anywhere else
+	board.moves = 10
+	BB.put(board, "R", [[3, 3], [4, 3], [5, 4]])
+	BB.put(board, "Y", [[5, 3]])
+	var swap_events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(5, 4), Vector2i(5, 3))
+	assert_true(EV.matched(swap_events).has(Vector2i(3, 3)), "a piece on a former shrine cell can be swapped and matched")
 
 
 func test_ir55_match_of_a_colour_it_does_not_need_fills_nothing() -> void:
@@ -455,7 +471,7 @@ func test_ir55_shrine_with_hp_one_is_lit_by_a_special_although_colours_are_neede
 	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(0, 3))
 	assert_eq(board.content_hp(3, 3), 0, "hp 1 -> 0")
 	assert_eq(_lit_events(events).size(), 1, "a shrine-lit event")
-	assert_eq(BB.shrine_need(board, 3, 3, "R"), 2, "needs unchanged")
+	_assert_shrine_removed_and_open(board, [[3, 3], [4, 3], [3, 4], [4, 4]])
 
 
 func _crane_shrine_board(needs: Dictionary, hp: int) -> BoardModel:
@@ -485,20 +501,99 @@ func test_ir55_crane_landing_on_the_last_need_lights_the_shrine() -> void:
 	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(0, 7))
 	assert_eq(BB.shrine_need(board, 3, 3, "B"), 0, "it needs nothing")
 	assert_eq(_lit_events(events).size(), 1, "a shrine-lit event")
-	assert_eq(board.content_hp(3, 3), 3, "hp still 3")
+	_assert_shrine_removed_and_open(board, [[3, 3], [4, 3], [3, 4], [4, 4]])
 
 
-func test_ir55_pending_pieces_of_the_match_that_do_not_touch_the_shrine() -> void:
-	pending("OQ-59: does a piece of a match next to the shrine count when that piece itself doesn't touch it (e.g. a line of 4 with one end touching)")
+# ---- OQ-59 A (a): one touching piece makes the whole match count; OQ-61 A: a lifted coloured special counts.
+
+func _board_2x2_shrine(needs: Dictionary) -> BoardModel:
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	board.moves = 10
+	BB.add_shrine(board, 3, 3, needs, 2, 2, 3)
+	return board
 
 
-func test_ir55_pending_lifted_coloured_special_in_a_match_next_to_the_shrine() -> void:
-	pending("OQ-61: does a coloured special lifted from a match next to a shrine count as a piece of its colour and fill the shrine")
+func test_ir55_match_with_a_piece_not_touching_still_counts_all_its_pieces() -> void:
+	var board: BoardModel = _board_2x2_shrine({"R": 3})
+	# R (2,5),(3,5), Y (4,5), R (4,6): swap makes R (2,5),(3,5),(4,5); (2,5) touches nothing.
+	BB.put(board, "R", [[2, 5], [3, 5], [4, 6]])
+	BB.put(board, "Y", [[4, 5]])
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(4, 6), Vector2i(4, 5))
+	assert_true(EV.matched(events).has(Vector2i(2, 5)), "precondition: the 3-match happened")
+	assert_eq(BB.shrine_need(board, 3, 3, "R"), 0, "all 3 R count, the non-touching one too")
+	assert_eq(_lit_events(events).size(), 1, "a shrine-lit event")
 
 
-func test_ir55_pending_hp_loss_from_a_match_next_to_the_shrine() -> void:
-	pending("OQ-59: does a match next to a shrine also lower its hp")
+func test_ir55_match_touching_with_one_end_only_counts_all_pieces_and_keeps_hp() -> void:
+	var board: BoardModel = _board_2x2_shrine({"R": 3, "B": 1})
+	# R (5,4),(6,4), Y (7,4), R (7,5): match (5,4),(6,4),(7,4); only (5,4) touches (4,4).
+	BB.put(board, "R", [[5, 4], [6, 4], [7, 5]])
+	BB.put(board, "Y", [[7, 4]])
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(7, 5), Vector2i(7, 4))
+	assert_true(EV.matched(events).has(Vector2i(7, 4)), "precondition: the 3-match happened")
+	assert_eq(BB.shrine_need(board, 3, 3, "R"), 0, "all 3 R count")
+	assert_eq(BB.shrine_need(board, 3, 3, "B"), 1, "still needs 1 B")
+	assert_eq(board.content_hp(3, 3), 3, "a match never lowers hp")
+	assert_eq(_lit_events(events).size(), 0, "not lit")
+	assert_eq(board.content_id(3, 3), "OB05", "the shrine stays")
 
 
-func test_ir55_pending_what_a_lit_shrine_does_on_the_board() -> void:
-	pending("OQ-59: what happens to a lit shrine on the board afterwards (stays, clears, content_hp)")
+func test_ir55_lifted_coloured_rocket_in_the_match_fills_the_shrine() -> void:
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	board.moves = 10
+	BB.add_shrine(board, 2, 4, {"R": 3}, 3, 1, 3)
+	BB.put(board, "R", [[2, 5], [5, 5]])
+	BB.put(board, "R-", [[3, 5]])
+	BB.put(board, "Y", [[4, 5]])
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(5, 5), Vector2i(4, 5))
+	assert_eq(BB.shrine_need(board, 2, 4, "R"), 0, "the lifted Rocket counts: 3 pieces fill 3 needs")
+	assert_eq(_lit_events(events).size(), 1, "a shrine-lit event")
+	var i_clear: int = EV.index_of(events, "clear", 0)
+	var i_lit: int = EV.index_of(events, "shrine_lit", 0)
+	var i_fall: int = EV.index_of(events, "fall", 0)
+	var i_refill: int = EV.index_of(events, "refill", 0)
+	var i_fire: int = EV.index_of(events, "rocket_fire", 0)
+	assert_true(i_clear >= 0 and i_clear < i_lit and i_lit < i_fall and i_fall < i_refill and i_refill < i_fire, "order: match clear, shrine lit, fall, refill, Rocket fires (got %s)" % [EV.sequence(events, ["clear", "shrine_lit", "fall", "refill", "rocket_fire"])])
+
+
+func test_ir55_rocket_touching_the_shrine_is_enough_then_rocket_clears_the_new_cells() -> void:
+	var board: BoardModel = _board_2x2_shrine({"R": 3})
+	BB.put(board, "R-", [[5, 4]])
+	BB.put(board, "R", [[6, 4], [7, 5]])
+	BB.put(board, "Y", [[7, 4]])
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(7, 5), Vector2i(7, 4))
+	assert_eq(_lit_events(events).size(), 1, "only the Rocket touches the shrine, and all 3 count: lit")
+	assert_eq(BB.shrine_need(board, 3, 3, "R"), 0)
+	var i_lit: int = EV.index_of(events, "shrine_lit", 0)
+	var i_fall: int = EV.index_of(events, "fall", 0)
+	var i_refill: int = EV.index_of(events, "refill", 0)
+	var i_fire: int = EV.index_of(events, "rocket_fire", 0)
+	assert_true(i_lit >= 0 and i_lit < i_fall and i_fall < i_refill and i_refill < i_fire, "order: lit, fall, refill, fire (got %s)" % [EV.sequence(events, ["shrine_lit", "fall", "refill", "rocket_fire"])])
+	if i_fire >= 0:
+		var fire: BoardEvent = events[i_fire]
+		assert_eq(fire.kind, "rocket_row")
+		assert_eq(fire.cells.size(), 9, "row 4 has 9 cells")
+		var i_clear: int = EV.index_after(events, "clear", i_fire)
+		assert_true(i_clear > i_fire and events[i_clear].cells.size() == 9, "the Rocket clears 9 pieces, including the ones now on (3,4) and (4,4)")
+		if i_clear > i_fire:
+			assert_true(events[i_clear].cells.has(Vector2i(3, 4)) and events[i_clear].cells.has(Vector2i(4, 4)))
+	assert_eq(EV.count(events, "shrine_lit"), 1, "the Rocket's later fire does not light a shrine again")
+
+
+# IR-14: a match next to a shrine gives it no hit (OQ-59 A b).
+func test_ir14_match_next_to_a_shrine_does_not_lower_its_hp() -> void:
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	board.moves = 10
+	BB.add_shrine(board, 3, 3, {"B": 1}, 3, 1, 1)
+	BB.put(board, "G", [[3, 4], [4, 4], [5, 5]])
+	BB.put(board, "B", [[5, 4]])
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(5, 5), Vector2i(5, 4))
+	assert_true(EV.matched(events).has(Vector2i(3, 4)), "precondition: the G match happened")
+	assert_eq(board.content_hp(3, 3), 1, "hp still 1")
+	assert_eq(BB.shrine_need(board, 3, 3, "B"), 1, "still needs 1 B")
+	assert_eq(_lit_events(events).size(), 0, "not lit")
+	assert_eq(board.content_id(3, 3), "OB05", "the shrine stays")
+

@@ -1,19 +1,19 @@
 # GUT tests for the win-finale Rockets of IR-16 / IR-05 (leftover moves become Rockets with random direction, OQ-40).
 # API: MatchResolver.fire_finale(board, directions) from tests/API_CONTRACT.md section 7. The call goes
 # through load() so a missing function fails these tests instead of breaking the script.
-# Odds (OQ-53 A) and placement (OQ-58 A) are tested; the fallback cell and settling between Rockets (OQ-60) are pending.
+# Odds (OQ-53 A), placement (OQ-58 A), the fallback cell and one-at-a-time settling (OQ-60 A) are tested.
 extends GutTest
 
 const BB := preload("res://tests/helpers/board_builder.gd")
 const EV := preload("res://tests/helpers/event_utils.gd")
 
 
-func _finale(board: BoardModel, directions: Array = []) -> Array[BoardEvent]:
+func _finale(board: BoardModel, directions: Array = [], cells: Array = []) -> Array[BoardEvent]:
 	var out: Array[BoardEvent] = []
 	var script: GDScript = load("res://src/match/match_resolver.gd")
 	if not script.has_method("fire_finale"):
 		return out
-	var result: Array = script.call("fire_finale", board, directions)
+	var result: Array = script.call("fire_finale", board, directions, cells) if not cells.is_empty() else script.call("fire_finale", board, directions)
 	for e in result:
 		out.append(e)
 	return out
@@ -221,9 +221,102 @@ func test_ir16_finale_with_no_uncovered_plain_piece_still_fires_every_rocket() -
 	assert_eq(board.moves, 0)
 
 
-func test_ir16_pending_fallback_cell_contents() -> void:
-	pending("OQ-60: when no uncovered plain piece is left, what the fallback finale Rocket does to what is in its random playable cell (special, covered piece, hatchling, obstacle)")
+# ---------------------------------------------------------------- OQ-60 A: fallback cell and settling
+
+# Every cell holds a Jade Orb (a special, so no uncovered plain piece), except what the test then puts in (1,1).
+func _no_plain_board(moves: int) -> BoardModel:
+	var board: BoardModel = _board(5, moves)
+	board.palette = BB.spread_palette()
+	for y in range(9):
+		for x in range(9):
+			BB.put(board, "O", [[x, y]])
+	return board
 
 
-func test_ir16_pending_settling_between_finale_rockets() -> void:
-	pending("OQ-60: whether pieces fall, refill and cascades resolve between one finale Rocket and the next")
+func test_ir16_fallback_rocket_sets_off_a_firecracker_instead_of_replacing_it() -> void:
+	var board: BoardModel = _no_plain_board(1)
+	BB.put(board, "RF", [[1, 1]])
+	var events: Array[BoardEvent] = _finale(board, ["rocket_row"], [Vector2i(1, 1)])
+	var fires: Array = EV.of_type(events, "rocket_fire")
+	assert_eq(fires.size(), 1, "one finale Rocket")
+	if fires.size() == 1:
+		assert_eq(fires[0].cell, Vector2i(1, 1), "fires from the stubbed fallback cell")
+		assert_eq(fires[0].kind, "rocket_row")
+		assert_true(EV.same_set(EV.to_set(fires[0].cells), EV.to_set(EV.row_cells(1))), "along row 1")
+	for e in EV.of_type(events, "special_created"):
+		assert_false(e.data.get("finale", false), "the fallback Rocket replaces nothing, so no placement event")
+	assert_eq(EV.blast_centres(events, 1), [Vector2i(1, 1)], "the Firecracker was set off: blast 1 at (1,1)")
+	assert_eq(EV.blast_centres(events, 2), [Vector2i(1, 1)], "and blast 2 at (1,1) after the fall")
+
+
+func test_ir16_fallback_rocket_leaves_a_fragment_drop_item_on_the_board() -> void:
+	var board: BoardModel = _no_plain_board(1)
+	BB.put(board, "Q", [[1, 1]])
+	var events: Array[BoardEvent] = _finale(board, ["rocket_row"], [Vector2i(1, 1)])
+	assert_eq(EV.count(events, "rocket_fire"), 1, "the Rocket fires along row 1")
+	assert_eq(board.get_kind(1, 1), "drop", "the fragment is still on the board")
+	assert_eq(board.get_drop_item(1, 1), "fragment", "still the fragment (IR-28)")
+	assert_eq(board.collected_count("fragment"), 0, "the Rocket does not collect it")
+
+
+func test_ir16_fallback_rocket_hits_the_moss_over_its_cell_once() -> void:
+	var board: BoardModel = _no_plain_board(1)
+	BB.put(board, "Y", [[1, 1], [1, 0]])
+	board.set_overlay(1, 1, "OB03", 2)
+	var events: Array[BoardEvent] = _finale(board, ["rocket_row"], [Vector2i(1, 1)])
+	assert_eq(EV.count(events, "rocket_fire"), 1)
+	assert_eq(board.overlay_hp(1, 1), 1, "moss hp 2 -> 1 (one hit)")
+	assert_eq(board.get_kind(1, 1), "plain", "the piece that fell in is there, still covered")
+	assert_eq(board.overlay_id(1, 1), "OB03", "still covered")
+
+
+func test_ir16_fallback_rocket_hits_a_bramble_layer() -> void:
+	var board: BoardModel = _no_plain_board(1)
+	board.add_content("OB02", 1, 1, 2)
+	var events: Array[BoardEvent] = _finale(board, ["rocket_row"], [Vector2i(1, 1)])
+	assert_eq(EV.count(events, "rocket_fire"), 1)
+	assert_eq(board.content_hp(1, 1), 1, "bramble 2 layers -> 1")
+	var cleared: Dictionary = EV.cleared(events)
+	assert_true(cleared.has(Vector2i(0, 1)) and cleared.has(Vector2i(8, 1)), "the rest of row 1 is cleared as usual")
+
+
+func test_ir16_finale_rockets_settle_completely_one_at_a_time() -> void:
+	var board: BoardModel = _board(5, 2)
+	board.palette = BB.spread_palette()
+	BB.put(board, "RF", [[7, 4]])
+	var events: Array[BoardEvent] = _finale(board, ["rocket_row", "rocket_row"], [Vector2i(4, 4), Vector2i(4, 6)])
+	var fires: Array = EV.of_type(events, "rocket_fire")
+	assert_eq(fires.size(), 2, "two Rockets")
+	if fires.size() != 2:
+		return
+	assert_eq(fires[0].cell, Vector2i(4, 4))
+	assert_eq(fires[1].cell, Vector2i(4, 6))
+	var i_f1: int = EV.index_of(events, "rocket_fire", 0)
+	var i_f2: int = EV.index_of(events, "rocket_fire", 1)
+	var i_b1: int = EV.index_of(events, "blast", 0)
+	var i_b2: int = EV.index_of(events, "blast", 1)
+	assert_true(i_f1 < i_b1 and i_b1 < i_b2 and i_b2 < i_f2, "Rocket 1, blast 1, blast 2, then Rocket 2 (got %s)" % [EV.sequence(events, ["rocket_fire", "blast"])])
+	var fall_after_f1: int = EV.index_after(events, "fall", i_f1)
+	assert_true(fall_after_f1 > i_f1 and fall_after_f1 < i_b1, "fall before blast 1")
+	var refill_after_b2: int = EV.index_after(events, "refill", i_b2)
+	assert_true(refill_after_b2 > i_b2 and refill_after_b2 < i_f2, "blast 2's fall and refill come before Rocket 2")
+
+
+func test_ir16_second_finale_rocket_uses_the_settled_board() -> void:
+	# 3x3 of Jade Orbs with one plain Y at (1,1). Rocket 1 (row) replaces the Y and clears row 1; the
+	# Orbs above fall and row 0 refills with plain pieces. Only row 0 holds plain pieces when Rocket 2
+	# is drawn, so it must appear in row 0 (before settling, no cell could be chosen but (1,1)).
+	for s in range(1, 11):
+		var board: BoardModel = BB.blank(3, 3, s)
+		board.palette = BB.spread_palette()
+		board.moves = 2
+		for y in range(3):
+			for x in range(3):
+				BB.put(board, "O", [[x, y]])
+		BB.put(board, "Y", [[1, 1]])
+		var events: Array[BoardEvent] = _finale(board, ["rocket_row", "rocket_row"])
+		var fires: Array = EV.of_type(events, "rocket_fire")
+		assert_eq(fires.size(), 2, "seed %d: two Rockets" % s)
+		if fires.size() == 2:
+			assert_eq(fires[0].cell, Vector2i(1, 1), "seed %d: Rocket 1 replaces the only plain piece" % s)
+			assert_eq(fires[1].cell.y, 0, "seed %d: Rocket 2 is on a refilled plain piece in row 0, got %s" % [s, fires[1].cell])

@@ -10,6 +10,8 @@ Status: `OPEN` / `ANSWERED`. "Blocks" names the rules whose tests can't be writt
 
 **Update (27 Nov 2026, round 3):** Owner in chat: "Q39 and Q40 is correct. Q51: A, Q52: A, Q53: A, Q54: A, Q55: A, Q56:A, Q57:A, Q58:A". OQ-39's "2nd–5th cost 500" reading is confirmed; OQ-40 confirmed; OQ-51 to OQ-58 ANSWERED (Option A each), cited as "Owner decision, chat 27 Nov 2026 › OQ-xx". OPEN: OQ-59 (lantern shrine parts OQ-55 A doesn't settle) and OQ-60 (finale Rocket parts OQ-58 A doesn't settle). GDD lines to add: see "GDD text to update (round 3)" at the end.
 
+**Update (27 Nov 2026, round 4):** Owner in chat: "59:A, 60:A, 61: A". OQ-59, OQ-60 and OQ-61 ANSWERED (Option A each, every sub-part settled), cited as "Owner decision, chat 27 Nov 2026 › OQ-xx". No question is open. GDD lines to add: see "GDD text to update (round 4)" at the end.
+
 ---
 
 ### OQ-01 · Bamboo Rocket: row or column? — ANSWERED
@@ -472,7 +474,7 @@ Owner decision, chat 27 Nov 2026 › OQ-44, Option A: "swap: match clears, fall,
 - Option B: Both stay on the board as pieces until they fire: they fall like any piece and fire from the cell they are in when their turn comes.
 Blocks: IR-39 (tests that clear a cell below the swapped special), IR-50 (piece counts for matched specials).
 
-### OQ-55 · Lantern shrine (OB05): how matches fill it, and what lights it — ANSWERED (in part)
+### OQ-55 · Lantern shrine (OB05): how matches fill it, and what lights it — ANSWERED (rest settled by OQ-59, OQ-61)
 Decision: Owner decision, chat 27 Nov 2026 › OQ-55: Option A. In plain words: (a) each piece of a colour the shrine still needs, in a match next to it, fills it by one; (b) the shrine is lit when it needs no more colours or its `hp` reaches 0, whichever comes first; (c) a Crane landing counts as one piece of a needed colour and doesn't lower `hp`. Now in IR-55, IR-48, IR-49, IR-14. Parts Option A doesn't settle (which pieces of the match count, whether a match also lowers `hp`, what a lit shrine leaves on the board): OQ-59.
 
 Owner decision, chat 27 Nov 2026 › OQ-50: Option A, whose part (b) said "not decided (the code doesn't fill shrines from matches yet)". GDD › Obstacle set › OB05 "Collect the colours it shows to light it"; Interaction rules › Crane "Lantern shrine: counts as one piece of a colour it still needs"; the shrine also has an `hp` that specials lower (IR-55). Not settled:
@@ -514,7 +516,7 @@ A cascade match (or a start-cell match, IR-43) can include a covered piece, and 
 - Option C: A special never appears in a covered cell: it goes on the next cell of the match in placement order (lowest, then left-most) that has no overlay; the covered cell refills by falling as OQ-29 says. (If every cell of the match is covered, the owner would need to say what happens.)
 Blocks: IR-40 (placement), IR-42 and IR-43 (cascade and start-cell specials), IR-54 (locked pieces), IR-33 (whether a covered special counts as "a special to tap" when checking for no possible move). No current test case makes a special on a covered cell, so no "Blocked by" line was added.
 
-### OQ-58 · Win finale: where does each finale Rocket appear? — ANSWERED (in part)
+### OQ-58 · Win finale: where does each finale Rocket appear? — ANSWERED (rest settled by OQ-60)
 Decision: Owner decision, chat 27 Nov 2026 › OQ-58: Option A. In plain words: each finale Rocket replaces an uncovered plain piece picked by the level's seeded random number generator (drawn after its direction); if none is left, it still earns its 5 coins and appears on a random playable cell (seeded). Now in IR-16, IR-05. Parts Option A doesn't settle (what the fallback Rocket does to what is in its cell; whether the board settles between finale Rockets): OQ-60.
 
 GDD says (and nothing more about placement):
@@ -533,7 +535,9 @@ Blocks: IR-16 (finale Rockets' firing cell and line), IR-05 (finale Rockets only
 
 ## New questions from applying the owner's answers to OQ-51 to OQ-58 (27 Nov 2026)
 
-### OQ-59 · Lantern shrine: which match pieces count, do matches lower hp, and what a lit shrine leaves — OPEN
+### OQ-59 · Lantern shrine: which match pieces count, do matches lower hp, and what a lit shrine leaves — ANSWERED
+Decision: Owner decision, chat 27 Nov 2026 › OQ-59: Option A. In plain words: (a) if any piece of a match touches the shrine, every piece of a needed colour in that match fills it; (b) matches never lower the shrine's `hp`, only specials do; (c) a lit shrine is removed and its cells become open cells that fill by falling. Now in IR-55, IR-14, IR-49.
+
 Owner decision, chat 27 Nov 2026 › OQ-55 (Option A): "(a) each piece of a needed colour in a match next to the shrine fills it by one; (b) the shrine is lit when every colour is collected or its `hp` reaches 0, whichever comes first". GDD › Board layers & obstacles › Cell layer model › "2 · Content | A piece, a blocker, a container or a drop item | Matching / adjacent matches / specials"; Obstacle set › OB05 "Collect the colours it shows to light it". Not settled:
 - (a) A match where only some pieces touch the shrine (e.g. R at (2,5),(3,5),(4,5) under a 2×2 shrine at (3,3)–(4,4): (3,5) and (4,5) touch it, (2,5) doesn't). Do all 3 R count, or only the 2 that touch?
 - (b) Does a match next to the shrine also lower its `hp` by 1, like any adjacent-match obstacle (IR-14)? Option A only says matches fill it; if not, `hp` falls only from specials.
@@ -542,23 +546,24 @@ Owner decision, chat 27 Nov 2026 › OQ-55 (Option A): "(a) each piece of a need
 - Option B: (a) only pieces of a needed colour that themselves touch the shrine count; (b) yes, the match also gives the shrine one hit (`hp` −1, once per match, IR-14); (c) the shrine stays on the board as a lit blocker that nothing can hit any more.
 (The owner may also mix parts.)
 Blocks: IR-55 (partly-touching matches, `hp` after a match, the board after lighting), IR-14 (shrine), IR-49 (whether a lit shrine's cells can be Crane targets), the OB05 module.
-Decision:
 
-### OQ-60 · Win finale: the fallback Rocket's cell, and settling between finale Rockets — OPEN
+### OQ-60 · Win finale: the fallback Rocket's cell, and settling between finale Rockets — ANSWERED
+Decision: Owner decision, chat 27 Nov 2026 › OQ-60: Option A. In plain words: (a) the fallback Rocket replaces nothing; it fires from its cell and whatever is there is treated like any cell a special hits (IR-09: piece cleared, special set off, fragment or drop item stays, top layer hit); (b) finale Rockets go one at a time, and the board settles fully before the next Rocket is drawn. Now in IR-16.
+
 Owner decision, chat 27 Nov 2026 › OQ-58 (Option A): "If no uncovered plain piece is left, the Rocket still counts for coins but appears on any random playable cell"; GDD › Interaction rules › "Soul fragments and drop items | Never destroyed by any special, combo or board clear"; Feel, juice & sound › "Win finale | Leftover moves fire as rockets 0.15 s apart". Not settled:
 - (a) The fallback cell may hold a special, a covered piece, a fragment, a drop item or an obstacle, or be empty. What happens to it? (A fragment or drop item must never be destroyed, IR-28.)
 - (b) With 2 or more leftover moves: is each Rocket placed and fired, and the board settled (fall, refill, cascades, set-off specials) before the next Rocket's draws, or are all Rockets placed first and then fired 0.15 s apart?
 - Option A: (a) the Rocket doesn't replace anything: it fires from that cell, and whatever is there is treated as IR-09 says (piece cleared, special set off, fragment or drop item stays, top layer hit); (b) one at a time: each Rocket is drawn, placed and fired, and the board settles fully, before the next Rocket's draws.
 - Option B: (a) the fallback draw skips cells holding a fragment, drop item or obstacle; a special or covered piece there is replaced without firing (the overlay stays); (b) all Rockets are drawn and placed first (in order), then fire one after another; the board settles only after the last one.
 Blocks: IR-16 (fallback cell; finale tests with 2+ leftover moves that check cells or pieces), the win-finale code.
-Decision:
 
-### OQ-61 · Lantern shrine: does a coloured special in a match next to it fill the shrine? — OPEN
+### OQ-61 · Lantern shrine: does a coloured special in a match next to it fill the shrine? — ANSWERED
+Decision: Owner decision, chat 27 Nov 2026 › OQ-61: Option A. In plain words: a coloured special in a match next to the shrine counts like a plain piece of its colour (in the example the shrine fills by 3), even though it is lifted rather than cleared. Now in IR-55, IR-50. IR-50's piece count (11) is unchanged.
+
 GDD › Rules clarifications › OQ-18 "Rockets, Firecrackers and Cranes keep the colour they were made from and match like normal pieces"; OQ-33 (Jade Orb only) "Only plain pieces count towards the most common colour, and only plain pieces are cleared". Owner decision, chat 27 Nov 2026 › OQ-54 (Option A): matched specials are "lifted off the board as the match resolves, like a set-off special"; OQ-55 (Option A): "each piece of a needed colour in a match next to the shrine fills it by one". Settled: a lifted special is not a cleared piece (IR-50, IR-41, IR-09). Not settled: e.g. R at (2,5), red row Rocket at (3,5), R at (4,5), next to a shrine that needs 3 R: does the shrine fill by 3 or by 2?
 - Option A: The lifted special counts: every piece of a needed colour in the match, specials included, fills the shrine by one (shrine fills by 3).
 - Option B: Only the plain pieces that are cleared count; a lifted special fills nothing (shrine fills by 2).
 Blocks: IR-55 (matches containing a coloured special next to a shrine), the OB05 module. Doesn't block the IR-50 piece count (11).
-Decision:
 
 ---
 
@@ -617,3 +622,13 @@ Round 2 item 1 now reads, with OQ-39 confirmed and OQ-52: "…the 1st for 300 co
 6. Rules clarifications › OQ-31 (round 2 item 11): "Goo blocks dew: on a goo cell the goo takes its hit first; the cell gets dew only if that hit removed the goo."
 7. Rules clarifications › OQ-29 / OQ-02: "A special made in a covered cell appears there under the overlay, locked: it can't be swapped, doesn't fall and can't be tapped; another special can set it off and a coloured one can still be matched."
 8. Rules clarifications: add rows 51 to 58.
+
+---
+
+## GDD text to update (round 4, owner only): decisions OQ-59 to OQ-61 (chat 27 Nov 2026)
+
+1. Obstacle set › OB05 (replaces round 3 item 5): "If any piece of a match touches it (up, down, left or right), every piece of that match of a colour it still needs, coloured specials included, fills it by one. Matches never lower its hp; a special lowers its hp by 1 without changing the colours; a Crane landing counts as one piece of a needed colour and doesn't lower hp. Lit when it needs no more colours or its hp reaches 0, whichever comes first; a lit shrine is removed and its cells fill by normal falling."
+2. Board layers & obstacles › Cell layer model › "2 · Content … Cleared by Matching / adjacent matches / specials": add "(lantern shrine: adjacent matches fill its colours but never lower its hp)".
+3. Core gameplay › Win / Feel › Win finale (replaces round 3 item 3): "…if none is left it still pays 5 coins and fires from a random playable cell without replacing what is there (that cell is hit like any cell a special covers). Finale Rockets go one at a time: the board settles fully (fall, refill, cascades, set-off specials) before the next one." Note: "0.15 s apart" in Feel › Win finale then means 0.15 s after the board settles, not a fixed beat; owner to word it.
+4. Rules clarifications › OQ-18 ("Rockets, Firecrackers and Cranes keep the colour they were made from and match like normal pieces"): add "and fill a lantern shrine like a piece of that colour".
+5. Rules clarifications: add rows 59 to 61.

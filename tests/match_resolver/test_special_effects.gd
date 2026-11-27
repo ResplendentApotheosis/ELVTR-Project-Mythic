@@ -837,3 +837,21 @@ func test_ir49_shrine_colour_tie_is_not_a_fixed_order() -> void:
 	for s in range(1, 25):
 		seen[_tie_shrine_result(s)] = true
 	assert_true(seen.has("1,2,0,0") and seen.has("2,1,0,0"), "across 24 seeds both colours get picked, got %s" % [seen.keys()])
+
+
+func test_ir49_a_lit_removed_shrine_is_never_a_crane_target() -> void:
+	# OQ-59 A (c): light the shrine with a real match, then the Crane must aim at the bramble only.
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	board.moves = 10
+	BB.add_shrine(board, 3, 2, {"R": 3}, 2, 2, 3)
+	BB.put(board, "R", [[3, 4], [4, 4], [5, 5]])
+	BB.put(board, "Y", [[5, 4]])
+	MatchResolver.swap(board, Vector2i(5, 5), Vector2i(5, 4))
+	assert_eq(board.content_id(3, 2), "", "precondition: the shrine is lit and removed")
+	board.add_content("OB02", 4, 8, 2)
+	BB.put(board, "GC", [[4, 4]])
+	board.goals = ["OB05"]
+	var target: Vector2i = _crane_target(board)
+	assert_eq(target, Vector2i(4, 8), "targets the bramble, never a cell of (3,2)-(4,3)")
+	assert_eq(board.content_hp(4, 8), 1, "the bramble took the landing")

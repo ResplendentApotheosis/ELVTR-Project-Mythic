@@ -33,8 +33,8 @@ static func choose(board: BoardModel, start: Vector2i, exclude: Array[Vector2i])
 	if not best_cells.is_empty():
 		return _closest(best_cells, start)
 	# 3. No goal left: the nearest remaining obstacle on any layer, or uncovered dew target
-	#    (owner decision OQ-38). Dew itself is not an obstacle to hit. Open question OQ-59 (c)
-	#    (provisional): a lit lantern shrine is not a target any more.
+	#    (owner decision OQ-38). Dew itself is not an obstacle to hit. Owner decision, chat
+	#    27 Nov 2026 › OQ-59 (c): a lit lantern shrine is removed, so it is never a target.
 	var obstacles: Array[Vector2i] = []
 	for y in range(board.height):
 		for x in range(board.width):
