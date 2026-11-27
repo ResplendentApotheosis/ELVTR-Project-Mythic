@@ -1,0 +1,101 @@
+id,chapter,tier,moves,colors,goals,new_obstacle,unlock,board_shape,target_first_try_win,design_intent
+1,1,intro,30,4,OB02 x17,OB02,,open top rows + blocker band below,95%,Teach breakable_layered alone; place it where the first 2-3 obvious matches touch it.
+2,1,easy,28,4,OB02 x34,,Line power-up (4-in-a-row) tutorial,open top rows + blocker band below,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+3,1,easy,28,4,OB02 x19,,Area power-up (L/T match) tutorial,narrow vertical channel through blockers,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+4,1,intro,30,4,OB04 x51,OB04,,open top rows + blocker band below,95%,Teach spread_goal alone; place it where the first 2-3 obvious matches touch it.
+5,1,easy,28,4,OB04 x70,,Signature homing power-up (2x2 match) tutorial,arch opening,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+6,1,easy,28,4,OB04 x44,,Colour-clear power-up (5-in-a-row) tutorial,diamond,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+7,1,intro,30,4,OB03 x36,OB03,,open top rows + blocker band below,95%,Teach cover_cluster alone; place it where the first 2-3 obvious matches touch it.
+8,1,easy,28,4,OB03 x26; OB02 x31,,,two towers joined at the base,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+9,1,easy,28,4,OB03 x27; OB02 x23,,,staircase,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+10,1,intro,30,4,OB05 x1,OB05,,open top rows + blocker band below,95%,Teach colour_lock_object alone; place it where the first 2-3 obvious matches touch it.
+11,1,easy,28,4,OB05 x1; OB02 x23,,In-level booster 1: single-cell smash (3 free),T-shape,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+12,1,medium,26,4,OB05 x1; OB04 x58,,,split halves with a 1-cell bridge,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+13,1,intro,30,4,OB06 x2,OB06,,open top rows + blocker band below,95%,Teach tall_column alone; place it where the first 2-3 obvious matches touch it.
+14,1,easy,28,4,OB06 x3,,,hourglass,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+15,1,hard,30,4,OB06 x4; OB02 x26; OB03 x69,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
+16,1,easy,28,4,OB05 x1,,Pre-level boosters unlocked,ring around a centre target,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+17,1,intro,30,4,OB07 x24,OB07,,open top rows + blocker band below,95%,Teach container_release alone; place it where the first 2-3 obvious matches touch it.
+18,1,easy,28,4,OB07 x29; OB06 x4,,,L-shape,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+19,1,medium,26,4,OB07 x42; OB03 x40; OB06 x6,,,columns / pillars,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+20,1,hard,30,4,OB06 x6; OB07 x25; OB05 x1,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
+21,1,easy,28,4,OB06 x3,,,open top rows + blocker band below,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+22,1,intro,30,4,OB08 x16,OB08,In-level booster 2: column clear (free first use),open top rows + blocker band below,95%,Teach shutter_colour alone; place it where the first 2-3 obvious matches touch it.
+23,1,easy,28,4,OB08 x25; OB02 x19,,,narrow vertical channel through blockers,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+24,1,medium,26,4,OB08 x23; OB05 x1; OB06 x5,,,arch opening,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+25,1,finale,32,4,OB08 x36; OB07 x28; OB05 x1,,Chapter 1 story card,"wide open 9x9, blockers spread evenly",25-35%,"Chapter finale: 4 goals, open board, ends with a story card."
+26,2,easy,24,4,OB07 x25,,,diamond,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+27,2,easy,24,4,OB05 x1; OB06 x2,,,two towers joined at the base,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+28,2,intro,26,4,OB10 x22,OB10,,open top rows + blocker band below,95%,Teach underlay_clear alone; place it where the first 2-3 obvious matches touch it.
+29,2,easy,24,4,OB10 x33,,In-level booster 3: board shuffle (free first use),staircase,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+30,2,hard,25,4,OB10 x33; OB07 x28; OB04 x75,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
+31,2,easy,24,4,OB07 x19; OB10 x21,,,T-shape,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+32,2,easy,24,4,OB07 x20; OB05 x1,,,split halves with a 1-cell bridge,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+33,2,medium,22,4,OB10 x31; OB05 x1; OB07 x41,,,hourglass,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+34,2,intro,26,4,OB11 x1,OB11,,open top rows + blocker band below,95%,Teach drop_item alone; place it where the first 2-3 obvious matches touch it.
+35,2,hard,25,4,OB11 x1; OB03 x64; OB05 x1,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
+36,2,easy,24,4,OB11 x3,,,ring around a centre target,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+37,2,easy,24,4,OB03 x50,,,L-shape,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+38,2,medium,22,4,OB10 x36; OB05 x1; OB04 x75,,,columns / pillars,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+39,2,medium,22,4,OB08 x29; OB11 x4,,,open top rows + blocker band below,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+40,2,hard,25,4,OB07 x30; OB08 x25; OB06 x2; OB04 x75,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
+41,2,intro,26,4,OB12 x16,OB12,,open top rows + blocker band below,95%,Teach breakable_two_hit alone; place it where the first 2-3 obvious matches touch it.
+42,2,easy,24,4,OB12 x32,,,narrow vertical channel through blockers,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+43,2,medium,22,4,OB12 x31; OB08 x27,,,arch opening,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+44,2,medium,22,4,OB04 x74; OB06 x4,,,diamond,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+45,2,hard,25,4,OB10 x39; OB08 x26; OB04 x75; OB11 x1,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
+46,2,intro,26,4,OB09 x1,OB09,,open top rows + blocker band below,95%,Teach hazard_destroyer alone; place it where the first 2-3 obvious matches touch it.
+47,2,easy,24,4,OB09 x1; OB08 x12,,,two towers joined at the base,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+48,2,medium,22,4,OB09 x2; OB03 x30; OB11 x3,,,staircase,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+49,2,medium,22,4,OB08 x25; OB05 x1,,,T-shape,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+50,2,finale,27,4,OB11 x2; OB12 x40; OB09 x1; OB08 x30,,Chapter 2 story card,"wide open 9x9, blockers spread evenly",25-35%,"Chapter finale: 4 goals, open board, ends with a story card."
+51,3,easy,24,4,OB06 x3; OB02 x30,,,split halves with a 1-cell bridge,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+52,3,easy,24,4,OB03 x40; OB11 x3,,,hourglass,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+53,3,medium,22,4,OB04 x71; OB03 x38; OB11 x1,,,ring around a centre target,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+54,3,medium,22,4,OB09 x2; OB06 x5; OB11 x4,,,L-shape,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+55,3,hard,25,4,OB04 x63; OB09 x1; OB11 x1; OB07 x28,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
+56,3,intro,26,4,OB15 x22,OB15,,open top rows + blocker band below,95%,Teach powerup_only alone; place it where the first 2-3 obvious matches touch it.
+57,3,easy,24,4,OB15 x26,,,columns / pillars,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+58,3,medium,22,4,OB15 x29; OB12 x37; OB06 x2,,,open top rows + blocker band below,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+59,3,medium,22,4,OB09 x1; OB12 x33,,,narrow vertical channel through blockers,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+60,3,hard,25,4,OB09 x1; OB05 x1; OB06 x4,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
+61,3,easy,23,4,OB11 x3; OB15 x22,,,arch opening,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+62,3,easy,23,4,OB15 x14; OB12 x31,,,diamond,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+63,3,medium,21,4,OB12 x34; OB02 x44,,,two towers joined at the base,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+64,3,medium,21,4,OB12 x24; OB09 x1,,,staircase,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+65,3,hard,24,4,OB12 x41; OB04 x75; OB02 x40; OB09 x1,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
+66,3,intro,25,4,OB14 x1; OB04 x36,OB14,,open top rows + blocker band below,95%,Teach spreader_source alone; place it where the first 2-3 obvious matches touch it.
+67,3,easy,23,4,OB14 x2; OB04 x72,,,T-shape,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+68,3,medium,21,4,OB14 x2; OB09 x1; OB04 x67,,,split halves with a 1-cell bridge,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+69,3,medium,21,4,OB12 x27; OB15 x34; OB10 x36,,,hourglass,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+70,3,hard,24,4,OB14 x2; OB15 x30; OB09 x1; OB04 x75,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
+71,3,easy,23,4,OB04 x48; OB15 x31,,,ring around a centre target,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+72,3,easy,23,4,OB14 x3; OB04 x62,,,L-shape,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+73,3,medium,21,4,OB06 x3; OB03 x31,,,columns / pillars,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+74,3,medium,21,4,OB14 x1; OB09 x2; OB04 x71,,,open top rows + blocker band below,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+75,3,finale,26,4,OB05 x1; OB08 x28; OB15 x42; OB09 x2,,Chapter 3 story card,"wide open 9x9, blockers spread evenly",25-35%,"Chapter finale: 4 goals, open board, ends with a story card."
+76,4,intro,25,4,OB16 x44,OB16,,open top rows + blocker band below,95%,Teach multi_release_rack alone; place it where the first 2-3 obvious matches touch it.
+77,4,easy,23,4,OB16 x29; OB11 x2,,,narrow vertical channel through blockers,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+78,4,medium,21,4,OB16 x47; OB04 x52,,,arch opening,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+79,4,medium,21,4,OB07 x33; OB03 x41,,,diamond,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+80,4,hard,24,4,OB03 x34; OB16 x54; OB09 x1; OB15 x29,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
+81,4,easy,23,4,OB07 x17,,,two towers joined at the base,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+82,4,easy,23,4,OB14 x3; OB04 x54,,,staircase,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+83,4,medium,21,4,OB07 x20; OB03 x46,,,T-shape,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+84,4,medium,21,4,OB16 x63; OB06 x2; OB03 x35,,,split halves with a 1-cell bridge,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+85,4,hard,24,4,OB04 x75; OB06 x6; OB10 x47; OB09 x2,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
+86,4,intro,25,4,OB13 x1,OB13,,open top rows + blocker band below,95%,Teach hazard_trap alone; place it where the first 2-3 obvious matches touch it.
+87,4,easy,23,4,OB13 x1,,,hourglass,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+88,4,medium,21,4,OB13 x2; OB11 x4,,,ring around a centre target,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+89,4,medium,21,4,OB15 x21; OB13 x1; OB16 x51,,,L-shape,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+90,4,hard,24,4,OB16 x60; OB14 x1; OB13 x1; OB04 x75,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
+91,4,easy,23,4,OB10 x35; OB02 x27,,,columns / pillars,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+92,4,easy,23,4,OB15 x11; OB14 x1; OB04 x51,,,open top rows + blocker band below,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+93,4,medium,21,4,OB12 x37; OB07 x30; OB13 x1,,,narrow vertical channel through blockers,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+94,4,medium,21,4,OB06 x5; OB05 x1; OB11 x2,,,arch opening,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+95,4,hard,24,4,OB09 x1; OB02 x37; OB07 x44,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
+96,4,intro,25,4,OB17 x22,OB17,,open top rows + blocker band below,95%,Teach generator alone; place it where the first 2-3 obvious matches touch it.
+97,4,easy,23,4,OB17 x25,,,diamond,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+98,4,medium,21,4,OB17 x50; OB15 x28; OB04 x59,,,two towers joined at the base,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+99,4,medium,21,4,OB13 x1; OB16 x32; OB10 x42,,,staircase,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+100,4,finale,26,4,OB13 x1; OB16 x44; OB03 x32; OB11 x2,,Chapter 4 story card,"wide open 9x9, blockers spread evenly",25-35%,"Chapter finale: 4 goals, open board, ends with a story card."
