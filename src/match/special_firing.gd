@@ -106,8 +106,8 @@ static func fire_orb(board: BoardModel, order: FireOrder, color: String, waiting
 ## covering the Crane's own cell: a piece that fell in is cleared, a special there is set off, the
 ## top layer takes one hit. Landing: collects a drop item, gives an uncovered dew target dew, puts
 ## one piece into a lantern shrine, or else hits the cell. Owner decision OQ-49 (chat 27 Nov 2026):
-## a dew landing clears the piece there like any special AND gives the cell dew. Open question
-## OQ-55 (provisional): a shrine landing counts as one piece and one hp, not a separate special hit.
+## a dew landing clears the piece there like any special AND gives the cell dew. Owner decision
+## OQ-55 (chat 27 Nov 2026): a shrine landing counts as one piece of a needed colour and takes no hp.
 static func fire_crane(board: BoardModel, order: FireOrder, waiting: Array[FireOrder], events: Array[BoardEvent]) -> void:
 	var target: Vector2i = CraneTargeting.choose(board, order.cell, [order.cell] as Array[Vector2i])
 	var e_target: BoardEvent = BoardEvent.new("crane_target")
@@ -130,9 +130,11 @@ static func fire_crane(board: BoardModel, order: FireOrder, waiting: Array[FireO
 		BoardGravity.collect_drop(board, target, events)
 	elif board.is_uncovered_dew_target(target.x, target.y):
 		cover(board, [target] as Array[Vector2i], hitset, "crane", waiting, events)
-		board.give_dew(target.x, target.y)   # OQ-49: clear the piece, then give dew
+		# OQ-49: clear the piece, then give dew; OQ-56: not if goo there survived the hit.
+		if board.underlay_hp(target.x, target.y) <= 0 or board.has_dew(target.x, target.y):
+			board.give_dew(target.x, target.y)
 	elif content != null and content.id == "OB05" and not content.needs.is_empty():
-		LanternShrine.take_one_piece(board, content, hitset, events)
+		LanternShrine.take_one_piece(board, content, events)
 	else:
 		cover(board, [target] as Array[Vector2i], hitset, "crane", waiting, events)
 
@@ -157,11 +159,11 @@ static func cover(board: BoardModel, cells: Array[Vector2i], hitset: Dictionary,
 		board.clear_piece(c.x, c.y)
 		cleared.append(c)
 	_clear_event(events, cleared, source)
-	var covered: Array[Vector2i] = own.duplicate()
-	covered.append_array(cells)
-	BoardDamage.note_cleared(board, cleared, covered, hitset)
 	for c in cells:
 		BoardDamage.hit_top_layer(board, c, hitset, events)
+	var covered: Array[Vector2i] = own.duplicate()
+	covered.append_array(cells)
+	BoardDamage.note_cleared(board, cleared, covered, hitset)   # after the hits: goo blocks dew (OQ-56)
 
 
 ## Removes a special that is still on the board before it fires; returns its cell (or nothing).

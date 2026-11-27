@@ -620,8 +620,47 @@ func test_ir48_set_off_crane_takeoff_clears_the_piece_that_fell_into_its_cell() 
 	assert_eq(board.content_hp(6, 2), 1, "then the Crane lands on its target")
 
 
-func test_ir48_pending_crane_landing_on_a_lantern_shrine_and_its_hp() -> void:
-	pending("OQ-55 (c): does a Crane landing on a lantern shrine also lower its hp")
+func test_ir48_crane_lifted_by_a_swap_match_takes_off_from_its_cell_and_clears_the_piece_that_fell_in() -> void:
+	# OQ-54 A. G at (2,4); Y at (3,4); green Crane at (4,4); G at (3,5). Swap (3,5)->(3,4).
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	board.moves = 10
+	BB.put(board, "G", [[2, 4], [3, 5]])
+	BB.put(board, "Y", [[3, 4]])
+	BB.put(board, "GC", [[4, 4]])
+	board.add_content("OB02", 6, 2, 2)
+	board.goals = ["OB02"]
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(3, 5), Vector2i(3, 4))
+	assert_eq(board.moves, 9)
+	var i_clear: int = EV.index_of_clear(events, "match")
+	var i_fall: int = EV.index_after(events, "fall", i_clear)
+	var i_refill: int = EV.index_after(events, "refill", i_fall)
+	var i_off: int = EV.index_of(events, "crane_takeoff")
+	assert_true(i_clear >= 0 and i_fall > i_clear and i_refill > i_fall and i_off > i_refill, "match clear, fall, refill, then the Crane takes off")
+	if i_fall >= 0:
+		assert_eq(EV.fall_map(events[i_fall]).get(Vector2i(4, 4)), Vector2i(4, 3), "the piece from (4,3) falls into the lifted Crane's cell (4,4)")
+	if i_off >= 0:
+		assert_eq(events[i_off].cell, Vector2i(4, 4), "take-off from (4,4)")
+		var i_off_clear: int = EV.index_after(events, "clear", i_off)
+		assert_true(i_off_clear > i_off and events[i_off_clear].cells.has(Vector2i(4, 4)), "the piece that fell into (4,4) is cleared by the take-off")
+	assert_eq(board.content_hp(6, 2), 1, "the Crane then hits its target")
+
+
+func test_ir48_landing_on_a_shrine_counts_as_one_piece_and_takes_no_hp() -> void:
+	# OQ-55 A (c). Only goal: lantern shrine 2x2, hp 2, still needing 3 R.
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	BB.put(board, "GC", [[0, 7]])
+	BB.add_shrine(board, 3, 3, {"R": 3}, 2, 2, 2)
+	board.goals = ["OB05"]
+	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(0, 7))
+	var landing: Array = EV.cells_of(events, "crane_landing")
+	assert_eq(landing.size(), 1)
+	if landing.size() == 1:
+		var c: Vector2i = landing[0]
+		assert_true(c.x >= 3 and c.x <= 4 and c.y >= 3 and c.y <= 4, "lands on a shrine cell, got %s" % c)
+	assert_eq(BB.shrine_need(board, 3, 3, "R"), 2, "the shrine needs 2 R")
+	assert_eq(board.content_hp(3, 3), 2, "hp still 2")
 
 
 # ---------------------------------------------------------------- IR-49
@@ -763,12 +802,13 @@ func test_ir49_hatchling_goal_counts_items_still_to_collect() -> void:
 func test_ir49_shrine_goal_counts_pieces_still_needed_and_takes_the_most_needed_colour() -> void:
 	var board: BoardModel = BB.blank()
 	BB.put(board, "GC", [[4, 4]])
-	BB.add_shrine(board, 1, 1, {"R": 3, "B": 1})
+	BB.add_shrine(board, 1, 1, {"R": 3, "B": 1}, 1, 1, 3)
 	board.add_content("OB02", 6, 6, 5)
 	board.goals = ["OB05", "OB02"]
 	assert_eq(_crane_target(board), Vector2i(1, 1), "4 pieces needed < 5 bramble hits")
 	assert_eq(BB.shrine_need(board, 1, 1, "R"), 2, "the landing counts as one red piece")
 	assert_eq(BB.shrine_need(board, 1, 1, "B"), 1)
+	assert_eq(board.content_hp(1, 1), 3, "hp still 3 (IR-55)")
 
 
 func _tie_shrine_result(seed_value: int) -> String:

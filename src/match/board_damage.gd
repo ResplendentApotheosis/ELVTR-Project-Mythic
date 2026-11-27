@@ -19,7 +19,8 @@ static func hit_top_layer(board: BoardModel, cell: Vector2i, hitset: Dictionary,
 
 ## Records the cells one special (or combo) has cleared and covered so far in its hitset. If any
 ## cleared cell is on healing dew, every covered cell gets dew (IR-53, owner decision OQ-46),
-## including cells covered earlier by the same special.
+## including cells covered earlier by the same special. Call it AFTER the hits, so goo has taken
+## its hit first (owner decision OQ-56, chat 27 Nov 2026).
 static func note_cleared(board: BoardModel, cleared: Array[Vector2i], covered: Array[Vector2i], hitset: Dictionary) -> void:
 	if not hitset.has("cleared_cells"):
 		hitset["cleared_cells"] = [] as Array[Vector2i]
@@ -35,13 +36,12 @@ static func note_cleared(board: BoardModel, cleared: Array[Vector2i], covered: A
 
 ## Hits a match gives: the layer under/over its own pieces (IR-15) and every adjacent-match
 ## obstacle or overlay next to any of its pieces, once each (IR-14). Diagonals never count.
-## A match on dew spreads it to all its cells (IR-53).
+## A match on dew spreads it to all its cells (IR-53), after the goo under them took its hit (OQ-56).
 static func hit_by_match(board: BoardModel, match_cells: Array[Vector2i], events: Array[BoardEvent]) -> void:
 	var hitset: Dictionary = {}
 	var in_match: Dictionary = {}
 	for c in match_cells:
 		in_match[c] = true
-	HealingDew.spread(board, match_cells, match_cells)
 	for c in match_cells:
 		# Owner decision OQ-41 (chat 27 Nov 2026): a matched piece under an overlay is cleared and
 		# hits the overlay only, not the underlay below it.
@@ -49,6 +49,7 @@ static func hit_by_match(board: BoardModel, match_cells: Array[Vector2i], events
 			hit_overlay(board, c, hitset, events)
 		elif board.underlay_hp(c.x, c.y) > 0:
 			hit_underlay(board, c, hitset, events)
+	HealingDew.spread(board, match_cells, match_cells)
 	for c in match_cells:
 		for n in neighbours(c):
 			if in_match.has(n) or not board.is_playable(n.x, n.y):
@@ -93,13 +94,13 @@ static func hit_underlay(board: BoardModel, cell: Vector2i, hitset: Dictionary, 
 static func hit_content(board: BoardModel, content: BoardContent, hitset: Dictionary, events: Array[BoardEvent]) -> void:
 	if hitset.has(content):
 		return
+	var behaviour: ObstacleBehaviour = ObstacleRegistry.behaviour(content.id)
+	if not behaviour.can_be_hit(content):
+		return
 	hitset[content] = true
 	content.hp -= 1
-	var cell: Vector2i = content.rect.position
-	events.append(_hit_event(cell, "content", content.id, content.hp))
-	if content.hp <= 0:
-		board.remove_content(content)
-		events.append_array(ObstacleRegistry.behaviour(content.id).on_cleared(board, content.id, cell, content))
+	events.append(_hit_event(content.rect.position, "content", content.id, content.hp))
+	behaviour.after_content_hit(board, content, events)
 
 
 static func neighbours(c: Vector2i) -> Array[Vector2i]:

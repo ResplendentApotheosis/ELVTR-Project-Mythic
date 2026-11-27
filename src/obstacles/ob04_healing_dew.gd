@@ -15,7 +15,8 @@ func takes_adjacent_match_hits() -> bool:
 ## If any of `cleared` (cells whose piece was cleared) has dew, every cell in `covered` gets dew (IR-53).
 ## Owner decision OQ-46 (chat 27 Nov 2026, trial, revisit after playtest): `covered` is every
 ## playable cell the match or special covers, including obstacle, fragment and drop-item cells.
-## Open question OQ-56 (provisional): dew given to a goo cell replaces the goo.
+## Owner decision OQ-56 (chat 27 Nov 2026): goo blocks dew. Call this after the hits: a cell whose
+## goo (or any other hittable underlay) is still there gets no dew this time.
 static func spread(board: BoardModel, cleared: Array[Vector2i], covered: Array[Vector2i]) -> void:
 	var any_dew: bool = false
 	for c in cleared:
@@ -25,4 +26,6 @@ static func spread(board: BoardModel, cleared: Array[Vector2i], covered: Array[V
 	if not any_dew:
 		return
 	for c in covered:
+		if board.underlay_hp(c.x, c.y) > 0 and not board.has_dew(c.x, c.y):
+			continue   # goo survived its hit (OQ-56)
 		board.give_dew(c.x, c.y)

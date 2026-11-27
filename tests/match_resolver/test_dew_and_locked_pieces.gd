@@ -1,6 +1,5 @@
 # GUT tests for IR-53 (healing dew spreads) and IR-54 (pieces under an overlay are locked).
 # API: tests/API_CONTRACT.md section 2b (dew targets). Dew is an underlay with id "OB04".
-# Pending placeholders name the open question (OQ) that blocks a case.
 extends GutTest
 
 const BB := preload("res://tests/helpers/board_builder.gd")
@@ -104,6 +103,56 @@ func test_ir53_crane_landing_on_an_uncovered_dew_target_clears_the_piece_and_giv
 	assert_eq(board.get_color(6, 2), BB.filler_color(6, 1), "(6,2) refilled by the piece from (6,1)")
 
 
+func _goo_dew_match_board(goo_hp: int) -> BoardModel:
+	# Dew under (3,5); goo under (4,5). The R swap makes the 3-match (2,5),(3,5),(4,5).
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	BB.set_dew(board, 3, 5)
+	board.set_underlay(4, 5, "OB10", goo_hp)
+	BB.put(board, "R", [[2, 5], [4, 5], [3, 6]])
+	return board
+
+
+func test_ir53_goo_that_survives_its_hit_blocks_the_dew() -> void:
+	# OQ-56 A: goo hp 2 -> 1, so (4,5) gets no dew this time.
+	var board: BoardModel = _goo_dew_match_board(2)
+	MatchResolver.swap(board, Vector2i(3, 6), Vector2i(3, 5))
+	assert_true(BB.has_dew(board, 2, 5), "dew at (2,5)")
+	assert_true(BB.has_dew(board, 3, 5), "dew at (3,5)")
+	assert_eq(board.underlay_id(4, 5), "OB10", "(4,5) still holds goo")
+	assert_eq(board.underlay_hp(4, 5), 1, "goo hp 2 -> 1")
+	assert_false(BB.has_dew(board, 4, 5), "no dew at (4,5)")
+
+
+func test_ir53_goo_removed_by_the_hit_lets_the_dew_in() -> void:
+	var board: BoardModel = _goo_dew_match_board(1)
+	MatchResolver.swap(board, Vector2i(3, 6), Vector2i(3, 5))
+	assert_true(BB.has_dew(board, 2, 5), "dew at (2,5)")
+	assert_true(BB.has_dew(board, 3, 5), "dew at (3,5)")
+	assert_true(BB.has_dew(board, 4, 5), "goo at (4,5) removed, so (4,5) has dew")
+
+
+func test_ir53_rocket_over_goo_moss_and_dew_cells() -> void:
+	# OQ-56 A in one row. Dew under (5,2). Goo hp 1 at (1,2), goo hp 2 at (7,2), moss hp 1 on goo hp 1 at (6,2).
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	BB.set_dew(board, 5, 2)
+	BB.put(board, "R-", [[0, 2]])
+	board.set_underlay(1, 2, "OB10", 1)
+	board.set_underlay(7, 2, "OB10", 2)
+	board.set_underlay(6, 2, "OB10", 1)
+	board.set_overlay(6, 2, "OB03", 1)
+	MatchResolver.tap(board, Vector2i(0, 2))
+	assert_true(BB.has_dew(board, 1, 2), "(1,2): goo removed, so it has dew")
+	assert_eq(board.underlay_id(7, 2), "OB10", "(7,2) still goo")
+	assert_eq(board.underlay_hp(7, 2), 1, "(7,2): goo hp 2 -> 1")
+	assert_false(BB.has_dew(board, 7, 2), "(7,2): no dew")
+	assert_eq(board.overlay_hp(6, 2), 0, "(6,2): moss removed")
+	assert_eq(board.underlay_id(6, 2), "OB10", "(6,2): the goo under the moss is untouched")
+	assert_eq(board.underlay_hp(6, 2), 1, "(6,2): goo still hp 1 (IR-09)")
+	assert_false(BB.has_dew(board, 6, 2), "(6,2): no dew")
+	for x in [0, 2, 3, 4, 5, 8]:
+		assert_true(BB.has_dew(board, x, 2), "dew at (%d,2)" % x)
 
 
 # ---------------------------------------------------------------- IR-54
@@ -175,3 +224,71 @@ func test_ir54_cell_below_a_locked_piece_is_filled_by_a_diagonal_slide() -> void
 	assert_eq(board.overlay_hp(4, 3), 2, "under moss hp 2")
 	assert_eq(board.get_color(4, 4), BB.filler_color(3, 3), "(4,4) is filled from (3,3) by a diagonal slide")
 	assert_eq(BB.empty_cells(board).size(), 0, "no playable cell is empty")
+
+
+func test_ir54_special_under_an_overlay_is_locked_no_swap_no_tap_no_fall() -> void:
+	# OQ-57 A. Red row Rocket under moss hp 1 at (2,6); Y at (3,6).
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	board.moves = 10
+	BB.put(board, "R-", [[2, 6]])
+	BB.put(board, "Y", [[3, 6]])
+	board.set_overlay(2, 6, "OB03", 1)
+	var before: String = BB.snapshot(board)
+	var e1: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(3, 6), Vector2i(2, 6))
+	assert_eq(EV.count(e1, "invalid_swap"), 1, "swap refused")
+	var e2: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(2, 6))
+	assert_eq(EV.count(e2, "rocket_fire"), 0, "tap does nothing")
+	assert_eq(BB.snapshot(board), before, "board unchanged")
+	assert_eq(board.moves, 10)
+	BB.put(board, "X", [[2, 7]])
+	MatchResolver.settle(board)
+	assert_eq(board.get_kind(2, 6), "rocket_row", "the Rocket does not fall")
+	assert_eq(board.overlay_hp(2, 6), 1)
+
+
+func test_ir54_covered_special_is_set_off_by_another_special() -> void:
+	# OQ-57 A. Red row Rocket under moss hp 1 at (2,6); a column Rocket tapped at (2,0).
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	board.moves = 10
+	BB.put(board, "R-", [[2, 6]])
+	BB.put(board, "B|", [[2, 0]])
+	board.set_overlay(2, 6, "OB03", 1)
+	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(2, 0))
+	assert_eq(board.overlay_hp(2, 6), 0, "the moss at (2,6) is removed by the column Rocket")
+	var fires: Array = EV.of_type(events, "rocket_fire")
+	assert_eq(fires.size(), 2, "the column Rocket, then the set-off red Rocket")
+	if fires.size() == 2:
+		assert_eq(fires[0].kind, "rocket_col")
+		assert_eq(fires[1].kind, "rocket_row")
+		assert_eq(fires[1].cell, Vector2i(2, 6), "fires from (2,6)")
+		assert_true(EV.same_set(EV.to_set(fires[1].cells), EV.to_set(EV.row_cells(6))), "along row 6")
+
+
+func test_ir54_covered_special_can_be_matched_by_colour_and_fires_from_its_cell() -> void:
+	# OQ-57 A + OQ-54 A. Red row Rocket under moss hp 2 at (2,6); R at (3,6); Y at (4,6); R at (4,7).
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	board.moves = 10
+	BB.put(board, "R-", [[2, 6]])
+	BB.put(board, "R", [[3, 6], [4, 7]])
+	BB.put(board, "Y", [[4, 6]])
+	board.set_overlay(2, 6, "OB03", 2)
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(4, 7), Vector2i(4, 6))
+	assert_eq(board.moves, 9)
+	var matched: Dictionary = EV.matched(events)
+	for c in [Vector2i(3, 6), Vector2i(4, 6)]:
+		assert_true(matched.has(c), "R match clears %s" % c)
+	var i_clear: int = EV.index_of_clear(events, "match")
+	var i_fall: int = EV.index_after(events, "fall", i_clear)
+	var i_refill: int = EV.index_after(events, "refill", i_fall)
+	var i_fire: int = EV.index_of(events, "rocket_fire")
+	assert_true(i_clear >= 0 and i_fall > i_clear and i_refill > i_fall and i_fire > i_refill, "events in order: match clear, fall, refill, Rocket fire")
+	if i_fall >= 0:
+		assert_eq(EV.fall_map(events[i_fall]).get(Vector2i(2, 6)), Vector2i(2, 5), "(2,6) refills by falling: the piece from (2,5) drops in")
+	if i_fire >= 0:
+		assert_eq(events[i_fire].cell, Vector2i(2, 6))
+		assert_eq(events[i_fire].kind, "rocket_row")
+		assert_true(EV.same_set(EV.to_set(events[i_fire].cells), EV.to_set(EV.row_cells(6))), "along row 6")
+	assert_eq(board.overlay_hp(2, 6), 0, "moss hp 2: one hit from the match, one from the Rocket that clears the piece that fell in")

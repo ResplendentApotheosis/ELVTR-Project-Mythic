@@ -265,12 +265,12 @@ static func dew_targets_left(board: BoardModel) -> int:
 	return -1
 
 
-## Lantern shrine (OB05) needing pieces of given colours, e.g. {"R": 3, "B": 1} (new API, contract section 2b).
-static func add_shrine(board: BoardModel, x: int, y: int, needs: Dictionary, w: int = 1, h: int = 1) -> void:
+## Lantern shrine (OB05) needing pieces of given colours, e.g. {"R": 3, "B": 1}; hp defaults to the total needed (new API, contract section 2b).
+static func add_shrine(board: BoardModel, x: int, y: int, needs: Dictionary, w: int = 1, h: int = 1, hp: int = -1) -> void:
 	var total: int = 0
 	for k in needs:
 		total += int(needs[k])
-	board.add_content("OB05", x, y, total, w, h)
+	board.add_content("OB05", x, y, total if hp < 0 else hp, w, h)
 	if board.has_method("set_shrine_needs"):
 		board.call("set_shrine_needs", x, y, needs)
 

@@ -6,6 +6,7 @@ extends RefCounted
 
 const NO_CELL: Vector2i = Vector2i(-1, -1)
 const MAX_CASCADES: int = 200
+const LanternShrine: GDScript = preload("res://src/obstacles/ob05_lantern_shrine.gd")
 
 
 ## The player drags the piece at `from` into `to` (IR-01, IR-18, IR-22..27, IR-39, IR-52).
@@ -35,10 +36,11 @@ static func swap(board: BoardModel, from: Vector2i, to: Vector2i) -> Array[Board
 	return events
 
 
-## Tapping a special fires it and uses a move; anything else does nothing (IR-02).
+## Tapping a special fires it and uses a move; anything else does nothing (IR-02). Owner decision
+## OQ-57 (chat 27 Nov 2026): a special locked under an overlay can't be tapped (no event, no move used).
 static func tap(board: BoardModel, cell: Vector2i) -> Array[BoardEvent]:
 	var events: Array[BoardEvent] = []
-	if not board.is_special(cell.x, cell.y):
+	if not board.is_special(cell.x, cell.y) or board.is_locked(cell.x, cell.y):
 		return events
 	board.moves -= 1
 	var queue: Array[FireOrder] = [FireOrder.new(board.get_kind(cell.x, cell.y), board.get_color(cell.x, cell.y), cell, true)]
@@ -55,13 +57,12 @@ static func settle(board: BoardModel) -> Array[BoardEvent]:
 	return events
 
 
-## Win finale (IR-16, IR-05): each leftover move becomes one Bamboo Rocket, fired one after another,
-## each fully resolved (fall, refill, cascades) before the next; board.moves ends at 0.
-## Owner decision OQ-40 (chat 27 Nov 2026): each Rocket's direction is one board.rng draw, unless
-## `directions[i]` ("rocket_row" / "rocket_col") overrides it (a test seam).
-## Open question OQ-53 (provisional): each direction is an independent 50/50 pick.
-## Not in the spec (our choice): each Rocket replaces a random uncovered plain piece (a second
-## board.rng draw); with no such piece it fires from the board's middle cell.
+## Win finale (IR-16, IR-05): each leftover move becomes one Bamboo Rocket, fired one after another;
+## board.moves ends at 0. Owner decisions OQ-40 and OQ-53 (chat 27 Nov 2026): each Rocket's
+## direction is an independent 50/50 pick, the FIRST board.rng draw of that Rocket, unless
+## `directions[i]` ("rocket_row" / "rocket_col") overrides it (a test seam). Owner decision OQ-58
+## (chat 27 Nov 2026): it then replaces a random uncovered plain piece (the second draw).
+## Open question OQ-60 (provisional): each Rocket fully resolves (fall, refill, cascades) before the next.
 static func fire_finale(board: BoardModel, directions: Array = []) -> Array[BoardEvent]:
 	var events: Array[BoardEvent] = []
 	var index: int = 0
@@ -70,7 +71,7 @@ static func fire_finale(board: BoardModel, directions: Array = []) -> Array[Boar
 		if index < directions.size():
 			kind = String(directions[index])
 		else:
-			kind = "rocket_row" if board.rng.randi_range(0, 1) == 0 else "rocket_col"
+			kind = "rocket_row" if board.rng.randi_range(0, 1) == 0 else "rocket_col"   # first draw
 		board.moves -= 1
 		index += 1
 		var order: FireOrder = _place_finale_rocket(board, kind, events)
@@ -79,14 +80,22 @@ static func fire_finale(board: BoardModel, directions: Array = []) -> Array[Boar
 	return events
 
 
+## Owner decision OQ-58 (chat 27 Nov 2026): the Rocket replaces a seeded random uncovered plain piece.
+## With no such piece it appears on a seeded random playable cell (OQ-58). Open question OQ-60
+## (provisional): there it replaces nothing; whatever is in that cell is treated like any covered cell (IR-09).
 static func _place_finale_rocket(board: BoardModel, kind: String, events: Array[BoardEvent]) -> FireOrder:
 	var options: Array[Vector2i] = []
+	var playable: Array[Vector2i] = []
 	for y in range(board.height):
 		for x in range(board.width):
+			if board.is_playable(x, y):
+				playable.append(Vector2i(x, y))
 			if board.get_kind(x, y) == "plain" and not board.is_locked(x, y):
 				options.append(Vector2i(x, y))
 	if options.is_empty():
-		return FireOrder.new(kind, "", Vector2i(board.width / 2, board.height / 2), false)
+		if playable.is_empty():
+			return FireOrder.new(kind, "", Vector2i(board.width / 2, board.height / 2), false)
+		return FireOrder.new(kind, "", playable[board.rng.randi_range(0, playable.size() - 1)], false)
 	var cell: Vector2i = options[board.rng.randi_range(0, options.size() - 1)]
 	board.set_piece(cell.x, cell.y, kind, "")
 	var made: BoardEvent = BoardEvent.new("special_created")
@@ -98,10 +107,11 @@ static func _place_finale_rocket(board: BoardModel, kind: String, events: Array[
 
 
 ## True if some swap would be accepted (makes a match or involves a special) or a special can be tapped.
+## Owner decision OQ-57 (chat 27 Nov 2026): a special locked under an overlay doesn't count.
 static func has_possible_move(board: BoardModel) -> bool:
 	for y in range(board.height):
 		for x in range(board.width):
-			if board.is_special(x, y):
+			if board.is_special(x, y) and not board.is_locked(x, y):
 				return true
 	for y in range(board.height):
 		for x in range(board.width):
@@ -147,7 +157,9 @@ static func _invalid(from: Vector2i, to: Vector2i, reason: String) -> BoardEvent
 ## Owner decision OQ-26: matches made by the swap resolve first, then the special fires from the
 ## cell it now sits in. Owner decision OQ-30: an Orb swapped with a drop item acts as a tap.
 ## Owner decision OQ-44 (chat 27 Nov 2026): pieces fall and refill between the swap's match and
-## the special firing; new matches from that fall wait until it has fired.
+## the special firing; new matches from that fall wait until it has fired. Owner decision OQ-54
+## (chat 27 Nov 2026): if the swap made a match, the special is lifted off the board as the match
+## clears (its cell refills in the fall) and fires from the cell it sat in right after the swap.
 static func _special_with_piece(board: BoardModel, from: Vector2i, to: Vector2i, special_cell: Vector2i, events: Array[BoardEvent]) -> void:
 	var other: Vector2i = from if special_cell == to else to
 	var kind: String = board.get_kind(special_cell.x, special_cell.y)
@@ -165,11 +177,17 @@ static func _special_with_piece(board: BoardModel, from: Vector2i, to: Vector2i,
 	for g in groups:
 		if g.has_cell(special_cell):
 			extra = []   # it is in a match, so it fires as a matched special (IR-50)
+	if not groups.is_empty() and not extra.is_empty():
+		board.clear_piece(special_cell.x, special_cell.y)   # lifted (OQ-54): no fall, no hits
+		order.on_board = false
 	_resolve_matches(board, groups, from, to, extra, events)
 
 
-## Clears each match, gives its hits, places its special, then fires `extra` specials and any
-## specials that were in the matches (IR-21, IR-50). `from`/`to` are the swap cells, or NO_CELL in cascades.
+## Clears each match, gives its hits, fills lantern shrines next to it, places its special, then
+## fires `extra` specials and any specials that were in the matches (IR-21, IR-50, IR-55).
+## `from`/`to` are the swap cells, or NO_CELL in cascades.
+## Owner decision OQ-54 (chat 27 Nov 2026) and IR-50: a special in the match is lifted, not cleared,
+## so the `clear` event lists only the plain pieces the match clears.
 static func _resolve_matches(board: BoardModel, groups: Array[MatchGroup], from: Vector2i, to: Vector2i,
 		extra: Array[FireOrder], events: Array[BoardEvent]) -> void:
 	var queue: Array[FireOrder] = extra.duplicate()
@@ -179,15 +197,20 @@ static func _resolve_matches(board: BoardModel, groups: Array[MatchGroup], from:
 		m.color = g.color
 		m.data = {"shape": g.shape_name()}
 		events.append(m)
+		var cleared: Array[Vector2i] = []
 		for c in g.cells:
-			if board.is_special(c.x, c.y) and not _queued(queue, c):
-				queue.append(FireOrder.new(board.get_kind(c.x, c.y), board.get_color(c.x, c.y), c, false))
+			if board.is_special(c.x, c.y):
+				if not _queued(queue, c):
+					queue.append(FireOrder.new(board.get_kind(c.x, c.y), board.get_color(c.x, c.y), c, false))
+			elif board.has_item(c.x, c.y):
+				cleared.append(c)
 			board.clear_piece(c.x, c.y)
 		var clear: BoardEvent = BoardEvent.new("clear")
-		clear.cells = g.cells.duplicate()
+		clear.cells = cleared
 		clear.source = "match"
 		events.append(clear)
 		BoardDamage.hit_by_match(board, g.cells, events)
+		LanternShrine.fill_from_match(board, cleared, g.color, events)
 		var kind: String = g.special_kind()
 		if kind != "":
 			var cell: Vector2i = _special_cell(g, from, to)
@@ -204,8 +227,9 @@ static func _resolve_matches(board: BoardModel, groups: Array[MatchGroup], from:
 ## Fires the swapped and matched specials one after another (IR-21, IR-39, IR-50). Owner decision
 ## OQ-44 (chat 27 Nov 2026): pieces fall and refill before each one fires, and the specials each
 ## one sets off fire after it (IR-41); cascade matches wait until all have fired.
-## Open question OQ-54 (provisional): a swapped special still on the board falls with the other
-## pieces and fires from where it lands; a matched special already left the board with its match.
+## Owner decision OQ-54 (chat 27 Nov 2026): swapped and matched specials were lifted, so they fire
+## from where they were lifted; only a special still on the board (a tap, or a swap with no match)
+## is moved along by falls.
 static func _fire_waiting(board: BoardModel, queue: Array[FireOrder], events: Array[BoardEvent]) -> void:
 	var scanned: int = events.size()
 	for order in queue:
@@ -240,9 +264,9 @@ static func _queued(queue: Array[FireOrder], cell: Vector2i) -> bool:
 
 ## IR-40: a player's match puts its special on the swap's target cell; a cascade match on its lowest,
 ## then left-most cell (an L/T/+ on its crossing cell). Owner decision OQ-25: a player match that
-## doesn't contain the target cell uses the cascade placement too. Open question OQ-57
-## (provisional): if that cell is covered by an overlay that survived, the special is still placed
-## there; it is locked for swaps and falls (IR-54) but can still be tapped.
+## doesn't contain the target cell uses the cascade placement too. Owner decision OQ-57
+## (chat 27 Nov 2026): if that cell is covered by an overlay that survived, the special is still placed
+## there, locked: no swap, no fall, no tap (IR-54); it can be set off or matched by colour.
 static func _special_cell(g: MatchGroup, _from: Vector2i, to: Vector2i) -> Vector2i:
 	if to != NO_CELL and g.has_cell(to):
 		return to

@@ -8,6 +8,8 @@ Status: `OPEN` / `ANSWERED`. "Blocks" names the rules whose tests can't be writt
 
 **Update (27 Nov 2026, later):** OQ-39 to OQ-50 ANSWERED by the owner in chat (not yet in the GDD; cited as "Owner decision, chat 27 Nov 2026 › OQ-xx"). OQ-46, OQ-47, OQ-48 and OQ-50 are trial decisions: revisit after playtest. OPEN: OQ-51 (continue offer after a quit) and OQ-52 to OQ-55 (parts the new answers don't settle). GDD lines to add for OQ-39 to OQ-50: see "GDD text to update (round 2)" at the end.
 
+**Update (27 Nov 2026, round 3):** Owner in chat: "Q39 and Q40 is correct. Q51: A, Q52: A, Q53: A, Q54: A, Q55: A, Q56:A, Q57:A, Q58:A". OQ-39's "2nd–5th cost 500" reading is confirmed; OQ-40 confirmed; OQ-51 to OQ-58 ANSWERED (Option A each), cited as "Owner decision, chat 27 Nov 2026 › OQ-xx". OPEN: OQ-59 (lantern shrine parts OQ-55 A doesn't settle) and OQ-60 (finale Rocket parts OQ-58 A doesn't settle). GDD lines to add: see "GDD text to update (round 3)" at the end.
+
 ---
 
 ### OQ-01 · Bamboo Rocket: row or column? — ANSWERED
@@ -313,7 +315,7 @@ Blocks: IR-49 (no-goal case on boards with dew).
 ## New questions from applying the owner's answers to OQ-23 to OQ-38 (27 Nov 2026)
 
 ### OQ-39 · Continue offer: how many, what price, and what if declined? — ANSWERED
-Decision: Owner decision, chat 27 Nov 2026 › OQ-39 (own wording, neither option): "39a: max 5, 39: 2nd-55h 500coins, 39c: attempt ends, goes back to retry screen, 39d: yes, shown but pop up says "you have less than 300 coins" and hence cannot be accepted, eventually have decline and go back to retry screen". In plain words: (a) at most 5 offers per attempt; (b) the 1st costs 300 coins, the 2nd to 5th cost 500 each ("2nd-55h" read as "2nd–5th"; owner please confirm); (c) declining ends the attempt and goes to the retry screen; (d) a player with under 300 coins still sees the offer with "you have less than 300 coins", can't accept, can only decline → retry screen. Now in IR-37. (A player with 300–499 coins at a 500-coin offer: OQ-52.)
+Decision: Owner decision, chat 27 Nov 2026 › OQ-39 (own wording, neither option): "39a: max 5, 39: 2nd-55h 500coins, 39c: attempt ends, goes back to retry screen, 39d: yes, shown but pop up says "you have less than 300 coins" and hence cannot be accepted, eventually have decline and go back to retry screen". In plain words: (a) at most 5 offers per attempt; (b) the 1st costs 300 coins, the 2nd to 5th cost 500 each ("2nd-55h" = "2nd–5th", confirmed by the owner in chat 27 Nov 2026: "Q39 and Q40 is correct"); (c) declining ends the attempt and goes to the retry screen; (d) a player with under 300 coins still sees the offer with "you have less than 300 coins", can't accept, can only decline → retry screen. Now in IR-37. (A player with 300–499 coins at a 500-coin offer: OQ-52.)
 
 GDD › Interaction rules › "Continue offer | Always shown after a fail, whether or not the goals can still be reached, and offered at least twice per attempt (count, price and decline flow: open question OQ-39)"; Core gameplay › Fail flow "an optional '+5 moves' for coins, offered at least twice per attempt whatever the board state, then the retry screen"; Meta & economy › Continue "Optional '+5 moves' for 300 coins, offered at least twice per attempt (exact count and later prices: OQ-39)". The GDD (a94a7e4) still lists this as open. IR-37 now uses the literal reading: offered every time moves run out, at least the first and second time in an attempt, each "+5 moves for 300 coins". Not settled:
 - (a) Is there a maximum? "At least twice" sets a minimum only.
@@ -325,7 +327,7 @@ GDD › Interaction rules › "Continue offer | Always shown after a fail, wheth
 Blocks: IR-37 (third-fail, decline and low-coin tests).
 
 ### OQ-40 · Direction of the win-finale Rockets — ANSWERED
-Decision: Owner decision, chat 27 Nov 2026 › OQ-40 (neither option): "can it be random rockets: some row, some column". In plain words: each finale Rocket gets its own random direction, row or column, picked by the level's seeded random number generator (so tests and bot runs repeat exactly). Now in IR-16, IR-05. (Odds and whether both directions must appear: OQ-53.)
+Decision: Owner decision, chat 27 Nov 2026 › OQ-40 (neither option): "can it be random rockets: some row, some column". In plain words: each finale Rocket gets its own random direction, row or column, picked by the level's seeded random number generator (so tests and bot runs repeat exactly). Confirmed by the owner in chat 27 Nov 2026 ("Q39 and Q40 is correct"). Now in IR-16, IR-05. (Odds and mix: answered in OQ-53.)
 
 GDD says: Core gameplay › "Leftover moves become Bamboo Rockets that fire for bonus coins"; Audio › "Leftover moves fire as rockets 0.15 s apart". OQ-24's chosen Option A said "finale Rockets: the owner picks one fixed direction", but no direction was picked.
 - Option A: All finale Rockets are row Rockets.
@@ -416,7 +418,7 @@ GDD says: Rules clarifications › OQ-16 "Gives one hit to its target cell, or c
 Blocks: IR-48, IR-53, IR-49 (the piece in the landing cell on dew-goal and no-goal dew landings).
 
 ### OQ-50 · Lantern shrine (OB05): what do specials and matches do to it? — ANSWERED in part (trial decision, revisit after playtest)
-Decision: Owner decision, chat 27 Nov 2026 › OQ-50: "A first". In plain words: (a) a special covering a shrine lowers its `hp` by 1 (once per special) and doesn't change the colours it still needs. Option A left (b), how matches fill a shrine, undecided, so that part (and what lights the shrine) is still open as OQ-55. Now in IR-55 (new).
+Decision: Owner decision, chat 27 Nov 2026 › OQ-50: "A first". In plain words: (a) a special covering a shrine lowers its `hp` by 1 (once per special) and doesn't change the colours it still needs. Option A left (b), how matches fill a shrine, undecided; that part (and what lights the shrine) was then answered in OQ-55. Now in IR-55.
 
 GDD says: Obstacle set › OB05 "Lantern shrine … Collect the colours it shows to light it"; Interaction rules › Crane "Lantern shrine: counts as one piece of a colour it still needs"; "What a special hits | Each cell it covers takes one hit"; "Which obstacles are multi-cell | … any obstacle drawn across 2 or more cells". The brief gives shrines an `hp` field. Nothing says (a) what a special's hit does to a shrine, or (b) how pieces are "collected" into it. OB05 debuts at level 10, so this blocks levels 10–12, 16, 20, 24, 25 and later.
 - Option A (provisional, what the code does now for (a)): (a) a special's hit lowers the shrine's `hp` by 1 (one hit per special, IR-10) but doesn't change the colours it still needs; (b) not decided (the code doesn't fill shrines from matches yet).
@@ -429,7 +431,9 @@ Blocks: the OB05 obstacle module; no IR for OB05 exists yet beyond IR-11 (multi-
 
 ## New question from checking the GDD update a94a7e4 (27 Nov 2026)
 
-### OQ-51 · Is the continue offer shown after quitting mid-level? — OPEN
+### OQ-51 · Is the continue offer shown after quitting mid-level? — ANSWERED
+Decision: Owner decision, chat 27 Nov 2026 › OQ-51: Option A. In plain words: the "+5 moves" offer appears only when moves run out; quitting goes straight to the fail result (life lost except on finales, first try used), with no offer. Now in IR-37, IR-38.
+
 Two parts of the GDD, read together, give an odd result:
 - Interaction rules › "Continue offer | Always shown after a fail, whether or not the goals can still be reached, and offered at least twice per attempt"; Rules clarifications › OQ-23 "Always after a fail, whether or not the goals can still be reached".
 - Interaction rules › "Quitting mid-level | Counts as a fail: costs a life (except on finales) and counts as that level's first try".
@@ -437,36 +441,40 @@ Read literally, a player who quits would be offered "+5 moves" (they may still h
 - Option A: The offer appears only when moves run out; quitting goes straight to the fail result (life lost, first try used), with no offer.
 - Option B: Quitting also shows the offer (e.g. "Keep playing with +5 moves?") before the quit is confirmed; declining it completes the quit as a fail.
 Blocks: IR-37 (which fails trigger the offer), IR-38 (quit flow).
-Decision:
 
 ---
 
 ## New questions from applying the owner's answers to OQ-39 to OQ-50 (27 Nov 2026)
 
-### OQ-52 · Continue offers 2–5: a player with 300–499 coins — OPEN
+### OQ-52 · Continue offers 2–5: a player with 300–499 coins — ANSWERED
+Decision: Owner decision, chat 27 Nov 2026 › OQ-52: Option A. In plain words: a player who can't pay an offer still sees it; the message names that offer's price ("you have less than 300 coins" for the 1st, "you have less than 500 coins" for the 2nd to 5th); only Decline works, which goes to the retry screen. Now in IR-37.
+
 Owner decision, chat 27 Nov 2026 › OQ-39: "2nd-55h 500coins" (read as 2nd–5th cost 500) and "39d: yes, shown but pop up says "you have less than 300 coins" and hence cannot be accepted, eventually have decline and go back to retry screen". The low-coin answer names 300, the price of the 1st offer. A player with, say, 400 coins at the 2nd offer can't pay 500, but "you have less than 300 coins" would be untrue. (A player under 300 at a later offer is covered: shown, can't accept, decline only; the message text is the same question.)
 - Option A: The offer is shown; the message names that offer's price ("you have less than 500 coins"); only Decline works → retry screen.
 - Option B: The offer is not shown when the player can't afford a 500-coin offer; the attempt goes straight to the retry screen (the low-coin pop-up is only for the 300-coin 1st offer).
 Blocks: IR-37 (later-offer low-coin test only).
-Decision:
 
-### OQ-53 · Win-finale Rockets: odds and mix of row and column — OPEN
+### OQ-53 · Win-finale Rockets: odds and mix of row and column — ANSWERED
+Decision: Owner decision, chat 27 Nov 2026 › OQ-53: Option A. In plain words: each finale Rocket's direction is its own 50/50 pick from the level's seeded random number generator; a finale can by chance be all rows or all columns. Now in IR-16.
+
 Owner decision, chat 27 Nov 2026 › OQ-40: "can it be random rockets: some row, some column". Not settled: whether each Rocket's direction is an independent 50/50 pick (so a finale could, by chance, be all rows), or whether a finale with 2 or more Rockets must contain at least one row and one column ("some row, some column").
 - Option A: Each finale Rocket independently: row or column, 50/50, from the level's seeded random number generator; all-row or all-column finales can happen.
 - Option B: Same seeded random picks, but a finale with 2 or more Rockets always contains at least one row and at least one column Rocket (e.g. if all picks match, the last Rocket is flipped).
 Blocks: IR-16 (finale odds/mix tests only).
-Decision:
 
-### OQ-54 · During the fall before a waiting special fires: do the swapped and matched specials fall? — OPEN
+### OQ-54 · During the fall before a waiting special fires: do the swapped and matched specials fall? — ANSWERED
+Decision: Owner decision, chat 27 Nov 2026 › OQ-54: Option A. In plain words: when a swap makes a match, the swapped special, and any coloured special that is part of a match, is lifted off the board as the match resolves (like a set-off special); its cell refills in the fall, and it fires from the cell it was in right after the swap (or where it was matched). In the example the Rocket fires from (4,4). Now in IR-39, IR-50, IR-48 (a lifted Crane's take-off cell).
+
 Owner decision, chat 27 Nov 2026 › OQ-44, Option A: "swap: match clears, fall, refill, special fires, then cascades". GDD › Rules clarifications › OQ-26 "each special fires from the cell it sits in"; OQ-04 lifts only specials *set off by another special*. Not settled:
 - (a) A swapped special that is not in the swap's match, when that match clears the cell below it. Example: column Rocket at (4,5), R at (4,4), R at (2,5),(3,5). Swap (4,5)→(4,4): the Rocket is now at (4,4) and R at (2,5),(3,5),(4,5) clear. In the fall, does the Rocket drop to (4,5) (and fire along column 4 from there), or stay put? (For a column Rocket the column is the same; for a row Rocket or a Firecracker the area changes.)
 - (b) A coloured special that is part of a match (IR-50): does it leave its cell when the match clears (so pieces fall into that cell before it fires), or stay on the board as a piece during the fall?
 - Option A: Both are lifted off the board as the match resolves, like a set-off special (IR-41): their cells refill in the fall, and each fires from the cell it was in right after the swap.
 - Option B: Both stay on the board as pieces until they fire: they fall like any piece and fire from the cell they are in when their turn comes.
 Blocks: IR-39 (tests that clear a cell below the swapped special), IR-50 (piece counts for matched specials).
-Decision:
 
-### OQ-55 · Lantern shrine (OB05): how matches fill it, and what lights it — OPEN
+### OQ-55 · Lantern shrine (OB05): how matches fill it, and what lights it — ANSWERED (in part)
+Decision: Owner decision, chat 27 Nov 2026 › OQ-55: Option A. In plain words: (a) each piece of a colour the shrine still needs, in a match next to it, fills it by one; (b) the shrine is lit when it needs no more colours or its `hp` reaches 0, whichever comes first; (c) a Crane landing counts as one piece of a needed colour and doesn't lower `hp`. Now in IR-55, IR-48, IR-49, IR-14. Parts Option A doesn't settle (which pieces of the match count, whether a match also lowers `hp`, what a lit shrine leaves on the board): OQ-59.
+
 Owner decision, chat 27 Nov 2026 › OQ-50: Option A, whose part (b) said "not decided (the code doesn't fill shrines from matches yet)". GDD › Obstacle set › OB05 "Collect the colours it shows to light it"; Interaction rules › Crane "Lantern shrine: counts as one piece of a colour it still needs"; the shrine also has an `hp` that specials lower (IR-55). Not settled:
 - (a) How a matched piece is "collected" into the shrine.
 - (b) What lights (completes) the shrine: every colour collected, `hp` reaching 0, or either.
@@ -475,13 +483,14 @@ Owner decision, chat 27 Nov 2026 › OQ-50: Option A, whose part (b) said "not d
 - Option B: (a) every matched piece of a needed colour anywhere on the board fills it by one; (b) the shrine is lit only when every colour is collected (`hp` 0 just stops special hits from doing anything more); (c) the landing counts as one piece and also lowers `hp` by 1.
 (The owner may also mix parts.)
 Blocks: IR-55, IR-48 (shrine landing), the OB05 obstacle module (levels 10–12, 16, 20, 24, 25 and later).
-Decision:
 
 ---
 
 ## New questions from the rules-keeper's gap check (27 Nov 2026)
 
-### OQ-56 · Healing dew spreading onto a creep goo cell — OPEN
+### OQ-56 · Healing dew spreading onto a creep goo cell — ANSWERED
+Decision: Owner decision, chat 27 Nov 2026 › OQ-56: Option A. In plain words: goo blocks dew. The goo takes its hit from that match or special first; if the goo survives, the cell gets no dew this time; if the hit removed it, the cell gets dew. Now in IR-53, IR-15.
+
 Parts that, read together, leave this open:
 - GDD › Board layers & obstacles › Cell layer model › "1 · Underlay | Creep goo, healing dew | Matching on top of it" (one underlay layer per cell).
 - `research/match-villains/level_agent_brief.md` › schema › "`underlay`: `.` = none; `1`–`3` = OB10 with that many hp; `s` = OB04 already covering that cell (a seed)" (one character per cell, so a cell can't start with both).
@@ -491,9 +500,10 @@ So a match or special that spreads dew can cover a cell that still holds goo. No
 - Option B: Dew replaces goo. The cell gets dew and any goo left there is removed; the removed goo counts as cleared for a goo goal.
 - Option C: Both can sit in one cell during play (the one-underlay limit applies to level files only). The goo keeps its hp and stays the layer that takes hits; the cell also counts as covered for a dew goal.
 Blocks: IR-53 (dew spreading onto goo cells), IR-15 (goo hit vs dew on the same cell), the OB04/OB10 obstacle modules and any level mixing dew and goo. No current test case puts dew next to goo, so no "Blocked by" line was added.
-Decision:
 
-### OQ-57 · A cascade special made on a covered cell whose overlay survived — OPEN
+### OQ-57 · A cascade special made on a covered cell whose overlay survived — ANSWERED
+Decision: Owner decision, chat 27 Nov 2026 › OQ-57: Option A. In plain words: the special appears in that cell under the overlay and is locked like any covered piece: it can't be swapped, doesn't fall and can't be tapped; another special can still set it off, and a coloured one can still be matched by colour. Now in IR-54, IR-40, IR-42, IR-43, IR-02, IR-33, IR-50.
+
 Parts that, read together, leave this open:
 - GDD › Rules clarifications › OQ-02 "in cascades, on the lowest then leftmost cell of the match (the crossing cell for an L or T)"; OQ-25 "A special whose match doesn't include the player's cell | Uses the cascade placement".
 - GDD › Rules clarifications › OQ-29 "Pieces under an overlay (moss, shutter) | Locked: can't be swapped and don't fall, but can be part of a match. A cell emptied under a surviving overlay refills by normal falling".
@@ -503,9 +513,10 @@ A cascade match (or a start-cell match, IR-43) can include a covered piece, and 
 - Option B: The special appears there and can't be swapped or fall, but can be tapped (a tap is not a swap); tapping it costs a move as usual.
 - Option C: A special never appears in a covered cell: it goes on the next cell of the match in placement order (lowest, then left-most) that has no overlay; the covered cell refills by falling as OQ-29 says. (If every cell of the match is covered, the owner would need to say what happens.)
 Blocks: IR-40 (placement), IR-42 and IR-43 (cascade and start-cell specials), IR-54 (locked pieces), IR-33 (whether a covered special counts as "a special to tap" when checking for no possible move). No current test case makes a special on a covered cell, so no "Blocked by" line was added.
-Decision:
 
-### OQ-58 · Win finale: where does each finale Rocket appear? — OPEN
+### OQ-58 · Win finale: where does each finale Rocket appear? — ANSWERED (in part)
+Decision: Owner decision, chat 27 Nov 2026 › OQ-58: Option A. In plain words: each finale Rocket replaces an uncovered plain piece picked by the level's seeded random number generator (drawn after its direction); if none is left, it still earns its 5 coins and appears on a random playable cell (seeded). Now in IR-16, IR-05. Parts Option A doesn't settle (what the fallback Rocket does to what is in its cell; whether the board settles between finale Rockets): OQ-60.
+
 GDD says (and nothing more about placement):
 - Core gameplay › Rules › "Win: all goals done before moves run out. Leftover moves become Bamboo Rockets that fire for bonus coins ("Forest Festival" finale)."
 - Feel, juice & sound › "Win finale | Leftover moves fire as rockets 0.15 s apart".
@@ -517,6 +528,36 @@ godot-engineer's provisional choice (in the code now) is Option A.
 - Option B: Each Rocket appears on a random playable cell (seeded), whatever is there: a plain piece, special, covered piece, fragment or drop item. (A special there would be set off; a fragment or drop item must never be destroyed, so these would need excluding: owner to confirm.)
 - Option C: No board placement: each Rocket flies in from off the board (e.g. from the moves counter) along a random row or column (seeded), and that whole line is hit; nothing on the board is replaced.
 Blocks: IR-16 (finale Rockets' firing cell and line), IR-05 (finale Rockets only), the win-finale code and its tests (`tests/match_resolver/test_finale_rockets.gd`). Coins (5 per Rocket) are the same under every option.
+
+---
+
+## New questions from applying the owner's answers to OQ-51 to OQ-58 (27 Nov 2026)
+
+### OQ-59 · Lantern shrine: which match pieces count, do matches lower hp, and what a lit shrine leaves — OPEN
+Owner decision, chat 27 Nov 2026 › OQ-55 (Option A): "(a) each piece of a needed colour in a match next to the shrine fills it by one; (b) the shrine is lit when every colour is collected or its `hp` reaches 0, whichever comes first". GDD › Board layers & obstacles › Cell layer model › "2 · Content | A piece, a blocker, a container or a drop item | Matching / adjacent matches / specials"; Obstacle set › OB05 "Collect the colours it shows to light it". Not settled:
+- (a) A match where only some pieces touch the shrine (e.g. R at (2,5),(3,5),(4,5) under a 2×2 shrine at (3,3)–(4,4): (3,5) and (4,5) touch it, (2,5) doesn't). Do all 3 R count, or only the 2 that touch?
+- (b) Does a match next to the shrine also lower its `hp` by 1, like any adjacent-match obstacle (IR-14)? Option A only says matches fill it; if not, `hp` falls only from specials.
+- (c) Once lit, what is left on the board: is the shrine removed, so its cells become open cells that fill by normal falling, or does it stay as a lit, inert blocker?
+- Option A: (a) every piece of a needed colour in the match counts, as long as at least one piece of the match touches the shrine; (b) no, matches only fill colours; `hp` falls only from specials; (c) the shrine is removed and its cells become open cells that fill by normal falling.
+- Option B: (a) only pieces of a needed colour that themselves touch the shrine count; (b) yes, the match also gives the shrine one hit (`hp` −1, once per match, IR-14); (c) the shrine stays on the board as a lit blocker that nothing can hit any more.
+(The owner may also mix parts.)
+Blocks: IR-55 (partly-touching matches, `hp` after a match, the board after lighting), IR-14 (shrine), IR-49 (whether a lit shrine's cells can be Crane targets), the OB05 module.
+Decision:
+
+### OQ-60 · Win finale: the fallback Rocket's cell, and settling between finale Rockets — OPEN
+Owner decision, chat 27 Nov 2026 › OQ-58 (Option A): "If no uncovered plain piece is left, the Rocket still counts for coins but appears on any random playable cell"; GDD › Interaction rules › "Soul fragments and drop items | Never destroyed by any special, combo or board clear"; Feel, juice & sound › "Win finale | Leftover moves fire as rockets 0.15 s apart". Not settled:
+- (a) The fallback cell may hold a special, a covered piece, a fragment, a drop item or an obstacle, or be empty. What happens to it? (A fragment or drop item must never be destroyed, IR-28.)
+- (b) With 2 or more leftover moves: is each Rocket placed and fired, and the board settled (fall, refill, cascades, set-off specials) before the next Rocket's draws, or are all Rockets placed first and then fired 0.15 s apart?
+- Option A: (a) the Rocket doesn't replace anything: it fires from that cell, and whatever is there is treated as IR-09 says (piece cleared, special set off, fragment or drop item stays, top layer hit); (b) one at a time: each Rocket is drawn, placed and fired, and the board settles fully, before the next Rocket's draws.
+- Option B: (a) the fallback draw skips cells holding a fragment, drop item or obstacle; a special or covered piece there is replaced without firing (the overlay stays); (b) all Rockets are drawn and placed first (in order), then fire one after another; the board settles only after the last one.
+Blocks: IR-16 (fallback cell; finale tests with 2+ leftover moves that check cells or pieces), the win-finale code.
+Decision:
+
+### OQ-61 · Lantern shrine: does a coloured special in a match next to it fill the shrine? — OPEN
+GDD › Rules clarifications › OQ-18 "Rockets, Firecrackers and Cranes keep the colour they were made from and match like normal pieces"; OQ-33 (Jade Orb only) "Only plain pieces count towards the most common colour, and only plain pieces are cleared". Owner decision, chat 27 Nov 2026 › OQ-54 (Option A): matched specials are "lifted off the board as the match resolves, like a set-off special"; OQ-55 (Option A): "each piece of a needed colour in a match next to the shrine fills it by one". Settled: a lifted special is not a cleared piece (IR-50, IR-41, IR-09). Not settled: e.g. R at (2,5), red row Rocket at (3,5), R at (4,5), next to a shrine that needs 3 R: does the shrine fill by 3 or by 2?
+- Option A: The lifted special counts: every piece of a needed colour in the match, specials included, fills the shrine by one (shrine fills by 3).
+- Option B: Only the plain pieces that are cleared count; a lifted special fills nothing (shrine fills by 2).
+Blocks: IR-55 (matches containing a coloured special next to a shrine), the OB05 module. Doesn't block the IR-50 piece count (11).
 Decision:
 
 ---
@@ -562,3 +603,17 @@ Lines that now disagree with, or say less than, the owner's chat answers:
 12. Rules clarifications › OQ-04 / OQ-26 / OQ-27: "before each waiting special fires, pieces fall and refill; cascade matches wait until all waiting specials have fired (the Firecracker's two blasts keep their cascades in between). All set-off specials share one waiting list: lowest, then left-most, fires next".
 13. Combos › Jade Orb + special: "converted pieces leave the board at once and their cells refill; each fires from the cell it was converted in".
 14. Rules clarifications: add rows 39 to 50 (marking 46, 47, 48 and 50 as trial decisions to revisit after playtest).
+
+---
+
+## GDD text to update (round 3, owner only): decisions OQ-51 to OQ-58 (chat 27 Nov 2026)
+
+Round 2 item 1 now reads, with OQ-39 confirmed and OQ-52: "…the 1st for 300 coins, the 2nd to 5th for 500 each. Declining ends the attempt (retry screen). Shown even without enough coins, with 'you have less than N coins' (N = that offer's price); only Decline works."
+1. Interaction rules › Continue offer: add "Only when moves run out; never after quitting."
+2. Interaction rules › Quitting mid-level ("Counts as a fail: costs a life (except on finales) and counts as that level's first try"): add "Goes straight to the fail result; no continue offer."
+3. Core gameplay › Win / Feel › Win finale (round 2 item 5): "each finale Rocket is a row or column Rocket, 50/50, picked independently (seeded), and replaces a random uncovered plain piece (seeded); if none is left it still pays 5 coins and appears on a random playable cell".
+4. Rules clarifications › OQ-26 / OQ-04: "When a swap makes a match, the swapped special, and any coloured special in a match, is lifted off the board as the match resolves; its cell refills in the fall and it fires from the cell it was in right after the swap (or where it was matched)."
+5. Obstacle set › OB05 (round 2 item 6): "A match next to it fills it by one per piece of a colour it still needs; a special lowers its hp by 1 without changing the colours; a Crane landing counts as one piece of a needed colour and doesn't lower hp. Lit when it needs no more colours or its hp reaches 0, whichever comes first."
+6. Rules clarifications › OQ-31 (round 2 item 11): "Goo blocks dew: on a goo cell the goo takes its hit first; the cell gets dew only if that hit removed the goo."
+7. Rules clarifications › OQ-29 / OQ-02: "A special made in a covered cell appears there under the overlay, locked: it can't be swapped, doesn't fall and can't be tapped; another special can set it off and a coloured one can still be matched."
+8. Rules clarifications: add rows 51 to 58.

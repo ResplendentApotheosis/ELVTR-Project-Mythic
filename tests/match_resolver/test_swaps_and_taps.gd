@@ -86,6 +86,20 @@ func test_ir02_tapping_a_plain_piece_does_nothing() -> void:
 	assert_eq(board.moves, 10)
 
 
+
+func test_ir02_tapping_a_special_under_an_overlay_does_nothing() -> void:
+	# OQ-57 A: a covered special is locked and can't be tapped.
+	var board: BoardModel = BB.blank()
+	board.moves = 10
+	BB.put(board, "R-", [[2, 6]])
+	board.set_overlay(2, 6, "OB03", 1)
+	var before: String = BB.snapshot(board)
+	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(2, 6))
+	assert_eq(EV.count(events, "rocket_fire"), 0, "no fire event")
+	assert_eq(BB.snapshot(board), before, "board unchanged")
+	assert_eq(board.moves, 10, "no move used")
+
+
 # ---------------------------------------------------------------- IR-39
 
 func test_ir39_rocket_swapped_with_plain_fires_from_its_new_cell() -> void:
@@ -126,7 +140,8 @@ func test_ir39_match_resolves_first_then_the_firecracker_fires_from_its_new_cell
 	if i_clear >= 0:
 		var first: Dictionary = EV.to_set(events[i_clear].cells)
 		for c in [Vector2i(2, 4), Vector2i(3, 4), Vector2i(4, 4)]:
-			assert_true(first.has(c), "R match cell %s" % c)
+			assert_true(first.has(c), "R match cleared cell %s" % c)
+		assert_false(first.has(Vector2i(4, 5)), "IR-50: the lifted Firecracker (now at (4,5)) is not in the match's clear event")
 	var blasts: Array = EV.of_type(events, "blast")
 	assert_eq(blasts.size(), 2)
 	for b in blasts:
@@ -168,14 +183,17 @@ func test_ir39_same_setups_with_two_plain_pieces_snap_back() -> void:
 	assert_eq(board.moves, 10)
 
 
-func test_ir39_pieces_fall_and_refill_before_the_swapped_firecracker_fires() -> void:
-	# OQ-44 A. R at (2,4),(3,4); yellow Firecracker at (4,4); R at (4,5).
+func test_ir39_swapped_firecracker_is_lifted_cells_refill_then_it_fires_from_its_new_cell() -> void:
+	# OQ-44 A + OQ-54 A. R at (2,4),(3,4); yellow Firecracker at (4,4); R at (4,5).
+	# After the swap the Firecracker sits at (4,5); the R match clears and lifts it; column 4 has two gaps.
 	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
 	board.moves = 10
 	BB.put(board, "R", [[2, 4], [3, 4], [4, 5]])
 	BB.put(board, "YF", [[4, 4]])
 	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(4, 5), Vector2i(4, 4))
 	assert_eq(board.moves, 9)
+	assert_eq(EV.count(events, "match"), 1, "no cascade match in this set-up")
 	var i_clear: int = EV.index_of_clear(events, "match")
 	var i_fall: int = EV.index_after(events, "fall", i_clear)
 	var i_refill: int = EV.index_after(events, "refill", i_fall)
@@ -183,25 +201,27 @@ func test_ir39_pieces_fall_and_refill_before_the_swapped_firecracker_fires() -> 
 	assert_true(i_clear >= 0 and i_fall > i_clear and i_refill > i_fall and i_blast > i_refill, "events in order: match clear, fall, refill, blast 1")
 	if i_fall < 0 or i_refill < 0 or i_blast < 0:
 		return
-	var targets: Dictionary = {}
-	for m in events[i_fall].data.get("moves", []):
-		targets[m["to"]] = m["from"]
-	for x in [2, 3, 4]:
-		assert_eq(targets.get(Vector2i(x, 4)), Vector2i(x, 3), "the piece from (%d,3) fell into (%d,4)" % [x, x])
-	assert_true(EV.same_set(EV.to_set(events[i_refill].cells), EV.to_set([Vector2i(2, 0), Vector2i(3, 0), Vector2i(4, 0)])), "new pieces enter at (2,0),(3,0),(4,0)")
+	var moved: Dictionary = EV.fall_map(events[i_fall])
+	assert_eq(moved.get(Vector2i(2, 4)), Vector2i(2, 3), "column 2 drops by one")
+	assert_eq(moved.get(Vector2i(3, 4)), Vector2i(3, 3), "column 3 drops by one")
+	for y in range(2, 6):
+		assert_eq(moved.get(Vector2i(4, y)), Vector2i(4, y - 2), "column 4 drops by two: (4,%d) <- (4,%d)" % [y, y - 2])
+	assert_true(EV.same_set(EV.to_set(events[i_refill].cells), EV.to_set([Vector2i(2, 0), Vector2i(3, 0), Vector2i(4, 0), Vector2i(4, 1)])), "new pieces at (2,0),(3,0),(4,0),(4,1): the lifted Firecracker's cell refilled too")
 	assert_eq(events[i_blast].cell, Vector2i(4, 5), "blast 1 is centred on (4,5)")
 	var i_blast_clear: int = EV.index_after(events, "clear", i_blast)
 	assert_true(i_blast_clear > i_blast, "blast 1 clears something")
 	if i_blast_clear > i_blast:
 		var cleared: Dictionary = EV.to_set(events[i_blast_clear].cells)
-		assert_true(cleared.has(Vector2i(3, 4)) and cleared.has(Vector2i(4, 4)), "blast 1 clears the pieces that fell into (3,4) and (4,4)")
+		for c in [Vector2i(3, 4), Vector2i(4, 4), Vector2i(4, 5)]:
+			assert_true(cleared.has(c), "blast 1 clears the piece that fell into %s" % c)
 		assert_false(cleared.has(Vector2i(2, 4)), "(2,4) is outside the blast (x 3-5)")
 
 
 func test_ir39_a_cascade_made_by_the_fall_waits_until_the_swapped_rocket_has_fired() -> void:
-	# OQ-44 A. After the R match clears, G lines up at (4,6),(5,6),(6,6); that cascade resolves
-	# only after the column Rocket (now at (7,7)) has fired along column 7.
+	# OQ-44 A + OQ-54 A. After the R match clears and the Rocket (now at (7,7)) is lifted, G lines up at
+	# (4,6),(5,6),(6,6); that cascade resolves only after the column Rocket has fired along column 7.
 	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
 	board.moves = 10
 	BB.put(board, "R", [[5, 6], [6, 6], [7, 7]])
 	BB.put(board, "B|", [[7, 6]])
@@ -216,13 +236,18 @@ func test_ir39_a_cascade_made_by_the_fall_waits_until_the_swapped_rocket_has_fir
 	var i_fall1: int = EV.index_after(events, "fall", i_clear)
 	var i_refill1: int = EV.index_after(events, "refill", i_fall1)
 	var i_fire: int = EV.index_of(events, "rocket_fire")
-	# The column Rocket clears its whole column, so nothing can fall: only a refill follows it.
 	var i_refill2: int = EV.index_after(events, "refill", i_fire)
 	var i_match2: int = EV.index_of(events, "match", 1)
 	assert_true(i_clear >= 0 and i_fall1 > i_clear and i_refill1 > i_fall1, "R match clear, fall, refill")
 	assert_true(i_fire > i_refill1, "then the Rocket fires")
-	assert_true(i_refill2 > i_fire, "refill after the Rocket (no fall: the whole column is empty)")
+	assert_true(i_refill2 > i_fire, "refill after the Rocket")
 	assert_true(i_match2 > i_refill2, "the G cascade match comes last")
+	if i_fall1 >= 0:
+		var moved: Dictionary = EV.fall_map(events[i_fall1])
+		assert_eq(moved.get(Vector2i(5, 6)), Vector2i(5, 5), "column 5 drops by one")
+		assert_eq(moved.get(Vector2i(6, 6)), Vector2i(6, 5), "column 6 drops by one")
+		for y in range(2, 8):
+			assert_eq(moved.get(Vector2i(7, y)), Vector2i(7, y - 2), "column 7 drops by two (the lifted Rocket's cell is gone): (7,%d) <- (7,%d)" % [y, y - 2])
 	if i_fire >= 0:
 		assert_eq(events[i_fire].cell, Vector2i(7, 7), "the Rocket fires from (7,7)")
 		assert_eq(events[i_fire].kind, "rocket_col")
@@ -230,10 +255,38 @@ func test_ir39_a_cascade_made_by_the_fall_waits_until_the_swapped_rocket_has_fir
 		var m: Dictionary = EV.to_set(events[i_match2].cells)
 		for c in [Vector2i(4, 6), Vector2i(5, 6), Vector2i(6, 6)]:
 			assert_true(m.has(c), "G match includes %s" % c)
+	assert_eq(EV.sequence(events, ["match", "rocket_fire"]), ["match", "rocket_fire", "match"], "match, Rocket, G cascade")
 
 
-func test_ir39_pending_special_over_a_cleared_cell() -> void:
-	pending("OQ-54 (a): when the swap's match clears the cell below the swapped special, does the special fall before it fires")
+func test_ir39_swapped_row_rocket_fires_along_the_row_of_its_cell_after_the_swap() -> void:
+	# OQ-54 A. Row Rocket (B) at (4,5); R at (4,4); R at (2,5),(3,5). The Rocket moves to (4,4).
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	board.moves = 10
+	BB.put(board, "B-", [[4, 5]])
+	BB.put(board, "R", [[4, 4], [2, 5], [3, 5]])
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(4, 5), Vector2i(4, 4))
+	assert_eq(board.moves, 9)
+	assert_eq(EV.sequence(events, ["match", "fall", "refill", "rocket_fire"]).slice(0, 4), ["match", "fall", "refill", "rocket_fire"], "match clear, fall, refill, Rocket fire")
+	var i_clear: int = EV.index_of_clear(events, "match")
+	var i_fall: int = EV.index_after(events, "fall", i_clear)
+	var i_fire: int = EV.index_of(events, "rocket_fire")
+	assert_true(i_clear >= 0 and i_fall > i_clear and i_fire > i_fall, "events found")
+	if i_fall < 0 or i_fire < 0:
+		return
+	var moved: Dictionary = EV.fall_map(events[i_fall])
+	assert_eq(moved.get(Vector2i(2, 5)), Vector2i(2, 4), "column 2 drops by one")
+	assert_eq(moved.get(Vector2i(3, 5)), Vector2i(3, 4), "column 3 drops by one")
+	for y in range(2, 6):
+		assert_eq(moved.get(Vector2i(4, y)), Vector2i(4, y - 2), "column 4 drops by two: (4,%d) <- (4,%d)" % [y, y - 2])
+	var fire: BoardEvent = events[i_fire]
+	assert_eq(fire.kind, "rocket_row")
+	assert_eq(fire.cell, Vector2i(4, 4), "fires from (4,4), the cell it moved into")
+	assert_true(EV.same_set(EV.to_set(fire.cells), EV.to_set(EV.row_cells(4))), "all 9 cells of row 4, none of row 5")
+	var i_fire_clear: int = EV.index_after(events, "clear", i_fire)
+	assert_true(i_fire_clear > i_fire)
+	if i_fire_clear > i_fire:
+		assert_true(EV.same_set(EV.to_set(events[i_fire_clear].cells), EV.to_set(EV.row_cells(4))), "the Rocket's clear is exactly row 4, including the piece that fell from (4,2) into (4,4)")
 
 
 # ---------------------------------------------------------------- IR-52

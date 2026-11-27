@@ -170,3 +170,21 @@ Behaviour changes the tests now expect (no new members):
 - **OQ-48 A:** Orb + Rocket/Firecracker: every converted piece leaves the board at once, its cell refills, and each fires from the cell it was converted in, lowest then left-most, each finishing (fall and refill included) before the next.
 - **OQ-49 B:** a Crane landing on an uncovered dew target clears the piece there (it appears in a `clear` event with `source` `"crane"`) and the cell gets dew.
 - **OQ-50 A (IR-55):** a special covering any cell of a lantern shrine lowers its hp (`content_hp`) by 1, at most once per special; `shrine_needs` does not change.
+
+## 8. Round 4 additions (OQ-51..OQ-58 answers: IR-02, IR-16, IR-39, IR-48, IR-50, IR-53, IR-54, IR-55)
+
+New API: one event type.
+
+| type | fields | meaning |
+|---|---|---|
+| `shrine_lit` | `cell` = the shrine's top-left cell | a lantern shrine (OB05) became lit: it needs no more colours, or its hp reached 0 (OQ-55 A). Emitted once per shrine, in the resolve that lit it |
+
+Behaviour changes the tests now expect (no new members):
+
+- **OQ-54 A (IR-39, IR-50, IR-48):** when a swap makes a match, the swapped Rocket/Firecracker/Crane is lifted off the board at the moment the match clears (like a set-off special). Its cell is empty in the fall, so a column loses one extra piece (IR-39: column 4 pieces from (4,0)-(4,3) land in (4,2)-(4,5)) and the new pieces include that cell. It then fires from the cell it sat in right after the swap (`rocket_fire.cell`, `blast.cell`, `crane_takeoff.cell`), so a swapped row Rocket fires along the row of the cell it moved INTO. Event order: `match`/`clear`, `fall`, `refill`, fire events, then cascades. A swap that makes no match keeps the old behaviour (the special fires at once, no lifting). Matched specials were already lifted; the match `clear` event is expected to list only the matched PLAIN pieces: IR-50 counts 2 + 9 = 11 cleared pieces, so the lifted special's own cell is not counted in the match clear (code currently also lists it: 12).
+- **OQ-55 A (IR-55, IR-48, IR-49, IR-14):** each piece of a colour the shrine still needs, in a match, with its own cell orthogonally next to a shrine cell, lowers `shrine_needs[colour]` by one; colours not needed fill nothing; a Crane landing takes one piece off the most-needed colour and does NOT lower `content_hp`; a special lowers `content_hp` by 1 (once per special). Lit = all needs 0 or `content_hp` 0: emit `shrine_lit`. What a lit shrine does on the board afterwards, whether matches also lower hp, and whether non-touching pieces of the match count: OQ-59 (pending tests, nothing checked).
+- **OQ-56 A (IR-53, IR-15):** dew spreading onto a cell with goo: the goo takes its hit from that match or special first; the cell gets dew only if the goo was removed; otherwise the goo stays (`underlay_id` "OB10", reduced hp) and the cell gets no dew. A cell with moss over goo: moss takes the hit, goo untouched, no dew.
+- **OQ-57 A (IR-02, IR-33, IR-40, IR-54):** a special created or lying in a cell with an overlay is locked: `swap` refuses it (either side), `tap` returns no events and uses no move, it never falls, `has_possible_move` does not count it. It still fires when another special covers it or when it is matched by colour.
+- **OQ-53 A / OQ-58 A (IR-16 finale):** each Rocket's direction is one `board.rng.randi_range(0, 1)`-style draw (the FIRST draw of that Rocket; `0` = row; the test accepts `randi_range(0,1)` or `randf() < 0.5`, either mapping, as long as it is the first call on `board.rng` in `fire_finale`); then the cell is a second draw among uncovered `plain` pieces. A `directions[i]` stub replaces the direction (it may or may not consume a draw: not tested). Odds 48-52% over seeds 1-1000 x 10 Rockets (3x3 board, 12-colour palette). Coins (20 + 5 per Rocket) are not computed by MatchResolver and are not tested here. The fallback cell and settling between Rockets: OQ-60 (pending).
+
+Test helper change: `BB.add_shrine(board, x, y, needs, w, h, hp)` takes an optional hp (default: total needs). New `EV.fall_map`, `EV.count_between`, `EV.sequence` in `tests/helpers/event_utils.gd`.

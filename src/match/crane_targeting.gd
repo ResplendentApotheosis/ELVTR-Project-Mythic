@@ -33,7 +33,8 @@ static func choose(board: BoardModel, start: Vector2i, exclude: Array[Vector2i])
 	if not best_cells.is_empty():
 		return _closest(best_cells, start)
 	# 3. No goal left: the nearest remaining obstacle on any layer, or uncovered dew target
-	#    (owner decision OQ-38). Dew itself is not an obstacle to hit.
+	#    (owner decision OQ-38). Dew itself is not an obstacle to hit. Open question OQ-59 (c)
+	#    (provisional): a lit lantern shrine is not a target any more.
 	var obstacles: Array[Vector2i] = []
 	for y in range(board.height):
 		for x in range(board.width):
@@ -41,7 +42,9 @@ static func choose(board: BoardModel, start: Vector2i, exclude: Array[Vector2i])
 			if exclude.has(c):
 				continue
 			var hittable_underlay: bool = board.underlay_hp(x, y) > 0 and not board.has_dew(x, y)
-			if board.overlay_hp(x, y) > 0 or board.get_content(x, y) != null or hittable_underlay \
+			var content: BoardContent = board.get_content(x, y)
+			var live_content: bool = content != null and not content.lit
+			if board.overlay_hp(x, y) > 0 or live_content or hittable_underlay \
 					or board.is_uncovered_dew_target(x, y):
 				obstacles.append(c)
 	if not obstacles.is_empty():
@@ -76,7 +79,7 @@ static func _goal_cells(board: BoardModel, goal: String, exclude: Array[Vector2i
 				hit = (content != null and content.fragment) or board.get_drop_item(x, y) == "fragment"
 			elif board.get_drop_item(x, y) == goal:
 				hit = true
-			elif content != null and content.id == goal:
+			elif content != null and content.id == goal and not content.lit:
 				hit = true
 			elif board.overlay_id(x, y) == goal or board.underlay_id(x, y) == goal:
 				hit = true

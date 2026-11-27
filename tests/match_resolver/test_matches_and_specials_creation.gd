@@ -309,8 +309,8 @@ func test_ir50_coloured_rocket_in_a_match_clears_and_fires() -> void:
 	BB.put(board, "Y", [[2, 4]])
 	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(2, 5), Vector2i(2, 4))
 	var matched: Dictionary = EV.matched(events)
-	for c in [Vector2i(1, 4), Vector2i(2, 4), Vector2i(3, 4)]:
-		assert_true(matched.has(c), "cell %s in the 3-match" % c)
+	for c in [Vector2i(1, 4), Vector2i(2, 4)]:
+		assert_true(matched.has(c), "cell %s is a cleared piece of the match" % c)
 	var cleared: Dictionary = EV.cleared(events)
 	for c in EV.row_cells(4):
 		assert_true(cleared.has(c), "row 4 cleared by the fired rocket: %s" % c)
@@ -320,8 +320,9 @@ func test_ir50_coloured_rocket_in_a_match_clears_and_fires() -> void:
 	assert_true(i_match_clear >= 0 and i_fire > i_match_clear, "match clear event comes before the Rocket fires")
 	if i_match_clear >= 0:
 		var first: Dictionary = EV.to_set(events[i_match_clear].cells)
-		for c in [Vector2i(1, 4), Vector2i(2, 4), Vector2i(3, 4)]:
-			assert_true(first.has(c), "the first clear is the 3-match, includes %s" % c)
+		for c in [Vector2i(1, 4), Vector2i(2, 4)]:
+			assert_true(first.has(c), "the first clear is the match, includes %s" % c)
+		assert_false(first.has(Vector2i(3, 4)), "IR-50: the lifted Rocket is not in the match's clear event")
 	assert_eq(EV.cells_of(events, "rocket_fire"), [Vector2i(3, 4)], "fires from (3,4)")
 	# OQ-44 A: only the fall and refill happen between the match clear and the Rocket firing.
 	var i_fall: int = EV.index_after(events, "fall", i_match_clear)
@@ -349,5 +350,45 @@ func test_ir50_crane_reports_the_colour_it_was_made_from() -> void:
 
 
 
-func test_ir50_pending_matched_special_leaves_its_cell_or_stays() -> void:
-	pending("OQ-54 (b): does a matched coloured special leave its cell (pieces fall into it before it fires) or stay on the board as a piece")
+func test_ir50_matched_rocket_is_lifted_and_the_row_clear_counts_eleven_pieces() -> void:
+	# OQ-54 A. R at (1,4); Y at (2,4); red row Rocket at (3,4); R at (2,5). Swap (2,5)->(2,4).
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	board.moves = 10
+	BB.put(board, "R", [[1, 4], [2, 5]])
+	BB.put(board, "Y", [[2, 4]])
+	BB.put(board, "R-", [[3, 4]])
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(2, 5), Vector2i(2, 4))
+	assert_eq(EV.count(events, "match"), 1, "no cascade match in this set-up")
+	var i_clear: int = EV.index_of_clear(events, "match")
+	var i_fall: int = EV.index_after(events, "fall", i_clear)
+	var i_refill: int = EV.index_after(events, "refill", i_fall)
+	var i_fire: int = EV.index_of(events, "rocket_fire")
+	assert_true(i_clear >= 0 and i_fall > i_clear and i_refill > i_fall and i_fire > i_refill, "match clear, fall, refill, Rocket fire")
+	if i_fall >= 0:
+		var moved: Dictionary = EV.fall_map(events[i_fall])
+		for x in [1, 2, 3]:
+			assert_eq(moved.get(Vector2i(x, 4)), Vector2i(x, 3), "column %d drops by one, (3,4) included because the Rocket was lifted" % x)
+	if i_refill >= 0:
+		assert_true(EV.same_set(EV.to_set(events[i_refill].cells), EV.to_set([Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)])), "new pieces at (1,0),(2,0),(3,0)")
+	if i_fire >= 0:
+		assert_eq(events[i_fire].cell, Vector2i(3, 4), "fires from the cell it was matched in")
+		assert_eq(events[i_fire].cells.size(), 9, "row 4")
+	assert_eq(EV.cleared_total(events), 11, "2 matched pieces + 9 pieces of row 4 (including the one that fell into (3,4))")
+
+
+# ---------------------------------------------------------------- IR-40 onto a covered cell (OQ-57 A)
+
+func test_ir40_cascade_special_on_a_covered_cell_appears_there_locked() -> void:
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	BB.put(board, "R", [[2, 6], [3, 6], [4, 6], [5, 6]])
+	board.set_overlay(2, 6, "OB03", 2)
+	var events: Array[BoardEvent] = MatchResolver.settle(board)
+	var cleared: Dictionary = EV.cleared(events)
+	for x in [2, 3, 4, 5]:
+		assert_true(cleared.has(Vector2i(x, 6)), "R at (%d,6) cleared" % x)
+	assert_eq(board.overlay_hp(2, 6), 1, "moss hp 2 -> 1")
+	_assert_created_one(events, "rocket_row", "R", Vector2i(2, 6))
+	assert_eq(board.get_kind(2, 6), "rocket_row", "the Rocket sits at (2,6), under the moss")
+	assert_eq(board.get_color(2, 6), "R")

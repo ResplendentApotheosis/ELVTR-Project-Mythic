@@ -278,3 +278,18 @@ func test_ir51_pieces_fall_straight_through_a_non_playable_cell_in_the_middle_of
 		for y in range(9):
 			assert_eq(board.get_color(x, y), BB.filler_color(x, y), "no diagonal slide: (%d,%d) unchanged" % [x, y])
 	assert_eq(BB.empty_cells(board).size(), 0, "no playable cell is empty")
+
+
+func test_ir33_covered_special_does_not_count_as_a_possible_move() -> void:
+	# OQ-57 A: the only special is a yellow row Rocket under moss hp 1 at (2,6) (it replaces the Y there,
+	# so no colour changes); it can't be tapped or swapped, so the board has no possible move.
+	var board: BoardModel = _dead_board()
+	BB.put(board, "Y-", [[2, 6]])
+	board.set_overlay(2, 6, "OB03", 1)
+	assert_false(MatchResolver.has_possible_move(board), "precondition: a locked special is not a possible move")
+	var events: Array[BoardEvent] = MatchResolver.settle(board)
+	assert_eq(EV.count(events, "shuffle"), 1, "a shuffle event")
+	assert_eq(board.moves, 8, "a shuffle costs no move")
+	assert_eq(board.get_kind(2, 6), "rocket_row", "the Rocket is still at (2,6)")
+	assert_eq(board.overlay_hp(2, 6), 1, "under moss hp 1")
+	assert_true(MatchResolver.has_possible_move(board), "at least one valid move after the shuffle")

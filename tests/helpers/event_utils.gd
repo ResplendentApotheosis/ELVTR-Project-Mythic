@@ -136,3 +136,29 @@ static func index_of_clear(events: Array, source: String) -> int:
 		if events[i].type == "clear" and events[i].source == source:
 			return i
 	return -1
+
+
+## Destination cell -> source cell for every move in one `fall` event (Dictionary Vector2i -> Vector2i).
+static func fall_map(event: BoardEvent) -> Dictionary:
+	var out: Dictionary = {}
+	for m in event.data.get("moves", []):
+		out[m["to"]] = m["from"]
+	return out
+
+
+## Number of events of this type between index `from_i` (exclusive) and `to_i` (exclusive).
+static func count_between(events: Array, type: String, from_i: int, to_i: int) -> int:
+	var n: int = 0
+	for i in range(from_i + 1, mini(to_i, events.size())):
+		if events[i].type == type:
+			n += 1
+	return n
+
+
+## Event types of `events` that are in `wanted`, in order (to assert an exact event order).
+static func sequence(events: Array, wanted: Array) -> Array:
+	var out: Array = []
+	for e in events:
+		if wanted.has(e.type):
+			out.append(e.type)
+	return out
