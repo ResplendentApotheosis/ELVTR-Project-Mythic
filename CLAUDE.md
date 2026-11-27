@@ -11,7 +11,7 @@ The owner is learning Godot as the project goes. Write in plain English, keep an
 3. **`research/match-villains/level_agent_brief.md`** and **`levels_1_100_plan.csv`**: obstacle IDs, level rules, the level JSON schema and the validation checklist.
 4. Everything else.
 
-If two sources disagree, or the GDD doesn't answer a question, **stop and ask the owner**. Never guess a game rule, and never "fix" the GDD. Only the owner edits `docs/` and `research/`. A hook blocks agent edits there.
+If two sources disagree, or the GDD doesn't answer a question, **stop and ask the owner**. Never guess a game rule, and never "fix" the GDD. Only the owner edits `docs/` and `research/`. A deny rule in `.claude/settings.json` blocks agent edits there.
 
 ## Folder map
 

@@ -2,17 +2,11 @@
   "env": {
     "GODOT_BIN": "C:/Program Files/Godot/Godot_v4.7.2-stable_win64_console.exe"
   },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-sources.js\""
-          }
-        ]
-      }
+  "permissions": {
+    "deny": [
+      "Edit(/docs/**)",
+      "Edit(/research/**)",
+      "Edit(/addons/gut/**)"
     ]
   }
 }

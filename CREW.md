@@ -12,7 +12,7 @@ flowchart TB
         O(["Owner"])
     end
 
-    subgraph SOURCES["Sources of truth: owner-only, guarded by hook"]
+    subgraph SOURCES["Sources of truth: owner-only, guarded by deny rules"]
         GDD[("docs/gdd/<br/>GDD final")]
         RES[("research/match-villains/<br/>level brief + 1–100 plan")]
     end
@@ -145,4 +145,4 @@ sequenceDiagram
 | balance-analyst | `levels/`, `tools/`, GDD | `reports/balance/`, bounded fields in `levels/` | sonnet | yes (validator, bot) |
 | Owner | everything | `docs/`, `research/`, `tools/level_bot/calibration.json` | — | — |
 
-The hook in `.claude/hooks/protect-sources.js` blocks agent edits to `docs/`, `research/` and `addons/gut/`. Every other write limit is set by the agent prompts.
+Deny rules in `.claude/settings.json` block agent edits to `docs/`, `research/` and `addons/gut/`. Every other write limit is set by the agent prompts.
