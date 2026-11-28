@@ -86,6 +86,126 @@ static func run(path: String, runs: int, seed_value: int) -> Dictionary:
 	}
 
 
+## The level files for "1-5" (level_001.json .. level_005.json in `dir`, in order) or "7" (one file).
+## Any other text ("", "abc", "1-x", "1-2-3", "-", "5-1") gives []. It does not check that the files exist.
+static func level_paths(range_text: String, dir: String = "res://levels") -> Array[String]:
+	var out: Array[String] = []
+	var parts: PackedStringArray = range_text.strip_edges().split("-")
+	if parts.size() < 1 or parts.size() > 2:
+		return out
+	for p in parts:
+		if not p.is_valid_int() or int(p) < 1:
+			return out
+	var first: int = int(parts[0])
+	var last: int = int(parts[parts.size() - 1])
+	if last < first:
+		return out
+	for n in range(first, last + 1):
+		out.append(dir.trim_suffix("/") + "/level_%03d.json" % n)
+	return out
+
+
+## run() for every path, in path order, all with the SAME seed. `jobs` above 1 runs that many levels at
+## once, each in its own Godot process (the CLI below, one level each); the results are the same whatever
+## `jobs` is, because every result goes through JSON in both cases. A level that can't be played gives
+## {"path": ..., "error": "..."} in its place; the others still run.
+static func run_many(paths: Array[String], runs: int, seed_value: int, jobs: int) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var to_spawn: Array[int] = []   # indexes of the levels a child process will play
+	for i in range(paths.size()):
+		var problem: String = cannot_play(paths[i], seed_value)
+		if problem != "":
+			out.append({"path": paths[i], "error": problem})
+		elif jobs <= 1:
+			out.append(_through_json(run(paths[i], runs, seed_value)))
+		else:
+			out.append({})
+			to_spawn.append(i)
+	if not to_spawn.is_empty():
+		_run_in_processes(paths, to_spawn, runs, seed_value, jobs, out)
+	return out
+
+
+## "" if this level can be built and played; else why not (e.g. "file not found").
+static func cannot_play(path: String, seed_value: int) -> String:
+	if not FileAccess.file_exists(path):
+		return "cannot play %s: file not found" % path
+	if LevelLoader.load_file(path, {"seed": seed_value}) == null:
+		return "cannot play %s: %s" % [path, LevelLoader.last_errors]
+	return ""
+
+
+## Plays the levels at `indexes` in child Godot processes, at most `jobs` at a time, and puts each one's
+## result (read back from the JSON file it wrote) into `out`. Separate processes, not threads, because
+## LevelLoader and the validator keep static variables that threads would share.
+static func _run_in_processes(paths: Array[String], indexes: Array[int], runs: int, seed_value: int, jobs: int,
+		out: Array[Dictionary]) -> void:
+	var work_dir: String = "user://level_bot_jobs_%d_%d" % [OS.get_process_id(), Time.get_ticks_usec()]
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(work_dir))
+	var waiting: Array[int] = indexes.duplicate()
+	var running: Dictionary = {}   # pid -> index
+	while not waiting.is_empty() or not running.is_empty():
+		while not waiting.is_empty() and running.size() < jobs:
+			var i: int = waiting.pop_front()
+			var pid: int = OS.create_process(OS.get_executable_path(), _child_args(paths[i], runs, seed_value,
+				_job_file(work_dir, i)))
+			if pid <= 0:
+				out[i] = {"path": paths[i], "error": "could not start a bot process for %s" % paths[i]}
+			else:
+				running[pid] = i
+		for pid in running.keys():
+			if not OS.is_process_running(pid):
+				var i: int = running[pid]
+				running.erase(pid)
+				out[i] = _read_job(paths[i], _job_file(work_dir, i))
+		if not running.is_empty():
+			OS.delay_msec(20)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(work_dir))
+
+
+static func _child_args(path: String, runs: int, seed_value: int, out_file: String) -> PackedStringArray:
+	return PackedStringArray([
+		"--headless", "--path", ProjectSettings.globalize_path("res://"),
+		"-s", "res://tools/level_bot/level_bot.gd", "--",
+		ProjectSettings.globalize_path(path), "--runs", str(runs), "--seed", str(seed_value),
+		"--out", ProjectSettings.globalize_path(out_file),
+	])
+
+
+static func _job_file(work_dir: String, index: int) -> String:
+	return work_dir + "/job_%03d.json" % index
+
+
+## The run() dictionary a child process wrote (the file is deleted after reading).
+static func _read_job(path: String, job_file: String) -> Dictionary:
+	var parsed: Variant = null
+	if FileAccess.file_exists(job_file):
+		parsed = JSON.parse_string(FileAccess.get_file_as_string(job_file))
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(job_file))
+	if parsed is Dictionary:
+		return _counts_as_ints(parsed)
+	return {"path": path, "error": "the bot process for %s wrote no result" % path}
+
+
+## A dictionary as it reads back from a JSON file, so in-process and child-process results compare equal.
+static func _through_json(d: Dictionary) -> Dictionary:
+	return _counts_as_ints(JSON.parse_string(JSON.stringify(d)))
+
+
+## JSON reads every number back as a float (2 -> 2.0); the counts of a run() dictionary become ints again,
+## so a report written from it looks exactly like one written straight from run().
+static func _counts_as_ints(d: Dictionary) -> Dictionary:
+	for key in ["level", "runs", "seed", "wins"]:
+		if d.has(key):
+			d[key] = int(d[key])
+	for r in d.get("results", []):
+		if r is Dictionary:
+			for key in ["moves_used", "moves_left"]:
+				if (r as Dictionary).has(key):
+					r[key] = int(r[key])
+	return d
+
+
 ## The bot's next move on this attempt's board, without changing it: {"action": "swap", "from", "to"} or
 ## {"action": "tap", "cell"}; {} if there is none. Every legal swap and tap is tried on a copy of the board
 ## with the real MatchResolver and scored: goals finished, then goal progress, then taught specials made

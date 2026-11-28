@@ -22,6 +22,8 @@ Status: `OPEN` / `ANSWERED`. "Blocks" names the rules whose tests can't be writt
 
 **Update (28 Nov 2026, round 9, SaveService answers):** Owner in chat: "Yes, all of them" (89 A, 90 B, 91 A, 92 A, 93 A all parts, 94 A all parts, 95 A, 96 A), plus two confirmed readings now owner decisions: levels are played in order with no skipping (IR-79); no purchase of any kind without enough coins, coins never below 0 (IR-80). Cited as "Owner decision, chat 28 Nov 2026 › OQ-xx". No question is open. Minor edge cases left are marked "Not yet specified" in IR-38, IR-81, IR-83, IR-84 and IR-87; none blocks SaveService. GDD lines to add: see "GDD text to update (round 9, owner only)" at the end.
 
+**Update (28 Nov 2026, board build failure):** OQ-97 opened, then ANSWERED by the owner in chat (Option A), cited as "Owner decision, chat 28 Nov 2026 › OQ-97". Now in IR-88. No question is open.
+
 ---
 
 ### OQ-01 · Bamboo Rocket: row or column? — ANSWERED
@@ -968,7 +970,9 @@ Blocks: StoryPlayer and one saved list. Not SaveService's core.
 
 ## New question from the board-build-failure decision (28 Nov 2026)
 
-### OQ-97 · A cancelled attempt (board failed to build): boosters, chest, unlocks and the screen after — OPEN
+### OQ-97 · A cancelled attempt (board failed to build): boosters, chest, unlocks and the screen after — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-97: Option A (2026-11-28). In plain words: a cancelled attempt puts the save back exactly as it was before the attempt started: the pre-level booster use or its 150 coins come back, a used streak chest is waiting again, a hero booster unlocked by that start is locked again, and the player goes back to the screen they started from with the message "This level couldn't be loaded". Now in IR-88 (Blocked-by line removed).
+
 Owner decision, chat 28 Nov 2026 › board build failure: "If a board fails to build after an attempt has started, cancel the attempt with no penalty (no life lost, no first try used, streak kept) instead of counting it as a quit." Now in IR-88 for the three named items. It doesn't say what happens to the other things starting an attempt already did: IR-83 (OQ-93 (d) A) says a pre-level booster "is spent per attempt" and "stays spent" in an attempt that fails, is quit or is killed; IR-84 (OQ-94 (b) A) says the chest "is used up by that attempt whatever its result"; IR-82 (OQ-93 (a) A) says a hero booster unlocks "when level N is first started". A cancelled attempt is none of fail, quit or kill, so these rules don't settle it. The producer reads "no penalty" as including (a) and (b) below (provisional, not an owner decision).
 (a) A pre-level booster chosen for the cancelled attempt (its free use, or the 150 coins paid). (b) A streak chest that was waiting for that board. (c) A hero booster unlocked by first starting level 11, 23, 29 or 36 in the cancelled attempt. (d) Which screen the player sees after the cancel.
 - Option A: The save goes back to exactly how it was before the attempt started: (a) the free use or the 150 coins come back; (b) the chest is waiting again; (c) the booster is locked again (it unlocks, with its free uses, when the level is next started); (d) the player is back on the screen the attempt was started from (map or level-start screen), with a short "this level couldn't be loaded" message.

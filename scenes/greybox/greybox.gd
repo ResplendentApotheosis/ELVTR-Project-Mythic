@@ -74,7 +74,7 @@ func _now() -> int:
 func _start_fresh() -> void:
 	_dev_make_level_playable()
 	if not session.start():
-		_note = session.last_error
+		_note = _session_message()
 	_show_board()
 	_refresh()
 
@@ -138,6 +138,12 @@ func _do(intent: Dictionary) -> void:
 			_play(session.tap(intent.cell), before_tap)
 
 
+## What the note label shows after a start or retry that didn't work: the player's message if there is one
+## (IR-88: "This level couldn't be loaded"), else the technical reason.
+func _session_message() -> String:
+	return session.notice if session.notice != "" else session.last_error
+
+
 ## The logic has already resolved the move; now the queue plays it. The HUD updates when it finishes.
 func _play(events: Array[BoardEvent], before: Dictionary) -> void:
 	if events.is_empty():
@@ -165,7 +171,7 @@ func _on_retry() -> void:
 		_note = ""
 		_show_board()
 	else:
-		_note = session.last_error
+		_note = _session_message()
 	_refresh()
 
 
@@ -179,7 +185,7 @@ func _on_buy_lives() -> void:
 func _on_play_again() -> void:
 	_note = ""
 	if not session.debug_play_again():
-		_note = session.last_error
+		_note = _session_message()
 	_show_board()
 	_refresh()
 
@@ -241,7 +247,7 @@ func _on_debug_load() -> void:
 	_hide_panels()
 	_note = ""
 	if not session.start():
-		_note = session.last_error
+		_note = _session_message()
 	_show_board()
 	_refresh()
 

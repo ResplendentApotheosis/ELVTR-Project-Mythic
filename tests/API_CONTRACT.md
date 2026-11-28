@@ -591,3 +591,39 @@ static func choose_move(attempt: LevelAttempt, rng: RandomNumberGenerator) -> Di
 - CLI `tools/level_bot/level_bot.gd` (`extends SceneTree`): `-- <level path> --runs N --seed S [--out path]`; writes the `run()` dictionary as JSON to `--out` (default `reports/balance/level_NNN_bot.json`); exit 0. The test runs it with `--out` under `user://` and is pending when `GODOT_BIN` is not set.
 
 Note for 15.1 / 15.2: the shared fixture `level_fixture_012.json` is NOT a validator-clean level (OB06 debuts at level 13, IR-67), and existing session tests build it. So `LevelSession`/`LevelLoader` must not reject a level for every `validate` error; the cancel test only needs the build to fail for `moves: 0` (IR-68) while the old fixture still builds. LevelFileCheck tests use `LevelFixtures.valid(12)`, which the real validator accepts.
+
+## 16. Full IR-88 restore, bot golden / speed, several levels at once - NEW API
+
+### 16.1 Cancelled attempt restores the whole save (tests: `tests/save_service/test_cancel_restore_ir88.gd`)
+
+`SaveService.cancel_attempt()` (15.1) now also gives back everything the start did (OQ-97 A): a free pre-level booster use, or the 150 coins paid (the next attempt charges again); a streak chest used by the start is waiting again (and goes onto the next board that builds, IR-77); hero boosters (11, 23, 29, 36) and pre-level boosters (16) unlocked by that start are locked again with no free uses given (they unlock with their free uses on the next real start). The save file on disk is rewritten too (closing the app after a cancel changes nothing). The current full-snapshot restore may already pass these.
+
+### 16.2 LevelSession after a failed build (tests: `tests/greybox/test_level_session_cancel_restore_ir88.gd`)
+
+```gdscript
+# LevelSession
+var notice: String = ""   # the player-facing message; "" normally
+```
+
+- After a failed build in `_begin`, `notice == "This level couldn't be loaded"` exactly (capital T, straight apostrophe, no full stop). `last_error` keeps the technical text and is never equal to the notice.
+- `notice` is cleared (`""`) at the start of every `start` / `retry` and stays `""` after a successful one. A refusal by the save (0 lives, IR-81) does not set this message.
+- State after a failed build follows "the screen they started from": `NOT_STARTED` from a fresh `start()`; `RETRY` when started through `retry()` from the retry screen (a failed retry leaves `state == RETRY`, lives and `attempt_log()` unchanged, and `retry()` works again once the file is fixed). Today `_begin` forces `NOT_STARTED`, so the retry case needs the old state remembered before the start.
+- `retry()` after the file was overwritten with a broken level must hit the build failure path (LevelLoader.retry re-reads `source_path`).
+
+### 16.3 Bot results unchanged by the speed-up (tests: `tests/level_bot/test_bot_golden_speed.gd`)
+
+- Golden file `tests/level_bot/fixtures/golden_fixture_012_runs5_seed1.json` was recorded from the bot BEFORE any speed-up (`level_bot.gd -- level_fixture_012.json --runs 5 --seed 1`). `LevelBot.run(fixture, 5, 1)` must equal it exactly (full dict, per-run results; compared after a JSON round trip) and so must `play_once(fixture, 1 + i)` for each run. So the same RNG draws in the same order: the speed-up may not change how many `rng.randi()` / `randf()` calls `choose_move` makes or the board's refill seeds.
+- Speed: average seconds per bot move (time of `play_once` over seeds 1-6 on the fixture divided by the sum of `moves_used`) must be under 0.10 s (target 0.05 s; the test prints the figure). No new API: `moves_used` is used.
+
+### 16.4 Several levels (tests: `tests/level_bot/test_bot_many.gd`)
+
+```gdscript
+# LevelBot (tools/level_bot/bot_runner.gd)
+static func level_paths(range_text: String, dir: String = "res://levels") -> Array[String]
+static func run_many(paths: Array[String], runs: int, seed: int, jobs: int) -> Array[Dictionary]
+```
+
+- `level_paths("1-5")` = `dir/level_001.json` .. `level_005.json` in order; `"7"` = one path; text that is empty or not `N` or `N-M` (`"abc"`, `"1-x"`, `"1-2-3"`, `"-"`) = `[]`. It does not check that the files exist.
+- `run_many`: one `run()` dictionary per path, in path order, every level with the SAME seed (not offset by level). The result is identical whatever `jobs` is (1, 2, 8): compared as JSON text. A path that cannot be played gives a dictionary with a non-empty `"error"` String (in its place, the other levels still run). `[]` paths gives `[]`.
+- CLI `level_bot.gd -- --levels 1-5 --jobs 5 [--dir path] [--runs N] [--seed S] [--out dir]`: writes `level_NNN_bot.json` per level (into `reports/balance/`, or into the `--out` directory), prints one summary line per level starting `level N ` (the existing single-level line format), exit 0. The single-level form `-- <path> ...` keeps working.
+- Fixtures: `tests/level_bot/fixtures/level_001.json` .. `level_003.json` are copies of `level_fixture_012.json` with their own ids.

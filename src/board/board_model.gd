@@ -138,20 +138,31 @@ func in_bounds(x: int, y: int) -> bool:
 	return x >= 0 and y >= 0 and x < width and y < height
 
 
+# Speed note: the level bot calls these few functions millions of times, so they check the bounds and
+# work out the cell index themselves instead of calling in_bounds() / _i(). Same answers, fewer calls.
+
 func is_playable(x: int, y: int) -> bool:
-	return in_bounds(x, y) and _playable[_i(x, y)]
+	if x < 0 or y < 0 or x >= width or y >= height:
+		return false
+	return _playable[y * width + x]
 
 
 func get_kind(x: int, y: int) -> String:
-	if not is_playable(x, y) or _content[_i(x, y)] != null:
+	if x < 0 or y < 0 or x >= width or y >= height:
 		return ""
-	return _kind[_i(x, y)]
+	var i: int = y * width + x
+	if not _playable[i] or _content[i] != null:
+		return ""
+	return _kind[i]
 
 
 func get_color(x: int, y: int) -> String:
-	if get_kind(x, y) == "":
+	if x < 0 or y < 0 or x >= width or y >= height:
 		return ""
-	return _color[_i(x, y)]
+	var i: int = y * width + x
+	if not _playable[i] or _content[i] != null or _kind[i] == "":
+		return ""
+	return _color[i]
 
 
 func get_drop_item(x: int, y: int) -> String:
@@ -171,11 +182,17 @@ func content_hp(x: int, y: int) -> int:
 
 
 func overlay_hp(x: int, y: int) -> int:
-	return _overlay_hp[_i(x, y)] if is_playable(x, y) else 0
+	if x < 0 or y < 0 or x >= width or y >= height:
+		return 0
+	var i: int = y * width + x
+	return _overlay_hp[i] if _playable[i] else 0
 
 
 func underlay_hp(x: int, y: int) -> int:
-	return _underlay_hp[_i(x, y)] if is_playable(x, y) else 0
+	if x < 0 or y < 0 or x >= width or y >= height:
+		return 0
+	var i: int = y * width + x
+	return _underlay_hp[i] if _playable[i] else 0
 
 
 func collected_count(key: String) -> int:
@@ -207,11 +224,17 @@ func shrine_needs(x: int, y: int) -> Dictionary:
 # ---------------------------------------------------------------- helpers used by the resolver
 
 func overlay_id(x: int, y: int) -> String:
-	return _overlay_id[_i(x, y)] if is_playable(x, y) else ""
+	if x < 0 or y < 0 or x >= width or y >= height:
+		return ""
+	var i: int = y * width + x
+	return _overlay_id[i] if _playable[i] else ""
 
 
 func underlay_id(x: int, y: int) -> String:
-	return _underlay_id[_i(x, y)] if is_playable(x, y) else ""
+	if x < 0 or y < 0 or x >= width or y >= height:
+		return ""
+	var i: int = y * width + x
+	return _underlay_id[i] if _playable[i] else ""
 
 
 func set_overlay_hp(x: int, y: int, hp: int) -> void:
@@ -238,13 +261,17 @@ func is_uncovered_dew_target(x: int, y: int) -> bool:
 
 ## A piece under an overlay is locked: it can't be swapped and doesn't fall (IR-54).
 func is_locked(x: int, y: int) -> bool:
-	return has_item(x, y) and overlay_hp(x, y) > 0
+	if x < 0 or y < 0 or x >= width or y >= height:
+		return false
+	var i: int = y * width + x
+	return _playable[i] and _content[i] == null and _kind[i] != "" and _overlay_hp[i] > 0
 
 
 func get_content(x: int, y: int) -> BoardContent:
-	if not is_playable(x, y):
+	if x < 0 or y < 0 or x >= width or y >= height:
 		return null
-	return _content[_i(x, y)]
+	var i: int = y * width + x
+	return _content[i] if _playable[i] else null
 
 
 ## Removes a content obstacle from every cell it covers (its cells become empty).
@@ -257,17 +284,19 @@ func remove_content(content: BoardContent) -> void:
 ## Every content obstacle on the board, each listed once (reading order of its top-left cell).
 func all_contents() -> Array[BoardContent]:
 	var out: Array[BoardContent] = []
-	for y in range(height):
-		for x in range(width):
-			var c: BoardContent = get_content(x, y)
-			if c != null and not out.has(c):
-				out.append(c)
+	for i in range(_content.size()):   # index order = reading order (y, then x)
+		var c: BoardContent = _content[i]
+		if c != null and _playable[i] and not out.has(c):
+			out.append(c)
 	return out
 
 
 ## True if the cell holds a piece, a special or a drop item (something that can fall).
 func has_item(x: int, y: int) -> bool:
-	return get_kind(x, y) != ""
+	if x < 0 or y < 0 or x >= width or y >= height:
+		return false
+	var i: int = y * width + x
+	return _playable[i] and _content[i] == null and _kind[i] != ""
 
 
 func is_special(x: int, y: int) -> bool:
@@ -276,7 +305,38 @@ func is_special(x: int, y: int) -> bool:
 
 ## A playable cell with no content and no item: gravity should fill it.
 func is_empty(x: int, y: int) -> bool:
-	return is_playable(x, y) and get_content(x, y) == null and get_kind(x, y) == ""
+	if x < 0 or y < 0 or x >= width or y >= height:
+		return false
+	var i: int = y * width + x
+	return _playable[i] and _content[i] == null and _kind[i] == ""
+
+
+## True if any cell is empty (is_empty). Lets gravity skip its work on a full board.
+func has_empty_cell() -> bool:
+	for i in range(_kind.size()):
+		if _playable[i] and _content[i] == null and _kind[i] == "":
+			return true
+	return false
+
+
+## Every cell's kind as get_kind() would give it (index = y * width + x), in one pass. For fast scans.
+func kind_grid() -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	out.resize(_kind.size())
+	for i in range(_kind.size()):
+		if _playable[i] and _content[i] == null:
+			out[i] = _kind[i]
+	return out
+
+
+## Every cell's colour as get_color() would give it (index = y * width + x), in one pass. For fast scans.
+func color_grid() -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	out.resize(_kind.size())
+	for i in range(_kind.size()):
+		if _playable[i] and _content[i] == null and _kind[i] != "":
+			out[i] = _color[i]
+	return out
 
 
 func clear_piece(x: int, y: int) -> void:
