@@ -43,6 +43,22 @@ func test_IR63_story_beat_mini_on_hard_chapter_on_finale() -> void:
 	expect_rejected(LF.valid(50, {"story_beat": "mini"}), "IR-63", "level 50 mini")
 
 
+func test_IR63_intro_beat_on_level_1_only() -> void:
+	expect_valid(LF.valid(1, {"story_beat": "intro"}), "level 1 intro")
+	expect_rejected(LF.valid(1, {"story_beat": null}), "IR-63", "level 1 null")
+	expect_rejected(LF.valid(1, {"story_beat": "mini"}), "IR-63", "level 1 mini")
+	expect_rejected(LF.valid(1, {"story_beat": "chapter"}), "IR-63", "level 1 chapter")
+	expect_rejected(LF.valid(2, {"story_beat": "intro"}), "IR-63", "level 2 intro")
+	expect_valid(LF.valid(2, {"story_beat": null}), "level 2 null")
+	expect_rejected(LF.valid(30, {"story_beat": "intro"}), "IR-63", "level 30 intro")
+	expect_rejected(LF.valid(25, {"story_beat": "intro"}), "IR-63", "level 25 intro")
+
+
+func test_IR63_no_beat_on_other_levels() -> void:
+	expect_rejected(LF.valid(12, {"story_beat": "mini"}), "IR-63", "level 12 mini")
+	expect_valid(LF.valid(12, {"story_beat": null}), "level 12 null")
+
+
 # ---------------------------------------------------------------- IR-64
 
 func test_IR64_short_cells_row_and_wrong_row_count_are_rejected() -> void:

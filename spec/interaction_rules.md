@@ -27,7 +27,7 @@ Derived only from `docs/gdd/zodiac-forest-gdd-final.md` (the GDD wins over this 
 | G. Gravity, refill, cascades, shuffle | IR-32, IR-33, IR-51 |
 | H. Hero boosters | IR-34 to IR-36, IR-62 |
 | I. Level flow | IR-37, IR-38, IR-56 to IR-61 |
-| J. Level files (LevelLoader and validator) | IR-63 to IR-73, IR-75 to IR-77 |
+| J. Level files (LevelLoader and validator) | IR-63 to IR-73, IR-75 to IR-77, IR-89 |
 | K. Save, progress and meta (SaveService) | IR-78 to IR-88 |
 
 ---
@@ -794,6 +794,7 @@ Test cases:
 - Validator: board with no seed cells; goal OB04 count 1 → valid; count 0 → rejected.
 - Validator: fragment level, fragment goal OB07 count 1 + plain OB07 count 3, 3 OB07 entries in `objects` with one marked `"fragment": true` → valid; plain count 2 → rejected (IR-31).
 - Validator: fragment level, fragment goal OB11 count 1 + plain OB11 count 2, `spawn.drop_items` total 2 with `"fragment_item": 1` → valid; plain count 1 → rejected (IR-31).
+- Validator: level 5 (easy), goals OB04 count 70 and OB02 count 4, 4 OB02 brambles in `objects` (any layers), enough playable cells and seeds under the dew limits → valid (2 goals, IR-59); OB02 count 3 or 5 → rejected.
 
 ---
 
@@ -802,14 +803,17 @@ Test cases:
 How each field of `res://levels/level_NNN.json` becomes the starting board and attempt. The schema is `level_agent_brief.md` §5 (GDD › Technical design › Level format: "exactly the schema in `level_agent_brief.md` section 5"). Goals in the file: IR-31, IR-59, IR-61. Drop item exits (`exit_columns`): IR-30. "Validator:" tests are for `tools/validate_level/`; "LevelLoader:" tests for `src/game/level_loader.gd`.
 
 ### IR-63 · Level identity: id, chapter, tier and story beat (NEW)
-Rule: A level file's `id` equals the NNN in its file name; `chapter` is 1 for levels 1–25 and 2 for 26–50; `tier` is one of intro, easy, medium, hard or finale, with levels 25 and 50 `finale` and levels 15, 20, 30, 35, 40 and 45 `hard`; `story_beat` is `"mini"` on hard levels and `"chapter"` on finales.
-Applies to: Every level 1–50. The tier sets the goal count (IR-59); a finale fail costs no life (IR-60).
-Source: `level_agent_brief.md` §5 › loading line `"res://levels/level_%03d.json" % id`, "`story_beat`: `null`, `"mini"` (on hard levels) or `"chapter"` (on finales)"; §4 Rhythm › "Every 5th level from 15 is `hard`; 25/50/75/100 are `finale`"; GDD › Level progression › "finales at 25, 50, 75 and 100, a hard level every 5th level from 15"; Chapters › "1 (1–25) … 2 (26–50)"; "each hard level carries a mini story beat"; "Each finale ends with a chapter story card".
+Rule: A level file's `id` equals the NNN in its file name; `chapter` is 1 for levels 1–25 and 2 for 26–50; `tier` is one of intro, easy, medium, hard or finale, with levels 25 and 50 `finale` and levels 15, 20, 30, 35, 40 and 45 `hard`; `story_beat` is `"intro"` on level 1 (the opening comic, which plays once before the board), `"mini"` on hard levels, `"chapter"` on finales and `null` on every other level; `"intro"` on any other level is rejected, and level 1 with `null` is rejected.
+Applies to: Every level 1–50. The tier sets the goal count (IR-59); a finale fail costs no life (IR-60). Each beat plays once: IR-87. Level 17 also has a story beat in IR-87's list but no `story_beat` value, so it is `null` here until OQ-99 is answered. CHANGED 28 Nov 2026: `"intro"` added.
+Source: `level_agent_brief.md` §5 › loading line `"res://levels/level_%03d.json" % id`, "`story_beat`: `null`, `"mini"` (on hard levels) or `"chapter"` (on finales)" (the brief gets `"intro"` by `spec/brief_additions.md`); Owner decision, chat 28 Nov 2026 › story_beat "intro" ("level 1 only, the opening comic, plays once before the board"); GDD › Story › Story beats (level 1 "Intro comic"); §4 Rhythm › "Every 5th level from 15 is `hard`; 25/50/75/100 are `finale`"; GDD › Level progression › "finales at 25, 50, 75 and 100, a hard level every 5th level from 15"; Chapters › "1 (1–25) … 2 (26–50)"; "each hard level carries a mini story beat"; "Each finale ends with a chapter story card".
 Test cases:
 - Validator: `level_026.json` with `"id": 26` → valid; with `"id": 27` → rejected.
 - Validator: level 26 with `"chapter": 1` → rejected; `"chapter": 2` → valid.
 - Validator: level 25 with `"tier": "hard"` → rejected; `"finale"` → valid. Level 30 with `"tier": "medium"` → rejected; `"hard"` → valid.
 - Validator: level 30 (hard) with `"story_beat": null` → rejected; `"mini"` → valid. Level 50 (finale) with `"story_beat": "chapter"` → valid.
+- Validator: level 1 with `"story_beat": "intro"` → valid; with `null` → rejected; with `"mini"` or `"chapter"` → rejected.
+- Validator: level 2 with `"story_beat": "intro"` → rejected; `null` → valid. Level 30 (hard) with `"intro"` → rejected. Level 25 (finale) with `"intro"` → rejected.
+- Validator: level 12 (no beat) with `"story_beat": "mini"` → rejected; `null` → valid.
 
 ### IR-64 · The `cells` grid sets the board shape (NEW)
 Rule: The board is `width` × `height` cells, at most 9 × 9; `cells` has `height` rows of `width` characters each, row 0 is the top row and character x of row y is cell (x, y); `#` is a playable cell and `.` is no cell; levels 1–50 have no spawner cells, so the file has no spawner field or character and new pieces enter only at the top playable cell of each column (IR-51).
@@ -963,6 +967,21 @@ Test cases:
 - Only goal: OB04 dew; (6,3) has dew; row 3 has 4 playable cells without dew, column 6 has 2 → the Rocket at (6,3) is a row Rocket.
 - Only goal: OB11 count 3, `max_on_board` 2, starting hatchlings at (1,0) and (7,0). The Rocket replaces the piece at (5,0) → row 0 holds 2, column 5 holds 0 → a row Rocket.
 
+### IR-89 · `tutorial`: the swap hint on a tutorial level (NEW)
+Rule: A level file may carry an optional `tutorial` field, `null` or absent meaning no hint, otherwise `{"teach": "<name>", "hint_cells": [[x,y],[x,y]]}` where `teach` is one of `"rocket"` (4 in a row), `"firecracker"` (L or T match), `"crane"` (2×2 match) or `"orb"` (5 in a row), and `hint_cells` is exactly two different, orthogonally adjacent playable cells inside the board, each holding a piece at the start (not a content obstacle); the loader carries the field to the attempt unchanged, the UI uses it to point at the two cells (the swap the player is shown), and the hint changes no game rule (no extra move, no booster, no change to the board).
+Applies to: LevelLoader, the validator and the UI hint. Added to levels 2, 3, 5 and 6 and any later tutorial level, placed by the level designer; no rule limits which levels may have it. The special each name teaches follows the shape rules (IR-04 Crane, IR-05 Rocket, IR-06 Firecracker, IR-07 Orb). Provisional: the validator does not check that swapping the two cells really makes the taught special (OQ-98). A retry (IR-71) carries the same field again. Whether the hint is shown again on a retry is not decided here.
+Source: Owner decision, chat 28 Nov 2026 › `tutorial` field ("`{"teach": "rocket", "hint_cells": [[3,4],[4,4]]}` … `teach` is one of rocket (4 in a row), firecracker (L/T match), crane (2x2 match), orb (5 in a row); two different, orthogonally adjacent playable cells, each holding a piece at the start; no extra move, no booster"); GDD › Core gameplay › "four special pieces (taught on levels 2, 3, 5 and 6)"; Interaction rules › "Adjacent / next to … never diagonal" (Rules clarifications › OQ-08); IR-66 (which cells hold no piece).
+Test cases:
+- Validator: level 2 with `"tutorial": {"teach": "rocket", "hint_cells": [[3,4],[4,4]]}`, both cells playable, plain pieces, inside the board → valid. `"tutorial": null`, and the field absent → valid.
+- LevelLoader: the same level → the attempt's `tutorial` equals `{"teach": "rocket", "hint_cells": [[3,4],[4,4]]}` exactly; the starting board, moves and goals are the same as without the field.
+- Validator: `"teach": "banana"`, `"teach": "Rocket"` or a missing `teach` → rejected. `"teach": "firecracker"`, `"crane"` and `"orb"` → valid.
+- Validator: `hint_cells` with 1 cell, 3 cells, 0 cells or a missing `hint_cells` → rejected. Two entries that are the same cell, `[[3,4],[3,4]]` → rejected.
+- Validator: `[[3,4],[5,4]]` (two apart) or `[[3,4],[4,5]]` (diagonal) → rejected; `[[3,4],[3,5]]` (vertical neighbours) → valid.
+- Validator: a hint cell on a `.` cell → rejected; on a cell with a content obstacle (an OB02 bramble, an OB06 pillar cell, an OB12 idol) → rejected; on a cell with a plain piece at the start → valid.
+- Validator: a hint cell `[9,4]` or `[-1,4]` or `[4,9]` on a 9×9 board → rejected.
+- Validator: `"tutorial": "rocket"`, `"tutorial": []`, `"tutorial": 3`, `"hint_cells": "3,4"`, `"hint_cells": [3,4]` (not a list of pairs) or a cell given as `[3]` or `["a","b"]` → rejected.
+- Level 2, 28 moves, with a valid `tutorial` field. The attempt starts → moves 28, no booster in the bag, the board identical to the same file without the field (the hint adds and takes no move). The player makes a different legal swap → resolved by the normal rules (moves 27), the hint changes nothing.
+
 ---
 
 ## K. Save, progress and meta (SaveService, not MatchResolver)
@@ -1089,13 +1108,14 @@ Test cases:
 
 ### IR-87 · Each story beat plays once (NEW)
 Rule: Each story beat of levels 1–50 plays only the first time its level is reached; retries of that level skip it, also after the game is closed and opened again, because the save remembers which beats have been seen.
-Applies to: StoryPlayer and SaveService (one saved list of seen beats, IR-78). The beats in levels 1–50: 1 (intro comic), 15, 17, 20, 25, 30, 35, 40, 45 and 50 (the creature beat is at 17 by OQ-83). A beat skipped by the player has still been played (it is skippable) and is not shown again. Not yet specified: whether each beat plays before or after its level (the GDD gives only the level and how it is delivered).
+Applies to: StoryPlayer and SaveService (one saved list of seen beats, IR-78). The beats in levels 1–50: 1 (intro comic), 15, 17, 20, 25, 30, 35, 40, 45 and 50 (the creature beat is at 17 by OQ-83). A beat skipped by the player has still been played (it is skippable) and is not shown again. The level 1 beat is the `"intro"` value (IR-63) and plays before the board (Owner decision, chat 28 Nov 2026 › story_beat "intro"). Not yet specified for the other beats: whether each plays before or after its level (the GDD gives only the level and how it is delivered). Whether level 17's beat is a `story_beat` value: OQ-99.
 Source: GDD › Story › Story beats, levels 1–50 (table: levels 1, 15, 17, 20, 25, 30, 35, 40, 45, 50; "Intro comic (4 panels, skippable…)"); Level progression › "each hard level carries a mini story beat"; Fairness rules › "At most one pop-up between the lobby and Play"; Owner decision, chat 28 Nov 2026 › OQ-96 (Option A: "Each beat plays once, the first time it is reached; retries skip it (the save remembers which were seen)").
 Test cases:
 - Level 15 never reached. First attempt → the level 15 story card plays; the attempt fails; retry → no story card.
 - Level 15's beat seen; the game is closed and opened; level 15 retried → no story card.
 - Level 15's beat skipped by the player on the first attempt → marked seen; the retry shows no story card.
 - Level 16 (no beat) started → no beat plays and the seen list is unchanged.
+- Level 1, never played. First attempt → the intro comic plays before the board is shown; the attempt fails; retry → no comic.
 
 ### IR-88 · A board that fails to build cancels the attempt and puts the save back as it was (CHANGED)
 Rule: If the attempt has been started in the save but its board then fails to build, the attempt is cancelled, not counted as a quit or a fail, and the save goes back to exactly how it was before the attempt started: no life is lost, the level is not marked as tried (so the next attempt that builds is its first try), the win streak is unchanged, no attempt-log entry is written (no fail, no quit, no first try, no "lives ran out"), the open-attempt mark is cleared (so the next launch does not treat it as a killed attempt, IR-38), a pre-level booster chosen for it comes back (its free use, or the 150 coins paid, IR-83), a streak chest it used is waiting again (IR-84), a hero booster unlocked by this start is locked again (it unlocks, with its free uses, when the level is next started, IR-82); no fail result, continue offer or retry screen is shown for it, and the player goes back to the screen the attempt was started from, with the message "This level couldn't be loaded".

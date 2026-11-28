@@ -1,5 +1,7 @@
 # spec/ changelog
 
+(Latest entries are at the end of this file.)
+
 - 2026-11-27 · IR-01 to IR-38 added · First spec from the GDD's Core gameplay, Interaction rules, Board layers, Soul fragments and Meta sections, for the MatchResolver build (plus the booster and level-flow rows of the Interaction rules table).
 - 2026-11-27 · OQ-01 to OQ-23 opened · Gaps and conflicts found while writing the MatchResolver rules; owner to decide.
 - 2026-11-27 · OQ-01 to OQ-22 marked ANSWERED · Owner answers added to GDD › Rules clarifications; OQ-23 stays open.
@@ -126,3 +128,8 @@
 - 2026-11-28 · IR-88 added; IR-38 pointer (no rule change); index K = IR-78 to IR-88 · Owner decision, chat 28 Nov 2026 › board build failure (relayed by the producer): a board that fails to build after the attempt started cancels it with no penalty (no life lost, level not tried, streak kept, no log entry, open attempt cleared, no fail/retry screen). 3 tests added.
 - 2026-11-28 · OQ-97 opened; IR-88 blocked in part · Not named by the decision: refund of a pre-level booster / its coins, a used-up streak chest, a hero booster unlocked by the cancelled start (IR-82, IR-83, IR-84 say spent/used up only for fail, quit or kill), and the screen after the cancel. Producer's "no penalty" reading listed as Option A.
 - 2026-11-28 · OQ-97 marked ANSWERED; IR-88 changed · Owner decision, chat 28 Nov 2026 › OQ-97 Option A: a cancelled attempt puts the save back exactly as before the start (pre-level booster use or 150 coins back, used streak chest waiting again, hero booster unlocked by that start locked again) and returns the player to the screen they started from with the message "This level couldn't be loaded". Blocked-by line removed; first test extended (screen and message); 4 tests added (free and paid pre-level booster, chest, Hoof Tap unlock).
+- 2026-11-28 · No change · Owner decision, chat 28 Nov 2026 (2-layer brambles on levels 2 and 3): checked IR-66 (OB02 `hp` 1–3), IR-67 (OB02 debuts at 1), IR-59, IR-61 and the GDD; nothing forbids OB02 hp 2 on levels 2 and 3, so no rule changed. Noted in `spec/brief_additions.md`.
+- 2026-11-28 · IR-89 added (section J; index updated) · Owner decision, chat 28 Nov 2026 › `tutorial` field: optional `{"teach", "hint_cells"}` on tutorial levels (2, 3, 5, 6 and any later); shape checks, loader carries it unchanged, no game rule changes. 9 tests. OQ-98 opened (does the validator check the swap really makes the special; Option A = no, provisional).
+- 2026-11-28 · IR-63 changed · Owner decision, chat 28 Nov 2026 › story_beat "intro": level 1 is `"intro"`, hard `"mini"`, finales `"chapter"`, all others `null`; "intro" elsewhere and null on level 1 rejected. 3 validator tests added. OQ-99 opened (level 17 has a beat in IR-87 but no `story_beat` value).
+- 2026-11-28 · IR-87 changed · Owner decision, chat 28 Nov 2026 › story_beat "intro": the level 1 beat plays before the board; one test added; "before or after" still open for the other beats.
+- 2026-11-28 · IR-61 changed (test only, no rule change) · Owner decision, chat 28 Nov 2026 (level 5 goals OB04 x70 + OB02 x4): IR-59 easy 1–2 goals and IR-61 count equals placed already allow it; one validator test added.

@@ -31,6 +31,6 @@
     {"obstacle": "OB06", "count": 1},
     {"obstacle": "OB02", "count": 1}
   ],
-  "story_beat": null,
+  "story_beat": "intro",
   "designer_notes": "Test fixture, not a real level."
 }

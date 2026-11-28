@@ -50,6 +50,6 @@
   "goals": [
     {"obstacle": "OB02", "count": 17}
   ],
-  "story_beat": null,
-  "designer_notes": "Intro for OB02: a one-layer bramble band fills the bottom two rows under six open rows, so any match in row 5 (or a vertical match ending there) breaks brambles. 17 brambles on 70 playable cells = 24% blocked. The notch at (4,6) gives a second contact line. Plan values kept (30 moves, OB02 x17). The intro comic beat for level 1 is not in the schema's story_beat values, so story_beat is null."
+  "story_beat": "intro",
+  "designer_notes": "Intro for OB02: a one-layer bramble band fills the bottom two rows under six open rows, so any match in row 5 (or a vertical match ending there) breaks brambles. 17 brambles on 70 playable cells = 24% blocked. The notch at (4,6) gives a second contact line. Plan values kept (30 moves, OB02 x17). story_beat is \"intro\" (the opening comic plays before the board)."
 }

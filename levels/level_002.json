@@ -81,6 +81,7 @@
   "goals": [
     {"obstacle": "OB02", "count": 38}
   ],
+  "tutorial": {"teach": "rocket", "hint_cells": [[3, 3], [4, 3]]},
   "story_beat": null,
   "designer_notes": "Rocket tutorial over a deep bramble band: full rows 5-7, a 2-layer bottom row (cols 1-7, corners trimmed) and 2-layer shoulders at (0,4),(1,4),(7,4),(8,4), so the shape differs from level 1. Tutorial swap: (3,3) red <-> (4,3) yellow makes a vertical red 4 in column 4 (rows 1-4), giving a column Rocket that, fired, breaks (4,5)-(4,7) and takes one layer off (4,8). Fixed (4,0) blue and (5,3) green stop it becoming a 5-line Orb or an L/T Firecracker. Goal OB02 x38 vs plan x34 (+12%, inside +-20%); 38 of 79 playable cells blocked (48%), 49 layer hits in total. Moves 26 (plan 28 -2, set by balance). [balance 2026-11-28] moves 28->26; bot still 100%, sent back. [redesign 2026-11-28] was 30 one-layer brambles (30 hits, bot 100%, 17.6 moves left); now 38 brambles with 11 two-layer (49 hits, +63%) and a 5-row-deep band at the sides; first use of 2-layer brambles, kept to the bottom row and shoulders so the Rocket demo still clears its column's top three."
 }

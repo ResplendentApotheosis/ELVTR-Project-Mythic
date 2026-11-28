@@ -46,6 +46,10 @@ static func load_level(level: Dictionary, options: Dictionary = {}) -> LevelAtte
 	attempt.board.goal_tracker = attempt.tracker
 	if has_dew_goal(attempt.level):
 		attempt.tracker.attach(attempt.board)
+	var beat: Variant = level.get("story_beat")
+	attempt.story_beat = beat if beat is String else ""
+	var hint: Variant = level.get("tutorial")
+	attempt.tutorial = (hint as Dictionary).duplicate(true) if hint is Dictionary else {}
 	var field: Variant = level.get("fragment")
 	if field is Dictionary:
 		attempt.fragment_guardian = String((field as Dictionary).get("guardian", "rat"))

@@ -322,7 +322,11 @@ var board: BoardModel                   # starting board, moves = level.moves, p
 var tracker: GoalTracker                # built from level.goals, level id passed in; board.goal_tracker == tracker;
                                         # attach(board) already called when the level has an OB04 goal
 var fragment_guardian: String = ""      # "rat" on a level with a "fragment" field, else ""
+var story_beat: String = ""             # level.story_beat: "intro" | "mini" | "chapter"; "" when null (IR-63)
+var tutorial: Dictionary = {}           # level.tutorial copied unchanged ({"teach": String, "hint_cells": [[x,y],[x,y]]}); {} when null or absent (IR-89)
 ```
+
+`retry` copies both again. Validator (11.4): a bad `tutorial` field is an error starting `"IR-89"` (teach not one of rocket/firecracker/crane/orb, hint_cells not exactly two different orthogonally adjacent in-board playable cells holding a plain piece, wrong types; `null`/absent is valid; it does NOT check the swap makes the special, OQ-98). A wrong `story_beat` is `"IR-63"`: level 1 must be `"intro"`, `"intro"` is rejected on every other level. Tests: `tests/level_loader/test_tutorial_ir89.gd`.
 
 ### 11.2 LevelLoader (all `static`)
 

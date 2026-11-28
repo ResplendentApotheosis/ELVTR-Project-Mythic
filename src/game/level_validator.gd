@@ -35,6 +35,7 @@ static func validate(level: Dictionary, file_id: int = -1) -> Array:
 	var tiles_ok: bool = LevelObjectChecks.check_fixed_tiles(level, colors, shape_ok, errors)
 	var layout_ok: bool = shape_ok and errors.size() == before_layout
 	_check_debuts(level, id, errors)
+	LevelTutorialChecks.check(level, shape_ok, errors)
 	_check_fragment(level, id, errors)
 	var goals: Array = LevelLoader.goal_list(level)
 	for e in GoalTracker.goal_errors(id, tier, goals):
@@ -81,10 +82,15 @@ static func _check_identity(level: Dictionary, id: int, file_id: int, errors: Ar
 	elif fixed_tier == "" and (tier == "hard" or tier == "finale"):
 		errors.append("IR-63: only levels %s are hard and %s are finales, level %d is %s" % [HARD_LEVELS, FINALE_LEVELS, id, tier])
 	var beat: Variant = level.get("story_beat")
-	if tier == "hard" and beat != "mini":
-		errors.append("IR-63: a hard level has story_beat \"mini\", found %s" % [beat])
-	if tier == "finale" and beat != "chapter":
-		errors.append("IR-63: a finale has story_beat \"chapter\", found %s" % [beat])
+	var wanted: Variant = null
+	if id == 1:
+		wanted = "intro"
+	elif tier == "hard":
+		wanted = "mini"
+	elif tier == "finale":
+		wanted = "chapter"
+	if beat != wanted:
+		errors.append("IR-63: level %d has story_beat %s, found %s" % [id, wanted, beat])
 
 
 # ---------------------------------------------------------------- IR-68

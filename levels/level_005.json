@@ -42,12 +42,18 @@
     {"x": 5, "y": 4, "tile": "blue"},
     {"x": 2, "y": 4, "tile": "yellow"},
     {"x": 4, "y": 2, "tile": "green"},
-    {"x": 4, "y": 5, "tile": "yellow"}
+    {"x": 4, "y": 5, "tile": "yellow"},
+    {"x": 2, "y": 3, "tile": "green"},
+    {"x": 5, "y": 3, "tile": "yellow"},
+    {"x": 3, "y": 2, "tile": "yellow"},
+    {"x": 3, "y": 5, "tile": "red"}
   ],
   "spawn": {"drop_items": null, "generators": null},
   "goals": [
-    {"obstacle": "OB04", "count": 70}
+    {"obstacle": "OB04", "count": 70},
+    {"obstacle": "OB02", "count": 4}
   ],
+  "tutorial": {"teach": "crane", "hint_cells": [[4, 4], [5, 4]]},
   "story_beat": null,
-  "designer_notes": "Paper Crane tutorial on a tall arch: a 1-wide, 3-deep opening at the bottom centre (column 4, rows 6-8) splits the lower board into two wide legs, with the only dew seeds on the keystone (rows 4-5, columns 3-5). Tutorial swap: (5,4) blue <-> (4,4) red makes a blue 2x2 at (3,3)-(4,4); half of it sits on dew, so all 4 cells get dew, and the Crane flies to an undewed cell. Fixed (2,4) yellow, (4,2) green and (4,5) yellow stop a 3-line forming with the square. Familiar partner: 4 one-layer brambles line the inner faces of the opening at (3,7),(3,8),(5,7),(5,8) as plain blockers, not a goal. Goal OB04 x70 = plan value, 90% of 78 playable cells, 6 seeds (64 new dew cells needed). Moves 26 (plan 28 -2, set by balance). [balance 2026-11-28] moves 28->26, goal 60->66; bot still 100%, sent back. [redesign 2026-11-28] was 74 playable cells, 10 seeds, goal 66 (56 new cells, bot 100%, 13.5 moves left); opening narrowed from 7 cells to 3 so the board grows to 78 cells and the goal returns to the plan's 70, and the 4 seeds on the arch's feet are removed so dew must be carried out to the bottom corners from the keystone."
+  "designer_notes": "Paper Crane tutorial on a tall arch: a 1-wide, 3-deep opening at the bottom centre (column 4, rows 6-8) splits the lower board into two wide legs, with the only dew seeds on the keystone (rows 4-5, columns 3-5). Tutorial swap: (5,4) blue <-> (4,4) red makes a blue 2x2 at (3,3)-(4,4); half of it sits on dew, so all 4 cells get dew, and the Crane flies to an undewed cell. Fixed (2,4) yellow, (4,2) green and (4,5) yellow stop a 3-line forming with the square. Familiar partner: 4 one-layer brambles line the inner faces of the opening at (3,7),(3,8),(5,7),(5,8); they are now a second goal (OB02 x4, equal to the brambles placed), so the level has 2 goals (easy allows 1-2). Tutorial hint cells (4,4)-(5,4) are pinned. 2-layer brambles are accepted on levels 2-3. Goal OB04 x70 = plan value, 90% of 78 playable cells, 6 seeds (64 new dew cells needed). Moves 26 (plan 28 -2, set by balance). [balance 2026-11-28] moves 28->26, goal 60->66; bot still 100%, sent back. [redesign 2026-11-28] was 74 playable cells, 10 seeds, goal 66 (56 new cells, bot 100%, 13.5 moves left); opening narrowed from 7 cells to 3 so the board grows to 78 cells and the goal returns to the plan's 70, and the 4 seeds on the arch's feet are removed so dew must be carried out to the bottom corners from the keystone."
 }
