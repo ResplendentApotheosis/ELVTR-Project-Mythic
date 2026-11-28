@@ -78,6 +78,8 @@ The Nian has cursed Zodiac Forest: a creeping decay spreads across it and wraps 
 
 **Story beats, levels 1–50 (51–60 kept as the post-MVP plan)**
 
+Each beat plays once, the first time its level is reached; retries skip it; the save remembers which were seen.
+
 | Level | Beat | Delivered as |
 | --- | --- | --- |
 | 1 | Home is decaying; friends are being wrapped by creep. The four set out | Intro comic (4 panels, skippable; see The four heroes) |
@@ -199,11 +201,11 @@ Every special, obstacle and layer follows this one table. MatchResolver, the GUT
 | Hero boosters on fragments and drop items | Never deleted. Hoof Tap, Tail Slam and Bamboo Dash collect a fragment or drop item they hit; Feather Fan moves pieces only, never fragments or drop items |
 | Hero boosters on everything else | Like a special: one hit per cell, top layer only; a multi-cell obstacle takes at most one hit per use. Bamboo Dash's diagonal follows the same rule |
 | Continue offer | Always shown when moves run out (never after quitting), whether or not the goals can still be reached. Up to 5 offers per attempt: the 1st costs 300 coins, the 2nd to 5th cost 500 each. A player who can't pay still sees the offer with "you have less than N coins" (N = that offer's price) and can only decline. Declining ends the attempt and goes to the retry screen |
-| Quitting mid-level | Counts as a fail: costs a life (except on finales) and counts as that level's first try. Goes straight to the fail result, with no continue offer |
+| Quitting mid-level | Counts as a fail: costs a life (except on finales) and counts as that level's first try. Goes straight to the fail result, with no continue offer. Closing the app, a crash or the phone killing it mid-level counts as a quit (life lost where a fail costs one, first try used and logged, win streak reset); the next launch opens the map, not the level |
 
 ### Rules clarifications (owner decisions, 27 Nov 2026)
 
-These answer the Rules Keeper's open questions OQ-01 to OQ-88 (`spec/open_questions.md`). Later questions are tracked there until answered. Rows marked *trial* are trial decisions to revisit after playtesting.
+These answer the Rules Keeper's open questions OQ-01 to OQ-96 (`spec/open_questions.md`). Later questions are tracked there until answered. Rows marked *trial* are trial decisions to revisit after playtesting.
 
 | OQ | Question | Rule |
 | --- | --- | --- |
@@ -295,6 +297,14 @@ These answer the Rules Keeper's open questions OQ-01 to OQ-88 (`spec/open_questi
 | 86 | Pre-level Rocket ties and targets | A tie (0 and 0 included) is a seeded 50/50; each goal obstacle with a cell in the line counts once, a dew goal counts the line's playable cells without dew, each drop item counts 1 |
 | 87 | Petrified pillar `hp` | 1–4 (other obstacles 1–3) |
 | 88 | Smaller level-file errors | Rejected: `color_set` on a 4-colour level, `"color"` on an `orb` tile, a shrine with missing or empty `needs` or a count of 0 |
+| 89 | How lives refill | On real time, also while the game is closed; 20 minutes per life from when lives drop below 5; a clock set back gives nothing back and takes nothing away |
+| 90 | Playing at 0 lives | No level can be started or retried, except the chapter finales (25, 50) and while unlimited lives run; the retry screen offers only waiting or buying all 5 |
+| 91 | Unlimited lives | 10 minutes after winning a chapter finale, in real time from the win; a fail during them costs no life |
+| 92 | App closed or killed mid-level | Counts as a quit: life lost where a fail costs one, first try used, streak reset; the next launch opens the map |
+| 93 | Booster unlocks and payment | Unlocks when its level is first started; paid at the moment of use, never ahead; one pre-level booster per attempt, spent per attempt |
+| 94 | Win streak and the chest | The streak resets when the chest drops; the chest board's attempt uses it up, won or failed; no chest from a 6th win on level 50 |
+| 95 | Upgrade milestones at 20 and 50 | Shown, but nothing saved in the MVP; rewards come with the upgrade flow |
+| 96 | Story beats | Play once, the first time the level is reached; retries skip them |
 
 ## Board layers & obstacles
 
@@ -399,7 +409,7 @@ Levels follow `levels_1_100_plan.csv`: 25-level chapters with finales at 25, 50,
 
 **Chapters:** 1 (1–25) Journey to the Jade Temple · 2 (26–50) Rat's trail · 3 (51–75) Ox's trail begins · 4 (76–100) deeper forest. Each finale ends with a chapter story card; each hard level carries a mini story beat. A new backdrop every 10 levels (5 in the MVP), so the forest visibly heals within each chapter.
 
-**Your 20/50-level upgrade milestones** can sit on top of this; see Open questions on whether to align them to the 25-level chapters.
+**Your 20/50-level upgrade milestones** can sit on top of this; see Open questions on whether to align them to the 25-level chapters. MVP: winning 20 and 50 shows the milestone but gives nothing saved yet; rewards come with the upgrade flow.
 
 ## Soul fragments
 
@@ -408,7 +418,7 @@ Fragments start at level 26, right after the temple reveal. The Rat's 8 fragment
 **Rules**
 
 - A fragment level shows a glowing fragment icon on the map and level card, so players know before they play.
-- Levels 26–33: the fragment is sealed in a creep cocoon (OB07 behaviour) and freed by adjacent matches. From level 38 it can also be an OB11 drop item (drop items debut at 34 with lost hatchlings, so players practise before a fragment rides one) that must reach the bottom row. Fail the level and the fragment stays for the retry. The fragment is one of the level's goals, so winning always collects it, and no special can destroy it (see Interaction rules). Won levels cannot be replayed in the MVP.
+- Levels 26–33: the fragment is sealed in a creep cocoon (OB07 behaviour) and freed by adjacent matches. From level 38 it can also be an OB11 drop item (drop items debut at 34 with lost hatchlings, so players practise before a fragment rides one) that must reach the bottom row. Fail the level and the fragment stays for the retry. The fragment is one of the level's goals, so winning always collects it, and no special can destroy it (see Interaction rules). Won levels cannot be replayed in the MVP. Levels are played in order, with no skipping. In the MVP the save counts a fragment by the level number (26, 30, 33, 35, 38, 40, 45, 50); revisit when another guardian gets fragments.
 - The Rat needs 8 fragments; every other guardian needs 12.
 - **Trail guardian:** after 50, the story points to one guardian at a time; in levels 51–60 every drop is for the trail guardian, the Ox. From level 61, each drop has a 70% chance of being for the trail guardian and 30% for a random guardian who is not yet restored. The roll happens when the level is won, so quitting and re-entering cannot change it.
 - **Pity rule:** from level 61, if 4 random rolls in a row miss the trail guardian, the next drop is guaranteed for it; scripted drops don't count.
@@ -436,14 +446,16 @@ The MVP economy is small and fair: coins, generous lives, four hero boosters tha
 
 | Item | Rule |
 | --- | --- |
-| Coins | Start 500. Win = 20 + 5 per finale rocket (about 40 a win). Spent on the continue, life refills and hero boosters; balance coin income against prices for each 5-level block in the economy sheet |
-| Lives | 5 max; lose one when an attempt ends in a fail (a declined offer, moves out a 6th time, or a quit), at most one per attempt; an attempt won after continues costs no life; chapter finales cost no life on a fail; refill 1 per 20 min, or buy all 5 back for 150 coins; 10 min of unlimited lives after each chapter finale |
+| Coins | Start 500. Win = 20 + 5 per finale rocket (about 40 a win). Spent on the continue, life refills and hero boosters; balance coin income against prices for each 5-level block in the economy sheet. No purchase (continue, life refill, booster) can be made with fewer coins than its price; coins never go below 0 |
+| Lives | 5 max; lose one when an attempt ends in a fail (a declined offer, moves out a 6th time, or a quit), at most one per attempt; an attempt won after continues costs no life; chapter finales cost no life on a fail; refill 1 per 20 min, or buy all 5 back for 150 coins; 10 min of unlimited lives after winning a chapter finale, counted in real time from the win; during them a fail costs no life. A new player starts with 5 lives. The refill runs on real time, also while the game is closed: the 20 minutes start when lives drop below 5, each life back starts the next 20, another loss doesn't restart them, and they stop at 5 lives or when all 5 are bought. If the device clock is set back, no life comes back until it passes the saved time again, and no life is taken away. The refill countdown doesn't run during unlimited lives: a countdown running when they begin is dropped, and when they end, if lives are below 5, a fresh 20 minutes start (also while the game is closed). Buying all 5 at 5 lives is refused (no coins charged) with the message "You already have 5 lives". No level can be started or retried at 0 lives unless unlimited lives are running, except the chapter finales (25, 50), which can be played at 0 lives. At 0 lives the retry screen offers only waiting or buying all 5 |
 | Continue | Optional "+5 moves" when moves run out: 300 coins for the 1st offer, 500 for the 2nd to 5th; at most 5 per attempt |
-| Win streak | 6 wins in a row: a chest drops a free Rocket and Crane onto the next board, placed as for pre-level boosters |
+| Win streak | 6 wins in a row: a chest drops a free Rocket and Crane onto the next board, placed as for pre-level boosters. The streak goes back to 0 when the chest drops (the next chest needs 6 more wins). The chest board's attempt uses the chest up, won or failed. A 6th win on level 50 gives no chest. A fail (declined offer, moves out a 6th time, or a quit) sets the streak to 0; a win after continues counts. A pre-level booster can be used on the chest board; the chest's Rocket and Crane are placed after the booster's specials |
 | Soul fragments | Not spendable; restore guardians |
 | Soul Dust | Cut from the MVP (see Soul fragments) |
 
 **Booster unlocks (MV's proven levels, our themes)**
+
+A booster unlocks when its level is first started, so it can be used on that level. With no free uses left, each use costs its price at the moment of use; uses are never bought ahead. Pre-level boosters: one of the two per attempt, spent per attempt (a retry needs another, free or 150 coins).
 
 | Unlock | Booster | Type | Effect | Free uses, then |
 | --- | --- | --- | --- | --- |
@@ -515,6 +527,8 @@ Build our own board core in Godot around the 4-layer cell model, with logic sepa
 **Bot calibration:** the week-9 testers' results on levels 1–10 set a first bot-to-human offset. A second round at week 14, with testers on hard levels 15–30, sets the offset for the hard and finale tiers. Levels are tuned to the bot's rate after the offset is applied.
 
 **Save file (local, versioned)**
+
+The save also keeps the life refill time, the unlimited-lives end time, which boosters are unlocked, the win streak and a waiting chest, seen story beats and an "attempt in progress" mark (field names are the engineer's choice). A save that can't be read, with no temporary copy, starts the player as a new player.
 
 ```json
 {
