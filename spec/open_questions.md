@@ -1101,9 +1101,10 @@ GDD says: Rules clarifications › row 04 (a special set off by another special 
 - Option B: like a set-off special: the Orb's cell is cleared, pieces fall and refill, and then the most common colour of the new board is counted and cleared.
 Blocks: the exact event order and colour in the Hoof Tap on an Orb tests (IR-36); the colour result differs only if the refill changes which colour is most common.
 
-### OQ-113 · Hoof Tap on a Jade Orb: is the piece in the Orb's own cell, after the refill, counted and cleared? — OPEN
+### OQ-113 · Hoof Tap on a Jade Orb: is the piece in the Orb's own cell, after the refill, counted and cleared? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option A (the piece that falls into the Orb's own cell is excluded from both the colour count and the clear, and takes no second hit). Now in IR-36 and IR-90. Same as the code and tests already built.
 GDD says: Rules clarifications › row 09 "A Jade Orb covers every cell whose piece it clears"; OQ-33 "only plain pieces count towards the most common colour, and only plain pieces are cleared". The owner's OQ-112 B says "the Orb's own cell is not part of that clear" but after the refill the Orb's cell holds a new plain piece (or one that fell in); the GDD doesn't say whether it counts or is cleared.
-- Option A (applied provisionally): the Orb's own cell is excluded from both the count and the clear: a piece there is neither counted nor cleared, and the cell takes no second hit.
+- Option A (chosen): the Orb's own cell is excluded from both the count and the clear: a piece there is neither counted nor cleared, and the cell takes no second hit.
 - Option B: only the clear excludes it: the piece there is counted like any uncovered plain piece, but is not cleared and takes no second hit.
 Blocks: IR-36 test for a refill piece in the Orb's cell that decides the colour; the no-piece test.
 
