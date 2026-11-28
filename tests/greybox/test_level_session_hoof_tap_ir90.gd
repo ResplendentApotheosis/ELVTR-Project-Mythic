@@ -433,6 +433,107 @@ func test_IR90_T9_cell_outside_the_grid_is_not_a_use() -> void:
 	assert_eq(s.coins(), 500)
 
 
+func test_IR90_T8_OQ106_B_hoof_tap_on_a_rocket_is_a_use_and_the_rocket_fires() -> void:
+	var s: Variant = _playing(500, 3)
+	if s == null:
+		return
+	s.board().set_piece(3, 3, "rocket_row", "R")
+	var moves: int = s.moves_left()
+	var r: Dictionary = _arm_and_use(s, CELL)
+	assert_true(bool(r.get("ok", false)), str(r))
+	assert_gte(_type_index(r.events, "rocket_fire"), 0, "IR-36: the Rocket fires")
+	assert_eq(int(s.hero_booster_state("hoof_tap").free_uses), 2, "a use that spends a free use")
+	assert_eq(s.coins(), 500)
+	assert_eq(s.moves_left(), moves, "IR-62: no move used")
+	assert_eq(s.state, LevelSession.PLAYING)
+	assert_eq(_type_index(r.events, "fail"), -1)
+	assert_eq(s.armed_hero_booster(), "")
+
+
+func test_IR90_T8_OQ106_B_hoof_tap_on_a_rocket_with_no_free_uses_costs_100() -> void:
+	var s: Variant = _playing(500, 0)
+	if s == null:
+		return
+	s.board().set_piece(3, 3, "rocket_col", "Y")
+	var r: Dictionary = _arm_and_use(s, CELL)
+	assert_true(bool(r.get("ok", false)), str(r))
+	assert_gte(_type_index(r.events, "rocket_fire"), 0)
+	assert_eq(s.coins(), 400)
+	assert_eq(_save.coins(), 400)
+
+
+func test_IR90_T8_OQ108_A_hoof_tap_on_a_special_under_moss_is_a_use() -> void:
+	var s: Variant = _playing(500, 3)
+	if s == null:
+		return
+	s.board().set_piece(3, 3, "rocket_row", "R")
+	s.board().set_overlay(3, 3, "OB03", 1)
+	var r: Dictionary = _arm_and_use(s, CELL)
+	assert_true(bool(r.get("ok", false)), str(r))
+	assert_eq(s.board().overlay_hp(3, 3), 0, "moss removed")
+	assert_gte(_type_index(r.events, "rocket_fire"), 0, "OQ-108 A: the covered Rocket fires")
+	assert_eq(int(s.hero_booster_state("hoof_tap").free_uses), 2)
+
+
+func test_IR90_T13_OQ106_B_a_set_off_rocket_can_win_the_level() -> void:
+	var s: Variant = _playing(500, 1, _creature_level())
+	if s == null:
+		return
+	s.board().set_piece(4, 3, "rocket_col", "R")   # column 4 covers the creature at (4,4)
+	var r: Dictionary = _arm_and_use(s, Vector2i(4, 3))
+	assert_true(bool(r.get("ok", false)), str(r))
+	var events: Array = r.get("events", [])
+	var i_fire: int = _type_index(events, "rocket_fire")
+	var i_goal: int = _type_index(events, "goal_done")
+	var i_win: int = _type_index(events, "win")
+	assert_gte(i_fire, 0, "the Rocket fires")
+	assert_gt(i_goal, i_fire, "goal done event as usual")
+	assert_gt(i_win, i_goal, "then the win")
+	assert_eq(s.state, LevelSession.WON)
+	assert_eq(s.moves_left(), 10, "IR-62")
+	assert_eq(s.coins(), 570, "500 + 20 + 5 x 10")
+	assert_eq(int(_save.hero_free_uses("hoof_tap")), 0)
+
+
+func test_IR90_OQ104_A_tap_on_a_hole_disarms_and_spends_nothing() -> void:
+	var s: Variant = _playing(500, 3)
+	if s == null:
+		return
+	assert_true(s.arm_hero_booster("hoof_tap"))
+	var r: Dictionary = s.use_hero_booster(Vector2i(0, 0))   # a hole of the fixture's shape
+	assert_false(bool(r.get("ok", true)))
+	assert_eq(s.armed_hero_booster(), "", "a hole counts as a non-cell area: disarmed")
+	assert_eq(int(s.hero_booster_state("hoof_tap").free_uses), 3)
+	assert_eq(s.coins(), 500)
+	assert_false(bool(s.use_hero_booster(CELL).get("ok", true)), "a following tap does nothing until armed again")
+	assert_eq(int(s.hero_booster_state("hoof_tap").free_uses), 3)
+
+
+func test_IR90_OQ103_A_refused_use_stays_armed_and_the_button_tap_disarms_it() -> void:
+	var s: Variant = _playing(90, 0)
+	if s == null:
+		return
+	var r: Dictionary = _arm_and_use(s, CELL)
+	assert_eq(r.get("reason", ""), "not_enough_coins")
+	assert_eq(s.armed_hero_booster(), "hoof_tap", "refused but still armed")
+	assert_eq(s.coins(), 90)
+	s.cancel_hero_booster()
+	assert_eq(s.armed_hero_booster(), "")
+	assert_eq(s.coins(), 90, "nothing spent")
+
+
+func test_IR90_OQ105_A_a_move_starting_disarms_the_button() -> void:
+	var s: Variant = _playing(500, 3)
+	if s == null:
+		return
+	assert_true(s.arm_hero_booster("hoof_tap"))
+	s.set_busy(true)
+	assert_eq(s.armed_hero_booster(), "")
+	assert_false(bool(s.use_hero_booster(CELL).get("ok", true)), "ignored while busy")
+	assert_eq(int(s.hero_booster_state("hoof_tap").free_uses), 3)
+	assert_eq(s.coins(), 500)
+
+
 # ---------------------------------------------------------------- (e) when it can't be used
 
 func test_IR90_T10_not_on_the_win_screen() -> void:

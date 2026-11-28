@@ -666,4 +666,17 @@ func set_busy(value: bool) -> void                       # the scene sets true w
   - `ok` false always comes with `events == []`.
 - `set_busy(true)` disarms an armed button (OQ-105 A). While armed, `swap` and `tap` return `[]` and use no move (OQ-105 A, ignored input).
 - A cancelled start (IR-88) leaves Hoof Tap locked again, free uses 0 (SaveService already does this); the state reads it.
-- NOT tested: Tail Slam / Bamboo Dash / Feather Fan flow, a Hoof Tap on a special (OQ-106), Option B variants, the scene's button visuals.
+- A Hoof Tap on a special (28 Nov 2026, IR-36, OQ-106 B, OQ-107..110 Option A provisional) is tested in `tests/boosters/test_hoof_tap_special_ir36.gd` and, through the session, in this file (T8/T13 "OQ106_B", "OQ108_A"): see 10.10. `use_hero_booster` returns those events unchanged; a Rocket on the cell is a normal use (free use or 100 coins, no move, can win).
+- NOT tested: Tail Slam / Bamboo Dash / Feather Fan flow in the level, Option B variants, the scene's button visuals.
+
+### 10.10 Booster on a special (IR-36, OQ-106 B; OQ-107..110 Option A) - NEW behaviour of `BoosterService.hoof_tap / tail_slam / bamboo_dash`
+
+No new methods. Event order for `hoof_tap` on a special at C (no obstacle), nothing else changing:
+1. `booster` (data.name, cell = C).
+2. `clear` with `source == "booster"`, `cells == [C]` (the booster's own clear: the special is lifted off the board; any obstacle hit on C happens here, one hit to the top layer, OQ-109 A).
+3. `fall`, `refill` (cascade matches do NOT resolve yet, IR-41).
+4. The special fires from C as a set-off special (IR-41): Rocket `rocket_fire` (cell C, kind, cells), then its `clear`, `fall`, `refill`; Firecracker `blast`(index 1) with its `clear`, `fall`, `refill`, cascades, `blast`(index 2)...; Crane `crane_target`, `crane_takeoff` (cell C), `crane_landing`; Jade Orb: nothing (removed without effect: no `orb_fire`, no `clear` with source `orb`, OQ-107 A).
+5. Further set-off specials, lowest then left-most (IR-41); then cascades, `goal_done` as usual (right after the event that reached a count), and `win` last if the goals are done.
+- Covered special (moss etc.): same, OQ-108 A. The cell takes the booster's hit AND the special's own hit (OQ-109 A): Rocket under moss hp 2 ends at 0. The Crane/Rocket etc. still fire.
+- `tail_slam` and `bamboo_dash` set off every special they cover the same way (OQ-110 A); several lifted specials go on the shared waiting list.
+- Moves never change; no `fail` event.
