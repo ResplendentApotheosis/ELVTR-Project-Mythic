@@ -548,3 +548,46 @@ func set_debug_moves(n: int) -> void     # n <= 0 stores 0 (off)
 
 - On `start` and `retry` (after the board is built), if `debug_enabled and debug_moves > 0` the board's `moves` is set to `debug_moves`. The gate is checked when the attempt starts. Setting it during an attempt changes only the NEXT start or retry. It stays until set to 0.
 - Nothing else changes: continues add +5 (IR-37), prices 300 then 500, a decline costs one life (IR-60), 0 lives still blocks retry (IR-81).
+
+## 15. Level tools and the cancelled attempt (IR-88, validator, bot) - NEW API
+
+### 15.1 Cancelled attempt (tests: `tests/save_service/test_cancel_attempt_ir88.gd`, `tests/greybox/test_level_session_cancel_ir88.gd`)
+
+```gdscript
+# SaveService
+func cancel_attempt() -> void   # undoes the open attempt; a no-op when none is open
+# LevelSession._begin: when the build returns null, call _save.cancel_attempt() instead of end_attempt("quit")
+```
+
+- `cancel_attempt` leaves the save as it was before `start_attempt` for: lives (and no `lives_ran_out`), the level is NOT tried (the next start is `first_try` again), streak, `attempt_log()` (no entry), `life_log()`, `next_level()`; the open-attempt mark is cleared (a later `end_attempt` does nothing, the next launch runs no IR-38 recovery). Works whether `start_attempt` got a tracker or `null`.
+- NOT tested (OQ-97 open): giving back a pre-level booster or chest, hero unlocks, the screen after.
+- LevelSession: a failed build leaves `state == NOT_STARTED` (never RETRY or OFFER), `last_error != ""`, `attempt == null`, and the save as above. Fixture `tests/greybox/fixtures/level_fixture_bad_012.json` has id 12 and `moves: 0`: `LevelLoader.validate` rejects it, but `LevelLoader.load_file` does not validate today. So for this to count as "the build returns null", the build path must reject it: either `LevelLoader.load_file`/`load_level` validates and returns null, or `LevelSession._begin` calls `LevelLoader.validate` and treats errors as a failed build (then `last_error` carries them). The good fixture must still build.
+
+### 15.2 Level validator (tests: `tests/validate_level/test_level_file_check.gd`)
+
+```gdscript
+# tools/validate_level/level_file_check.gd
+class_name LevelFileCheck
+static func check(path: String) -> Array[String]   # [] = pass; one String per failed check
+```
+
+- Fails (one string each): file missing, not JSON, JSON not an object, file name not `level_NNN.json`, NNN != the level id (message names both numbers), and every string `LevelLoader.validate(level, NNN)` returns (the real validator; it may prefix text, tests only look for the original text inside). A level that fails two ways returns more strings than one that fails one way.
+- Paths may be `res://`, `user://` or absolute.
+- CLI `tools/validate_level/validate_level.gd` (`extends SceneTree`): `-- <level path>`; prints one line per failed check; `quit(0)` on pass, `quit(1)` on fail or a missing file. The test runs it with `OS.execute($GODOT_BIN, ["--headless","--path",<root>,"-s",CLI,"--",<abs path>])` and is pending when `GODOT_BIN` is not set.
+
+### 15.3 Level bot (tests: `tests/level_bot/test_bot_runner.gd`)
+
+```gdscript
+# tools/level_bot/bot_runner.gd
+class_name LevelBot
+static func play_once(path: String, seed: int) -> Dictionary   # {"won", "moves_used", "moves_left", "goal_progress"}
+static func run(path: String, runs: int, seed: int) -> Dictionary
+static func choose_move(attempt: LevelAttempt, rng: RandomNumberGenerator) -> Dictionary
+```
+
+- `play_once`: `LevelLoader.load_file(path, {"seed": seed})` (exactly one build, `LevelLoader.build_count` +1), then moves with `MatchResolver` (swap or tap) until a win or the first run-out; it never accepts a continue (moves_used never above the level's moves), never calls SaveService or boosters, writes no file. `moves_used + moves_left == level.moves`. `goal_progress` in 0..1 (sum of goal units done / sum of goal units total, via `GoalTracker.goal_units_done/total`); `== 1.0` exactly on a win and `< 1.0` on a loss. Same path + seed = the same dictionary.
+- `run`: `{"level": int, "tier": String, "runs": int, "seed": int, "wins": int, "win_rate": float (wins/runs), "avg_moves_left_on_win": float (0.0 with no wins), "avg_goal_progress_on_fail": float (0.0 with no fails), "results": Array}`; `results[i] == play_once(path, seed + i)`. Same args = identical dictionary.
+- `choose_move`: returns `{"action": "swap", "from": Vector2i, "to": Vector2i}` or `{"action": "tap", "cell": Vector2i}`. It never changes the board. The move is always accepted by `MatchResolver` (no `invalid_swap`, one move used). Greedy order: a move that finishes a goal, then one that creates a special, then a plain match; ties by `rng`. Not tested: the exact weights between goal progress and specials, and when a tap is chosen.
+- CLI `tools/level_bot/level_bot.gd` (`extends SceneTree`): `-- <level path> --runs N --seed S [--out path]`; writes the `run()` dictionary as JSON to `--out` (default `reports/balance/level_NNN_bot.json`); exit 0. The test runs it with `--out` under `user://` and is pending when `GODOT_BIN` is not set.
+
+Note for 15.1 / 15.2: the shared fixture `level_fixture_012.json` is NOT a validator-clean level (OB06 debuts at level 13, IR-67), and existing session tests build it. So `LevelSession`/`LevelLoader` must not reject a level for every `validate` error; the cancel test only needs the build to fail for `moves: 0` (IR-68) while the old fixture still builds. LevelFileCheck tests use `LevelFixtures.valid(12)`, which the real validator accepts.

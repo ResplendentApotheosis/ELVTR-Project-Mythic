@@ -325,5 +325,48 @@ func add_collected(key: String, amount: int = 1) -> void:
 	_collected[key] = collected_count(key) + amount
 
 
+## A full, independent copy of this board (every layer, piece, counter and the rng's exact state), for
+## trying a move without touching the real board (the level bot). `goal_tracker` is NOT copied: it is
+## left null, so the caller decides (e.g. GoalTracker.copy_for(copy)).
+func copy() -> BoardModel:
+	var b: BoardModel = BoardModel.new(width, height, 1)
+	b.moves = moves
+	b.auto_shuffle = auto_shuffle
+	b.goals = goals.duplicate(true)
+	b.exit_columns = exit_columns.duplicate(true)
+	b.spawners = spawners.duplicate(true)
+	b.palette = palette.duplicate(true)
+	b.rng.seed = rng.seed
+	b.rng.state = rng.state
+	b.drop_total = drop_total
+	b.drop_max_on_board = drop_max_on_board
+	b.drop_fragment_item = drop_fragment_item
+	b.drop_spawned = drop_spawned
+	b._playable = _playable.duplicate()
+	b._kind = _kind.duplicate()
+	b._color = _color.duplicate()
+	b._drop = _drop.duplicate()
+	b._overlay_id = _overlay_id.duplicate()
+	b._overlay_hp = _overlay_hp.duplicate()
+	b._underlay_id = _underlay_id.duplicate()
+	b._underlay_hp = _underlay_hp.duplicate()
+	b._dew_target = _dew_target.duplicate()
+	b._collected = _collected.duplicate(true)
+	# A multi-cell obstacle is ONE object shared by its cells, so each one is copied once.
+	var copies: Dictionary = {}
+	for i in range(_content.size()):
+		var c: BoardContent = _content[i]
+		if c == null:
+			continue
+		if not copies.has(c):
+			var n: BoardContent = BoardContent.new(c.id, c.hp, c.rect, c.fragment)
+			n.needs = c.needs.duplicate(true)
+			n.lit = c.lit
+			n.color = c.color
+			copies[c] = n
+		b._content[i] = copies[c]
+	return b
+
+
 func _i(x: int, y: int) -> int:
 	return y * width + x

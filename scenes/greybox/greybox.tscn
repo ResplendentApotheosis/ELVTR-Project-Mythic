@@ -79,13 +79,31 @@ layout_mode = 0
 offset_left = 640.0
 offset_top = 500.0
 offset_right = 1120.0
-offset_bottom = 620.0
+offset_bottom = 680.0
 theme_override_constants/separation = 6
 
 [node name="Title" type="Label" parent="DebugPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.85, 1, 1)
-text = "DEBUG (editor builds only) - keys 1-9 set the moves"
+text = "DEBUG (editor builds only) - keys 1-9 set the moves, L picks a level"
+
+[node name="LevelRow" type="HBoxContainer" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="LevelCaption" type="Label" parent="DebugPanel/LevelRow"]
+layout_mode = 2
+text = "Level (1-50)"
+
+[node name="LevelBox" type="SpinBox" parent="DebugPanel/LevelRow"]
+layout_mode = 2
+min_value = 1.0
+max_value = 50.0
+value = 1.0
+rounded = true
+
+[node name="LoadButton" type="Button" parent="DebugPanel/LevelRow"]
+layout_mode = 2
+text = "Load"
 
 [node name="Row" type="HBoxContainer" parent="DebugPanel"]
 layout_mode = 2

@@ -966,6 +966,17 @@ Blocks: StoryPlayer and one saved list. Not SaveService's core.
 
 ---
 
+## New question from the board-build-failure decision (28 Nov 2026)
+
+### OQ-97 · A cancelled attempt (board failed to build): boosters, chest, unlocks and the screen after — OPEN
+Owner decision, chat 28 Nov 2026 › board build failure: "If a board fails to build after an attempt has started, cancel the attempt with no penalty (no life lost, no first try used, streak kept) instead of counting it as a quit." Now in IR-88 for the three named items. It doesn't say what happens to the other things starting an attempt already did: IR-83 (OQ-93 (d) A) says a pre-level booster "is spent per attempt" and "stays spent" in an attempt that fails, is quit or is killed; IR-84 (OQ-94 (b) A) says the chest "is used up by that attempt whatever its result"; IR-82 (OQ-93 (a) A) says a hero booster unlocks "when level N is first started". A cancelled attempt is none of fail, quit or kill, so these rules don't settle it. The producer reads "no penalty" as including (a) and (b) below (provisional, not an owner decision).
+(a) A pre-level booster chosen for the cancelled attempt (its free use, or the 150 coins paid). (b) A streak chest that was waiting for that board. (c) A hero booster unlocked by first starting level 11, 23, 29 or 36 in the cancelled attempt. (d) Which screen the player sees after the cancel.
+- Option A: The save goes back to exactly how it was before the attempt started: (a) the free use or the 150 coins come back; (b) the chest is waiting again; (c) the booster is locked again (it unlocks, with its free uses, when the level is next started); (d) the player is back on the screen the attempt was started from (map or level-start screen), with a short "this level couldn't be loaded" message.
+- Option B: Only life, first try, streak, log and open attempt are undone (IR-88): (a) the booster use or coins stay spent; (b) the chest stays used up; (c) the booster stays unlocked; (d) the player goes to the map with the same message.
+Blocks: IR-88 tests for a cancelled attempt that used a pre-level booster or a chest, or first started a booster level; LevelSession's after-cancel screen. Not IR-88's core (life, first try, streak, log, open attempt).
+
+---
+
 ## GDD text to update (owner only) — ALL DONE in a94a7e4
 
 Checked line by line against the GDD on 27 Nov 2026. All 12 contradictions are now fixed:

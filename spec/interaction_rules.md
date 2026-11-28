@@ -28,7 +28,7 @@ Derived only from `docs/gdd/zodiac-forest-gdd-final.md` (the GDD wins over this 
 | H. Hero boosters | IR-34 to IR-36, IR-62 |
 | I. Level flow | IR-37, IR-38, IR-56 to IR-61 |
 | J. Level files (LevelLoader and validator) | IR-63 to IR-73, IR-75 to IR-77 |
-| K. Save, progress and meta (SaveService) | IR-78 to IR-87 |
+| K. Save, progress and meta (SaveService) | IR-78 to IR-88 |
 
 ---
 
@@ -694,7 +694,7 @@ Test cases:
 
 ### IR-38 · Quitting mid-level counts as a fail (CHANGED)
 Rule: Quitting mid-level counts as a fail: it goes straight to the fail result with no continue offer, costs a life (except on chapter finales and while unlimited lives run, IR-60), resets the win streak (IR-84) and counts as that level's first try; the app being closed or killed (crash, or the phone stopping it) mid-level counts as a quit, and on the next launch the player is on the map, with the level not resumed.
-Applies to: Every level 1–50. The continue offer is only for running out of moves (IR-37). The attempt log and "first try": IR-86. Coins spent on continues and boosters in a killed attempt stay spent. How SaveService notices a killed attempt (e.g. an "attempt open" mark written at the start) is an implementation choice. Not yet specified: an attempt killed while unlimited lives were running whose next launch comes after they ran out.
+Applies to: Every level 1–50. The continue offer is only for running out of moves (IR-37). The attempt log and "first try": IR-86. Coins spent on continues and boosters in a killed attempt stay spent. How SaveService notices a killed attempt (e.g. an "attempt open" mark written at the start) is an implementation choice. Not yet specified: an attempt killed while unlimited lives were running whose next launch comes after they ran out. A board that fails to build after the attempt has started is not a quit: IR-88.
 Source: GDD › Interaction rules › "Quitting mid-level | Counts as a fail: costs a life (except on finales) and counts as that level's first try"; Meta & economy › Lives; Owner decision, chat 27 Nov 2026 › OQ-51 (Option A: "The offer appears only when moves run out; quitting goes straight to the fail result (life lost, first try used), with no offer"); Owner decision, chat 28 Nov 2026 › OQ-92 (Option A: "It counts as a quit (IR-38): a fail, a life lost (not on finales), the streak back to 0, the first try used and logged; on the next launch the player is on the map (the level is not resumed)").
 Test cases:
 - Level 12, 5 lives, first attempt. Quit after 3 moves → lives 4; attempt logged as a fail and as the first try.
@@ -1096,3 +1096,12 @@ Test cases:
 - Level 15's beat seen; the game is closed and opened; level 15 retried → no story card.
 - Level 15's beat skipped by the player on the first attempt → marked seen; the retry shows no story card.
 - Level 16 (no beat) started → no beat plays and the seen list is unchanged.
+
+### IR-88 · A board that fails to build cancels the attempt with no penalty (NEW)
+Rule: If the attempt has been started in the save but its board then fails to build, the attempt is cancelled, not counted as a quit or a fail: no life is lost, the level is not marked as tried (so the next attempt that builds is its first try), the win streak is unchanged, no attempt-log entry is written (no fail, no quit, no first try, no "lives ran out"), the open-attempt mark is cleared (so the next launch does not treat it as a killed attempt, IR-38), and no fail result, continue offer or retry screen is shown.
+Applies to: LevelSession and SaveService: any failure to build the board after the attempt was started (e.g. LevelLoader returns no board for an invalid level or an unknown `pre_specials` name, IR-77). Not a player quit or a killed app (IR-38), and not running out of moves (IR-37, IR-57). Lives: IR-60, IR-81. Streak: IR-84. Attempt log and first try: IR-86. How SaveService undoes the start (e.g. a cancel call, or starting the attempt only after the board is built) is an implementation choice; only the end state is the rule. "No attempt-log entry" and "open-attempt mark cleared" are the rules-keeper's reading of "cancel the attempt … instead of counting it as a quit" with "no first try used". Blocked by OQ-97: whether a pre-level booster (a free use or 150 coins, IR-83) and a waiting streak chest used up by the start are given back, whether a hero booster unlocked by this start (IR-82) stays unlocked, and which screen the player sees afterwards; tests below avoid all four.
+Source: Owner decision, chat 28 Nov 2026 › board build failure ("If a board fails to build after an attempt has started, cancel the attempt with no penalty (no life lost, no first try used, streak kept) instead of counting it as a quit"); GDD › Interaction rules › "Quitting mid-level | Counts as a fail: costs a life (except on finales) and counts as that level's first try" (the rule this case does not follow); MVP milestones › Retention test › "Log per player: … every attempt and win, lives run out, … mid-level quits".
+Test cases:
+- Level 12 never played; lives 5, streak 3, coins 1000, no pre-level booster, no chest waiting. The attempt is started, then the board fails to build → lives 5; streak 3; coins 1000; level 12 not tried; attempt log unchanged (no entry); no open attempt; no fail result, continue offer or retry screen; next level 12. The next attempt builds and is won → one log entry: level 12, win, not a quit, first try; streak 4.
+- Level 14 tried once before (one log entry: fail); lives 1, streak 0. An attempt is started and its board fails to build → lives 1 (not 0); no "lives ran out" entry; the log still has exactly one entry; level 14 can still be started (IR-81).
+- Level 25 never played; lives 2, streak 5. The attempt is started, the board fails to build, then the app is closed. Next launch → lives 2; streak 5; no quit or fail logged; level 25 not tried.

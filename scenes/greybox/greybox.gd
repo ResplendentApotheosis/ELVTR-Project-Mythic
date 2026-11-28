@@ -1,11 +1,12 @@
 # Grey-box playable level: loads LEVEL_PATH with the real LevelLoader, lets you click/drag to swap or click a
 # special to tap, plays the events with AnimationQueue, and shows moves, goals, coins, lives and the
 # win / continue-offer / retry panels. All rules come from LevelSession -> the real modules.
-# Debug builds only (DebugGate): "Play again", jump-to-level and a "moves next attempt" box (keys 1-9).
-# Check: press F5 in the editor (this is the main scene) and make a match.
+# Debug builds only (DebugGate): "Play again", jump-to-level, a "moves next attempt" box (keys 1-9) and a
+# "Level" box: press L (or click it), type 1-50, press Enter or Load to play res://levels/level_NNN.json.
+# Check: press F5 in the editor (this is the main scene) and make a match; press L, type 1, press Enter.
 extends Control
 
-## The level this scene plays. Change it to try another level file.
+## The level this scene starts with. The debug "Level" box (key L) switches to res://levels/level_NNN.json.
 const LEVEL_PATH: String = "res://tests/level_loader/fixtures/level_fixture_012.json"
 ## A separate save file, so the grey box never touches the real player save.
 const SAVE_PATH: String = "user://greybox_save.json"
@@ -33,11 +34,14 @@ const SAVE_PATH: String = "user://greybox_save.json"
 @onready var debug_panel: VBoxContainer = $DebugPanel
 @onready var debug_moves_box: SpinBox = $DebugPanel/Row/MovesBox
 @onready var debug_status: Label = $DebugPanel/Status
+@onready var debug_level_box: SpinBox = $DebugPanel/LevelRow/LevelBox
+@onready var debug_load_button: Button = $DebugPanel/LevelRow/LoadButton
 
 var save: SaveService
 var session: LevelSession
 var input: BoardInput = null
 var _note: String = ""
+var _level_path: String = LEVEL_PATH   # the level file being played now
 
 
 func _ready() -> void:
@@ -56,6 +60,8 @@ func _ready() -> void:
 	play_again_button.visible = session.debug_enabled
 	debug_panel.visible = session.debug_enabled
 	debug_moves_box.value_changed.connect(_on_debug_moves_changed)
+	debug_load_button.pressed.connect(_on_debug_load)
+	debug_level_box.get_line_edit().text_submitted.connect(_on_debug_level_submitted)
 	_show_debug_moves()
 	_start_fresh()
 
@@ -77,7 +83,7 @@ func _start_fresh() -> void:
 ## played again. So that this test level can always be played, the grey-box save is moved to it through
 ## LevelSession's debug shortcut. With the debug gate off (a release build) this does nothing.
 func _dev_make_level_playable() -> void:
-	var data: Variant = LevelLoader.read_level_file(LEVEL_PATH)
+	var data: Variant = LevelLoader.read_level_file(_level_path)
 	if not data is Dictionary:
 		return
 	var id: int = LevelLoader.as_int((data as Dictionary).get("id"), 0)
@@ -97,6 +103,7 @@ func _show_board() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _debug_key(event):
+		get_viewport().set_input_as_handled()
 		return
 	if not _can_play():
 		return
@@ -179,15 +186,64 @@ func _on_play_again() -> void:
 
 # ---------------------------------------------------------------- debug moves (debug builds only)
 
-## Keys 1-9 set "moves next attempt". True if the key was used. Does nothing with the debug gate off.
+## Keys 1-9 set "moves next attempt"; L puts the cursor in the "Level" box. True if the key was used.
+## Does nothing with the debug gate off. While a text box has the cursor, L is ignored (it is typing).
 func _debug_key(event: InputEvent) -> bool:
 	if not session.debug_enabled or not event is InputEventKey:
 		return false
 	var key: InputEventKey = event
-	if not key.pressed or key.echo or key.keycode < KEY_1 or key.keycode > KEY_9:
+	if not key.pressed or key.echo:
+		return false
+	if key.keycode == KEY_L:
+		if get_viewport().gui_get_focus_owner() is LineEdit:
+			return false
+		var box: LineEdit = debug_level_box.get_line_edit()
+		box.grab_focus()
+		box.select_all()
+		return true
+	if key.keycode < KEY_1 or key.keycode > KEY_9:
 		return false
 	debug_moves_box.value = key.keycode - KEY_0   # this also calls _on_debug_moves_changed
 	return true
+
+
+# ---------------------------------------------------------------- debug level switch (debug builds only)
+
+## Enter in the "Level" box. The SpinBox reads the typed text first, then we load.
+func _on_debug_level_submitted(_text: String) -> void:
+	debug_level_box.apply()
+	_on_debug_load()
+
+
+## Load button: plays res://levels/level_NNN.json. A missing file leaves the current level as it is.
+func _on_debug_load() -> void:
+	debug_level_box.get_line_edit().release_focus()   # so keys 1-9 and L work again
+	if not session.debug_enabled:
+		return
+	if queue.is_playing():
+		_note = "wait for the move to finish, then load"
+		_refresh()
+		return
+	var n: int = int(debug_level_box.value)
+	var path: String = LevelLoader.level_path(n)
+	if not FileAccess.file_exists(path):
+		_note = "levels/level_%03d.json not found" % n
+		_refresh()
+		return
+	# An open attempt is cancelled with no penalty (IR-88's cancel, used here as a debug shortcut only).
+	if session.state == LevelSession.PLAYING or session.state == LevelSession.OFFER:
+		save.cancel_attempt()
+	var next: LevelSession = LevelSession.new(path, save)
+	next.set_debug_moves(session.debug_moves)
+	session = next
+	_level_path = path
+	session.debug_jump_to_level(n)
+	_hide_panels()
+	_note = ""
+	if not session.start():
+		_note = session.last_error
+	_show_board()
+	_refresh()
 
 
 func _on_debug_moves_changed(value: float) -> void:

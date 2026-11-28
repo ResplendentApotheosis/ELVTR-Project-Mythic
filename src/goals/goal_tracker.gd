@@ -119,6 +119,32 @@ func _is_fragment_goal(index: int) -> bool:
 	return bool(_goals[index].get("fragment", false))
 
 
+## How many goals this attempt has.
+func goal_count() -> int:
+	return _goals.size()
+
+
+## The goal's id: its obstacle id (e.g. "OB02"), or "fragment" for the fragment goal.
+func goal_id(index: int) -> String:
+	return "fragment" if _is_fragment_goal(index) else String(_goals[index].get("obstacle", ""))
+
+
+## An independent copy of this tracker (goals, progress, offers, lives, coins) that watches `board`
+## instead: it becomes board.goal_tracker, and a dew goal reads `board`. Used to try a move on a copy.
+func copy_for(board: BoardModel) -> GoalTracker:
+	var t: GoalTracker = GoalTracker.new(_goals.duplicate(true), level)
+	t._done = _done.duplicate()
+	t.lives = lives
+	t.coins = coins
+	t._offers_accepted = _offers_accepted
+	t._offer_price = _offer_price
+	t._failed = _failed
+	if _board_ref != null:
+		t.attach(board)
+	board.goal_tracker = t
+	return t
+
+
 # ---------------------------------------------------------------- continue offers and lives
 
 ## The resolver calls this when moves reach 0 and the level is not won (IR-57). Offers 1-5 are shown

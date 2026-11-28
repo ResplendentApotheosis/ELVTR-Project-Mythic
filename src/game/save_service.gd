@@ -9,6 +9,7 @@ var _path: String
 var _clock: Callable
 var _data: Dictionary
 var _tracker: GoalTracker = null   # the open attempt's tracker; its coins are the live balance
+var _before_start: Dictionary = {}   # the save just before start_attempt changed it (cancel_attempt puts it back)
 
 
 func _init(save_path: String, clock: Callable) -> void:
@@ -43,6 +44,7 @@ func start_attempt(level: int, tracker: GoalTracker = null, pre_boosters: Array 
 	var reason: String = _start_refusal(level, pre_boosters)
 	if reason != "":
 		return {"ok": false, "reason": reason}
+	_before_start = _data.duplicate(true)   # kept in memory only, for cancel_attempt (IR-88)
 	_unlock_boosters(level)
 	var pre_specials: Array = []
 	if pre_boosters.size() == 1:
@@ -95,6 +97,29 @@ func end_attempt(outcome: String, finale_rockets: int = 0) -> void:
 	if tracker != null:
 		tracker.lives = lives()
 		tracker.coins = coins()
+
+
+## IR-88: the open attempt's board failed to build, so the attempt is cancelled with no penalty: no life
+## lost, the level not marked as tried, streak kept, nothing logged, the open-attempt mark cleared.
+## Does nothing if no attempt is open.
+## PROVISIONAL (waits on OQ-97): it puts back the WHOLE save as it was just before start_attempt, so a
+## pre-level booster use (or its 150 coins), a waiting streak chest and a hero booster unlocked by this
+## start come back too (OQ-97 Option A). If the owner picks Option B, restore only lives, the tried mark,
+## streak, logs and the open-attempt mark here.
+func cancel_attempt() -> void:
+	if _data.open_attempt.is_empty():
+		return
+	if _before_start.is_empty():
+		# no snapshot (should not happen): at least undo the "tried" mark and close the attempt
+		var open: Dictionary = _data.open_attempt
+		if bool(open.get("first_try", false)):
+			(_data.tried_levels as Array).erase(int(open.get("level", 0)))
+		_data.open_attempt = {}
+	else:
+		_data = _before_start
+	_before_start = {}
+	_tracker = null
+	_save()
 
 
 # ---------------------------------------------------------------- coins and lives (IR-80, IR-81)
@@ -296,6 +321,7 @@ func _finish_attempt(level: int, first_try: bool, outcome: String, finale_rocket
 	(_data.attempt_log as Array).append({"level": level, "won": won, "quit": outcome == "quit", "first_try": first_try})
 	_data.open_attempt = {}
 	_tracker = null
+	_before_start = {}
 	if won:
 		_apply_win(level, finale_rockets)
 	else:

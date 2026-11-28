@@ -75,8 +75,10 @@ func _begin(options: Dictionary, is_retry: bool) -> bool:
 	else:
 		built = LevelLoader.load_file(_level_path, opts)
 	if built == null:
-		# Should not happen (the file was just read). Close the attempt the save opened, as the app would.
-		_save.end_attempt("quit")
+		# IR-88: the board did not build (e.g. moves 0, a broken board): cancel the attempt with no
+		# penalty. Not a quit: no life lost, no first try used, nothing logged.
+		_save.cancel_attempt()
+		attempt = null
 		last_error = "could not build %s %s" % [_level_path, LevelLoader.last_errors]
 		state = NOT_STARTED
 		return false
