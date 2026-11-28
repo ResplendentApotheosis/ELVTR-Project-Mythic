@@ -1,0 +1,42 @@
+{
+	"avg_goal_progress_on_fail": 0.0,
+	"avg_moves_left_on_win": 24.0,
+	"level": 12,
+	"results": [
+		{
+			"goal_progress": 1.0,
+			"moves_left": 24,
+			"moves_used": 2,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 25,
+			"moves_used": 1,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 24,
+			"moves_used": 2,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 24,
+			"moves_used": 2,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 23,
+			"moves_used": 3,
+			"won": true
+		}
+	],
+	"runs": 5,
+	"seed": 1,
+	"tier": "medium",
+	"win_rate": 1.0,
+	"wins": 5
+}

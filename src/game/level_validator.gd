@@ -121,7 +121,8 @@ static func _check_colors(level: Dictionary, tier: String, errors: Array) -> Arr
 static func _check_moves(level: Dictionary, id: int, errors: Array) -> void:
 	var moves: int = LevelLoader.as_int(level.get("moves"), -1)
 	if moves < MIN_MOVES:
-		errors.append("IR-68: moves %s is under %d" % [level.get("moves"), MIN_MOVES])
+		var shown: Variant = moves if (level.get("moves") is int or level.get("moves") is float) else level.get("moves")
+		errors.append("IR-68: moves %s is under %d" % [shown, MIN_MOVES])   # JSON gives 0.0: show it as 0
 	var plan: Dictionary = plan_row(id)
 	if plan.is_empty():
 		errors.append("IR-68: no plan row for level %d (is %s readable?)" % [id, PLAN_PATH])
@@ -260,6 +261,8 @@ static func _check_drop_columns(level: Dictionary, errors: Array) -> void:
 ## The loader must be able to build a starting board with no match and at least 3 matching swaps.
 static func _check_start_board(level: Dictionary, errors: Array) -> void:
 	var attempt: LevelAttempt = LevelLoader.load_level(level, {"seed": 1})
+	if attempt == null:
+		return   # the board could not be built at all; that problem (e.g. moves < 1) is already reported
 	var board: BoardModel = attempt.board
 	if not MatchFinder.find_groups(board).is_empty():
 		errors.append("IR-69: the starting board has a match")

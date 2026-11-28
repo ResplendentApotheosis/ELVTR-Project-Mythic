@@ -22,6 +22,9 @@ static func apply(board: BoardModel, events: Array[BoardEvent]) -> void:
 
 ## Owner decision OQ-35: straight falls first, then one diagonal slide at a time, then refill.
 static func _fill(board: BoardModel, events: Array[BoardEvent]) -> void:
+	# Speed: with no empty cell nothing can fall, slide or refill, so there is nothing to do.
+	if not board.has_empty_cell():
+		return
 	var first_new_event: int = events.size()
 	for _guard in range(MAX_STEPS):
 		var moves: Array = []
@@ -59,6 +62,8 @@ static func _is_stopper(board: BoardModel, x: int, y: int) -> bool:
 ## into stretches. Owner decision OQ-45 (chat 27 Nov 2026): non-playable cells are passed through.
 static func _fall_straight(board: BoardModel, moves: Array) -> void:
 	for x in range(board.width):
+		if not _column_has_empty(board, x):
+			continue   # speed: a column with no empty cell has nothing to fall into
 		var stretch: Array[Vector2i] = []
 		for y in range(board.height + 1):
 			if y == board.height or _is_stopper(board, x, y):
@@ -66,6 +71,13 @@ static func _fall_straight(board: BoardModel, moves: Array) -> void:
 				stretch = []
 			elif board.is_playable(x, y):
 				stretch.append(Vector2i(x, y))
+
+
+static func _column_has_empty(board: BoardModel, x: int) -> bool:
+	for y in range(board.height):
+		if board.is_empty(x, y):
+			return true
+	return false
 
 
 static func _compact(board: BoardModel, stretch: Array[Vector2i], moves: Array) -> void:
@@ -142,10 +154,11 @@ static func _refill(board: BoardModel, events: Array[BoardEvent]) -> bool:
 ## refill never makes a match (tests/API_CONTRACT.md §2). Returns {stand-in name: real colour}.
 static func _color_new_pieces(board: BoardModel) -> Dictionary:
 	var real_colors: Dictionary = {}
+	var colors: PackedStringArray = board.color_grid()   # speed: read once; only stand-ins are looked at
 	for y in range(board.height - 1, -1, -1):
 		for x in range(board.width):
-			var stand_in: String = board.get_color(x, y)
-			if board.get_kind(x, y) == "plain" and stand_in.begins_with(NEW_PIECE_MARK):
+			var stand_in: String = colors[y * board.width + x]
+			if stand_in.begins_with(NEW_PIECE_MARK) and board.get_kind(x, y) == "plain":
 				var color: String = pick_refill_color(board, Vector2i(x, y))
 				board.set_piece(x, y, "plain", color)
 				real_colors[stand_in] = color

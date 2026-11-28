@@ -1,0 +1,36 @@
+{
+  "id": 3,
+  "chapter": 1,
+  "tier": "medium",
+  "moves": 26,
+  "colors": 4,
+  "width": 9,
+  "height": 9,
+  "cells": [
+    "..#######",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########"
+  ],
+  "underlay": [
+    ".........", ".........", ".........", ".........", ".........",
+    ".........", ".........", ".........", "........."
+  ],
+  "objects": [
+    {"type": "OB06", "x": 1, "y": 1, "w": 1, "h": 3, "hp": 3},
+    {"type": "OB02", "x": 0, "y": 6, "hp": 1}
+  ],
+  "fixed_tiles": [],
+  "spawn": {"drop_items": null, "generators": null},
+  "goals": [
+    {"obstacle": "OB06", "count": 1},
+    {"obstacle": "OB02", "count": 1}
+  ],
+  "story_beat": null,
+  "designer_notes": "Test fixture, not a real level."
+}

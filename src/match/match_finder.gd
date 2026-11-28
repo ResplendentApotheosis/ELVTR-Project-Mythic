@@ -14,15 +14,21 @@ static func match_color(board: BoardModel, x: int, y: int) -> String:
 
 
 ## Every match on the board, in reading order of their first shape.
+## Speed: the colours are read once into a grid (match_colors), then rows, columns and squares are scanned
+## on that grid. The shapes and their order are the same as checking each cell with match_color().
 static func find_groups(board: BoardModel) -> Array[MatchGroup]:
+	var w: int = board.width
+	var h: int = board.height
+	var grid: PackedStringArray = match_colors(board)
 	var shapes: Array = []        # each: {"color": String, "type": "h"/"v"/"sq", "cells": Array[Vector2i]}
 	# Row lines
-	for y in range(board.height):
+	for y in range(h):
+		var row: int = y * w
 		var x: int = 0
-		while x < board.width:
-			var c: String = match_color(board, x, y)
+		while x < w:
+			var c: String = grid[row + x]
 			var end: int = x + 1
-			while c != "" and end < board.width and match_color(board, end, y) == c:
+			while c != "" and end < w and grid[row + end] == c:
 				end += 1
 			if c != "" and end - x >= 3:
 				var run: Array[Vector2i] = []
@@ -31,12 +37,12 @@ static func find_groups(board: BoardModel) -> Array[MatchGroup]:
 				shapes.append({"color": c, "type": "h", "cells": run})
 			x = end
 	# Column lines
-	for x in range(board.width):
+	for x in range(w):
 		var y: int = 0
-		while y < board.height:
-			var c: String = match_color(board, x, y)
+		while y < h:
+			var c: String = grid[y * w + x]
 			var end: int = y + 1
-			while c != "" and end < board.height and match_color(board, x, end) == c:
+			while c != "" and end < h and grid[end * w + x] == c:
 				end += 1
 			if c != "" and end - y >= 3:
 				var run: Array[Vector2i] = []
@@ -45,13 +51,27 @@ static func find_groups(board: BoardModel) -> Array[MatchGroup]:
 				shapes.append({"color": c, "type": "v", "cells": run})
 			y = end
 	# 2x2 squares
-	for y in range(board.height - 1):
-		for x in range(board.width - 1):
-			var c: String = match_color(board, x, y)
-			if c != "" and match_color(board, x + 1, y) == c and match_color(board, x, y + 1) == c and match_color(board, x + 1, y + 1) == c:
+	for y in range(h - 1):
+		for x in range(w - 1):
+			var i: int = y * w + x
+			var c: String = grid[i]
+			if c != "" and grid[i + 1] == c and grid[i + w] == c and grid[i + w + 1] == c:
 				var sq: Array[Vector2i] = [Vector2i(x, y), Vector2i(x + 1, y), Vector2i(x, y + 1), Vector2i(x + 1, y + 1)]
 				shapes.append({"color": c, "type": "sq", "cells": sq})
+	if shapes.is_empty():
+		return [] as Array[MatchGroup]
 	return _join(shapes)
+
+
+## match_color() for every cell at once (index = y * width + x).
+static func match_colors(board: BoardModel) -> PackedStringArray:
+	var kinds: PackedStringArray = board.kind_grid()
+	var colors: PackedStringArray = board.color_grid()
+	for i in range(kinds.size()):
+		var kind: String = kinds[i]
+		if kind == "" or kind == "orb" or kind == "drop":
+			colors[i] = ""
+	return colors
 
 
 ## True if the piece at this cell is part of any line of 3 or 2x2 square.

@@ -1,6 +1,7 @@
 # Turns a level file (level_agent_brief.md section 5 + "fragment") into a LevelAttempt: board layers,
 # fixed tiles, a seeded starting fill with no match and 3+ matching swaps, drop items and pre-level specials.
-# Never validates on load (validate() does); an unknown pre_specials name gives null + last_errors (IR-77).
+# Never runs the full validate() on load; it gives null + last_errors only for an unknown pre_specials name
+# (IR-77) or a board that can't be built or played (moves < 1, broken shape; structure_errors, IR-88).
 # Check: run the GUT suite; tests/level_loader/ covers it (API: tests/API_CONTRACT.md section 11).
 class_name LevelLoader
 extends RefCounted
@@ -30,7 +31,8 @@ static func level_path(id: int) -> String:
 ## Builds a new attempt from a level dictionary. Never validates: assumes a valid level.
 ## Returns null (nothing placed) if options hold an unknown pre_specials name; see last_errors (IR-77).
 static func load_level(level: Dictionary, options: Dictionary = {}) -> LevelAttempt:
-	last_errors = LevelStartItems.pre_special_errors(options)
+	last_errors = structure_errors(level)
+	last_errors.append_array(LevelStartItems.pre_special_errors(options))
 	if not last_errors.is_empty():
 		return null
 	var seed_value: int = as_int(options["seed"], 0) if options.has("seed") else new_seed(0)
@@ -80,6 +82,33 @@ static func retry(previous: LevelAttempt, options: Dictionary = {}) -> LevelAtte
 	attempt.tracker.lives = previous.tracker.lives
 	attempt.tracker.coins = previous.tracker.coins
 	return attempt
+
+
+## Only the problems that make a board impossible to build or play (producer decision, 28 Nov 2026, for
+## IR-88): moves under 1, or a missing / empty / malformed board shape. NOT the full validate(): a level
+## that breaks a design rule (e.g. an obstacle before its debut, IR-67) still builds. [] = buildable.
+static func structure_errors(level: Dictionary) -> Array:
+	var errors: Array = []
+	if as_int(level.get("moves"), 30) < 1:
+		errors.append("IR-68: moves must be at least 1 (got %s)" % str(level.get("moves")))
+	var w: int = as_int(level.get("width"), 9)
+	var h: int = as_int(level.get("height"), 9)
+	if w < 1 or h < 1:
+		errors.append("IR-64: width and height must be at least 1 (got %d x %d)" % [w, h])
+		return errors
+	var cells: Variant = level.get("cells")
+	if not cells is Array or (cells as Array).size() != h:
+		errors.append("IR-64: cells must be a list of %d rows" % h)
+		return errors
+	var playable: int = 0
+	for row in cells:
+		if not row is String or (row as String).length() != w:
+			errors.append("IR-64: every cells row must be %d characters" % w)
+			return errors
+		playable += (row as String).count("#")
+	if playable == 0:
+		errors.append("IR-64: the board has no playable (#) cell")
+	return errors
 
 
 ## Problems with a level, one String each, starting with the IR it breaks; [] = valid (API_CONTRACT 11.4).

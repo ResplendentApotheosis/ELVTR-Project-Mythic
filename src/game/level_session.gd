@@ -12,10 +12,13 @@ const PLAYING: String = "playing"           # the player can swap and tap
 const OFFER: String = "offer"               # moves ran out: the continue offer is on screen (IR-37)
 const WON: String = "won"                   # the level was won and the finale has fired (IR-16, IR-56)
 const RETRY: String = "retry"               # the attempt failed, or the save refused to start one (IR-37, IR-81)
+## IR-88 / OQ-97 A: the exact words the player sees when a level's board can't be built.
+const BUILD_FAILED_NOTICE: String = "This level couldn't be loaded"
 
 var state: String = NOT_STARTED
 var attempt: LevelAttempt = null
-var last_error: String = ""      # why the last start / retry did not work ("" = it worked)
+var last_error: String = ""      # why the last start / retry did not work ("" = it worked); technical text
+var notice: String = ""          # the message the player sees ("" normally); set when the board can't build
 var win_coins: int = 0           # coins the win paid (20 + 5 per finale Rocket, IR-16)
 var finale_rockets: int = 0      # moves left at the win
 var debug_enabled: bool = DebugGate.enabled()   # debug shortcuts allowed? (never in a release build)
@@ -55,6 +58,7 @@ func retry(options: Dictionary = {}) -> bool:
 ## The order (owner, 28 Nov 2026): the save decides the attempt (IR-79, IR-81, IR-83, IR-84); only if it
 ## says yes is the board built, once, with the specials it handed back (IR-77); then the tracker is bound.
 func _begin(options: Dictionary, is_retry: bool) -> bool:
+	notice = ""
 	_level_id = _read_level_id()
 	if _level_id <= 0:
 		last_error = "could not load %s" % _level_path
@@ -75,10 +79,17 @@ func _begin(options: Dictionary, is_retry: bool) -> bool:
 	else:
 		built = LevelLoader.load_file(_level_path, opts)
 	if built == null:
-		# Should not happen (the file was just read). Close the attempt the save opened, as the app would.
-		_save.end_attempt("quit")
+		# IR-88: the board did not build (e.g. moves 0, a broken board): cancel the attempt and put the
+		# save back as it was. Not a quit: no life lost, no first try used, nothing logged. The player
+		# goes back to the screen they started from (a retry keeps the old attempt for its next seed).
+		_save.cancel_attempt()
 		last_error = "could not build %s %s" % [_level_path, LevelLoader.last_errors]
-		state = NOT_STARTED
+		notice = BUILD_FAILED_NOTICE
+		if is_retry:
+			state = RETRY
+		else:
+			attempt = null
+			state = NOT_STARTED
 		return false
 	if debug_enabled and debug_moves > 0:
 		built.board.moves = debug_moves   # debug only: changes the starting moves, nothing else
