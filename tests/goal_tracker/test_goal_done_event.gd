@@ -191,3 +191,48 @@ func test_ir56_a_booster_that_finishes_the_goal_makes_goal_done_then_win_and_use
 	assert_true(EV.index_of(events, "win") > i_goal)
 	assert_eq(events.back().type, "win")
 	assert_eq(board.moves, 6, "Hoof Tap uses no move")
+
+
+# IR-56 / GDD Rules clarifications row 101: two goals finished by one hit show in goal-bar order
+# (the order listed in the level file); each event carries the goal index (data.goal) and obstacle id (data.id).
+func _one_hit_board() -> BoardModel:
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	board.moves = 10
+	BB.put(board, "R|", [[6, 0]])
+	board.add_content("OB02", 6, 6, 1)
+	board.add_content("OB07", 6, 7, 1)
+	return board
+
+
+func _goal_pairs(events: Array) -> Array:
+	var out: Array = []
+	for e in EV.of_type(events, "goal_done"):
+		out.append([int(e.data.get("goal", -1)), str(e.data.get("id", ""))])
+	return out
+
+
+func test_ir56_two_goals_by_one_hit_come_in_file_order_bramble_first() -> void:
+	var board: BoardModel = _one_hit_board()
+	var t: Variant = track(board, [obstacle_goal("OB02", 1), obstacle_goal("OB07", 1)])
+	if t == null:
+		return
+	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(6, 0))
+	assert_eq(_goal_pairs(events), [[0, "OB02"], [1, "OB07"]], "goal-bar order, index and id on each event")
+	var i_first: int = EV.index_of(events, "goal_done", 0)
+	var i_second: int = EV.index_of(events, "goal_done", 1)
+	var i_fall: int = EV.index_of(events, "refill")  # a full column clear has no fall, the refill is the next step
+	assert_true(i_first >= 0 and i_second > i_first and i_fall > i_second, "both before the first fall")
+	assert_eq(EV.count(events, "win"), 1)
+	assert_eq(events.back().type, "win", "the win comes last, after the settle")
+	assert_true(EV.index_of(events, "win") > EV.index_after(events, "refill", i_second), "after the refill")
+
+
+func test_ir56_two_goals_by_one_hit_follow_the_file_order_not_the_board_or_the_id() -> void:
+	var board: BoardModel = _one_hit_board()
+	var t: Variant = track(board, [obstacle_goal("OB07", 1), obstacle_goal("OB02", 1)])
+	if t == null:
+		return
+	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(6, 0))
+	assert_eq(_goal_pairs(events), [[0, "OB07"], [1, "OB02"]], "OB07 listed first: index 0")
+	assert_true(EV.index_of(events, "goal_done", 1) < EV.index_of(events, "refill"), "both before the refill (next step of the move)")

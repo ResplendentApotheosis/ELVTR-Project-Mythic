@@ -1,6 +1,6 @@
 # GUT tests for IR-03..IR-08, IR-40, IR-42, IR-43, IR-50 (match detection, special creation).
 # API: tests/API_CONTRACT.md. Cascade matches are made with MatchResolver.settle(board).
-# Pending placeholders name the open question (OQ) that blocks a case.
+# IR-40 placement follows GDD round 10 (28 Nov 2026): all four swap-made specials go on a swapped cell.
 extends GutTest
 
 const BB := preload("res://tests/helpers/board_builder.gd")
@@ -274,33 +274,52 @@ func test_ir40_cascade_orb_stays_on_the_leftmost_cell() -> void:
 	var events: Array[BoardEvent] = MatchResolver.settle(board)
 	_assert_created_one(events, "orb", "", Vector2i(0, 6))
 
-
-func test_ir40_firecracker_provisional_l_with_the_target_cell_is_on_the_target() -> void:
-	# OQ-100 provisional: unchanged. Same board as the IR-06 L test.
+func test_ir40_firecracker_l_with_the_target_cell_is_on_the_target_not_the_crossing_cell() -> void:
+	# R at (2,5),(3,5),(3,6),(3,7); Y at (1,5); R at (1,4). Swap (1,4)->(1,5): L (1,5),(2,5),(3,5) + (3,5),(3,6),(3,7).
 	var board: BoardModel = BB.blank()
-	BB.put(board, "R", [[2, 2], [2, 3], [3, 4], [4, 4], [1, 4]])
-	BB.put(board, "Y", [[2, 4]])
-	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(1, 4), Vector2i(2, 4))
-	_assert_created_one(events, "firecracker", "R", Vector2i(2, 4))
-
-
-func test_ir40_firecracker_provisional_t_with_only_the_start_cell_is_on_the_crossing_cell() -> void:
-	# OQ-100 provisional: start (2,3) gets Y from target (2,4); T = (2,3),(3,3),(4,3) + stem (3,2),(3,1); crossing (3,3).
-	var board: BoardModel = BB.blank()
-	BB.put(board, "Y", [[3, 3], [4, 3], [3, 2], [3, 1], [2, 4]])
-	BB.put(board, "R", [[2, 3]])
-	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(2, 3), Vector2i(2, 4))
+	board.moves = 10
+	BB.put(board, "R", [[2, 5], [3, 5], [3, 6], [3, 7], [1, 4]])
+	BB.put(board, "Y", [[1, 5]])
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(1, 4), Vector2i(1, 5))
 	assert_eq(EV.matched(events).size(), 5)
-	_assert_created_one(events, "firecracker", "Y", Vector2i(3, 3))
+	_assert_created_one(events, "firecracker", "R", Vector2i(1, 5))
+	assert_eq(board.moves, 9)
 
 
-func test_ir40_crane_provisional_with_only_the_start_cell_is_on_the_lowest_leftmost_cell() -> void:
-	# OQ-100 provisional: 2x2 (1,2),(2,2),(1,3),(2,3); start (2,3) gets Y from target (2,4).
+func test_ir40_firecracker_t_with_only_the_start_cell_is_on_the_start_cell() -> void:
+	# R at (2,3),(3,3),(4,3),(3,4); Y at (3,5); R at (4,5). Swap (3,5)->(4,5): R lands on (3,5), completing the T.
+	var board: BoardModel = BB.blank()
+	board.moves = 10
+	BB.put(board, "R", [[2, 3], [3, 3], [4, 3], [3, 4], [4, 5]])
+	BB.put(board, "Y", [[3, 5]])
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(3, 5), Vector2i(4, 5))
+	assert_eq(EV.matched(events).size(), 5)
+	_assert_created_one(events, "firecracker", "R", Vector2i(3, 5))
+	assert_eq(board.moves, 9)
+
+
+func test_ir40_crane_with_only_the_start_cell_is_on_the_start_cell() -> void:
+	# Y at (1,2),(2,2),(1,3); R at (2,3); Y at (2,4). Swap (2,3)->(2,4): 2x2 (1,2),(2,2),(1,3),(2,3).
 	var board: BoardModel = BB.blank()
 	BB.put(board, "Y", [[1, 2], [2, 2], [1, 3], [2, 4]])
 	BB.put(board, "R", [[2, 3]])
 	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(2, 3), Vector2i(2, 4))
 	assert_eq(EV.matched(events).size(), 4)
+	_assert_created_one(events, "crane", "Y", Vector2i(2, 3))
+
+
+func test_ir40_the_same_t_formed_by_a_fall_puts_the_firecracker_on_the_crossing_cell() -> void:
+	var board: BoardModel = BB.blank()
+	BB.put(board, "R", [[2, 3], [3, 3], [4, 3], [3, 4], [3, 5]])
+	var events: Array[BoardEvent] = MatchResolver.settle(board)
+	assert_eq(EV.matched(events).size(), 5)
+	_assert_created_one(events, "firecracker", "R", Vector2i(3, 3))
+
+
+func test_ir40_the_same_square_formed_by_a_fall_puts_the_crane_on_the_lowest_leftmost_cell() -> void:
+	var board: BoardModel = BB.blank()
+	BB.put(board, "Y", [[1, 2], [2, 2], [1, 3], [2, 3]])
+	var events: Array[BoardEvent] = MatchResolver.settle(board)
 	_assert_created_one(events, "crane", "Y", Vector2i(1, 3))
 
 
@@ -351,6 +370,21 @@ func test_ir43_two_four_lines_clear_eight_and_make_two_rockets() -> void:
 	assert_eq(_created(events).size(), 2, "exactly two specials")
 	assert_true(made.has("rocket_col|R|4,3"), "red column Rocket at (4,3)")
 	assert_true(made.has("rocket_col|Y|3,3"), "yellow column Rocket at (3,3): the start cell (IR-40, 28 Nov; not (3,4))")
+	assert_eq(board.moves, 9)
+
+
+func test_ir43_each_match_special_is_on_the_swapped_cell_in_its_own_match_rocket_and_crane() -> void:
+	# Swap (3,3)->(4,3). R column 4 (4,1),(4,2),(4,3),(4,4) gets its Rocket on the target (4,3);
+	# Y 2x2 (2,3),(3,3),(2,4),(3,4) gets its Crane on the start cell (3,3), not its lowest cell.
+	var board: BoardModel = BB.blank()
+	board.moves = 10
+	BB.put(board, "R", [[4, 1], [4, 2], [4, 4], [3, 3]])
+	BB.put(board, "Y", [[2, 3], [2, 4], [3, 4], [4, 3]])
+	var events: Array[BoardEvent] = MatchResolver.swap(board, Vector2i(3, 3), Vector2i(4, 3))
+	var made: Dictionary = _created_set(events)
+	assert_eq(_created(events).size(), 2, "exactly two specials")
+	assert_true(made.has("rocket_col|R|4,3"), "red column Rocket on the target cell (4,3)")
+	assert_true(made.has("crane|Y|3,3"), "yellow Crane on the start cell (3,3)")
 	assert_eq(board.moves, 9)
 
 

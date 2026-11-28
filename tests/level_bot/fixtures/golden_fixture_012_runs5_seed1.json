@@ -1,12 +1,12 @@
 {
 	"avg_goal_progress_on_fail": 0.0,
-	"avg_moves_left_on_win": 24.0,
+	"avg_moves_left_on_win": 23.8,
 	"level": 12,
 	"results": [
 		{
 			"goal_progress": 1.0,
-			"moves_left": 24,
-			"moves_used": 2,
+			"moves_left": 23,
+			"moves_used": 3,
 			"won": true
 		},
 		{

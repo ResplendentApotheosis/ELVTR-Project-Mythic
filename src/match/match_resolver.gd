@@ -302,7 +302,7 @@ static func _queued(queue: Array[FireOrder], cell: Vector2i) -> bool:
 static func _special_cell(g: MatchGroup, from: Vector2i, to: Vector2i, kind: String) -> Vector2i:
 	if to != NO_CELL and g.has_cell(to):
 		return to
-	if from != NO_CELL and g.has_cell(from) and (kind == "orb" or kind.begins_with("rocket")):
+	if from != NO_CELL and g.has_cell(from):
 		return from
 	return g.cascade_cell()
 
