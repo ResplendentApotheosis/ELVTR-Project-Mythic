@@ -33,7 +33,7 @@ const FIRE_EVENTS: Array[String] = ["rocket_fire", "orb_fire", "combo", "crane_t
 ## The steps for one list of events. `before` = BoardSnapshot.piece_grid(board) taken BEFORE the move;
 ## `after` = the board after the move (used to colour new pieces that are still there at the end).
 ## Step types: swap, invalid_swap, clear, special, fall, spawn, fire, hit, obstacle_cleared, collect,
-## shuffle, wait, outcome, and a final sync (the view then matches the real board exactly).
+## shuffle, wait, goal_done, outcome, and a final sync (the view then matches the real board exactly).
 static func build(events: Array[BoardEvent], before: Dictionary, after: BoardModel) -> Array[Dictionary]:
 	var new_pieces: Dictionary = new_piece_looks(events, before, after)
 	var steps: Array[Dictionary] = []
@@ -68,6 +68,10 @@ static func build(events: Array[BoardEvent], before: Dictionary, after: BoardMod
 				steps.append({"type": "collect", "cell": e.cell, "item": String(e.data.get("item", "")), "duration": COLLECT})
 			"shuffle":
 				steps.append({"type": "shuffle", "pieces": new_pieces.get(i, []), "duration": SHUFFLE})
+			"goal_done":
+				# No time of its own: the HUD marks the goal done at once while later steps still play (IR-56).
+				steps.append({"type": "goal_done", "goal": int(e.data.get("goal", -1)), "id": String(e.data.get("id", "")),
+					"fragment": bool(e.data.get("fragment", false)), "duration": 0.0})
 			"win", "fail":
 				steps.append({"type": "outcome", "name": e.type, "data": e.data.duplicate(), "duration": 0.0})
 			_:

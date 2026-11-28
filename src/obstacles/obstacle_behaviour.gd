@@ -25,6 +25,7 @@ func after_content_hit(board: BoardModel, content: BoardContent, events: Array[B
 	if content.hp <= 0:
 		board.remove_content(content)
 		events.append_array(on_cleared(board, content.id, content.rect.position, content))
+		GoalHook.announce(board, events)
 
 
 ## Called once when the obstacle's last hp is gone. Counts the goal and returns any events.

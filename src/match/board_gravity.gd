@@ -210,6 +210,7 @@ static func collect_drop(board: BoardModel, cell: Vector2i, events: Array[BoardE
 	if item == "fragment":
 		e.data["carrier"] = "OB11"   # a fragment on a drop item also counts for a plain OB11 goal (IR-31)
 	events.append(e)
+	GoalHook.announce(board, events)
 
 
 static func _add_fall_event(events: Array[BoardEvent], moves: Array) -> void:

@@ -118,7 +118,7 @@ static func _orb_special(board: BoardModel, target: Vector2i, kind: String, own:
 	clear.cells = lifted
 	clear.source = "combo"
 	events.append(clear)
-	BoardDamage.note_cleared(board, lifted, lifted, hitset)
+	BoardDamage.note_cleared(board, lifted, lifted, hitset, events)
 	for c in converted:
 		BoardGravity.apply(board, events)
 		var order: FireOrder = FireOrder.new(kind, color, c, false)

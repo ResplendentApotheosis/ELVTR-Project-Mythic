@@ -163,7 +163,7 @@ static func cover(board: BoardModel, cells: Array[Vector2i], hitset: Dictionary,
 		BoardDamage.hit_top_layer(board, c, hitset, events)
 	var covered: Array[Vector2i] = own.duplicate()
 	covered.append_array(cells)
-	BoardDamage.note_cleared(board, cleared, covered, hitset)   # after the hits: goo blocks dew (OQ-56)
+	BoardDamage.note_cleared(board, cleared, covered, hitset, events)   # after the hits: goo blocks dew (OQ-56)
 
 
 ## Removes a special that is still on the board before it fires; returns its cell (or nothing).

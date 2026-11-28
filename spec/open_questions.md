@@ -35,7 +35,7 @@ GDD says: Special pieces › "4 in a line | Bamboo Rocket | Clears its full row 
 Blocks: IR-05, IR-16, IR-25.
 
 ### OQ-02 · Which cell does a new special appear on? — ANSWERED
-Decision: GDD › Rules clarifications › OQ-02: the swap's target cell; in cascades the lowest then left-most cell (the crossing cell for an L or T). Now in IR-40. (Player match not containing the target cell: OQ-25.)
+Decision: GDD › Rules clarifications › OQ-02: the swap's target cell; in cascades the lowest then left-most cell (the crossing cell for an L or T). Now in IR-40. (CHANGED for the Rocket and Orb by the owner, chat 28 Nov 2026: a swap's Rocket or Orb appears on the swapped cell in its match, the target cell first; cascades unchanged. Firecracker and Crane: OQ-100.) (Player match not containing the target cell: OQ-25.)
 
 GDD says: Special pieces table gives the shape that makes each special, but not where the special is placed.
 - Option A: On the cell the player moved into with the swap; for matches made by cascades, on a fixed cell of the shape (e.g. the lowest, then leftmost).
@@ -203,7 +203,8 @@ GDD says: Rules clarifications › OQ-01 "Fires along the line it was made from:
 - Option B: Each one's direction is picked by the level's seeded random number generator (row or column, 50/50), so bot runs stay repeatable.
 Blocks: IR-16, IR-25 (which cells the converted Rockets clear).
 
-### OQ-25 · Where does a special appear if the player's match doesn't include the target cell? — ANSWERED
+### OQ-25 · Where does a special appear if the player's match doesn't include the target cell? — ANSWERED (Rocket and Orb part CHANGED by the owner, 28 Nov 2026)
+Change (28 Nov 2026): for a Rocket or Jade Orb the special now appears on the swapped cell in its match (the start cell when the match doesn't contain the target cell); the text below still holds for the Firecracker and Crane (provisional, OQ-100) and for cascades. Now in IR-40, IR-43.
 Decision: GDD › Rules clarifications › OQ-25 (Option B; first given in chat 27 Nov 2026): that special uses the cascade placement: the lowest, then left-most cell of its match (the crossing cell for an L, T or "+"). Now in IR-40, IR-43.
 
 GDD says: Rules clarifications › OQ-02 "On the cell the player moved into"; OQ-07 "Both resolve, and each can make its own special". In a two-match swap (IR-43) the second match runs through the swap's start cell, not the cell the player moved into.
@@ -604,6 +605,7 @@ Blocks: IR-56, IR-57.
 
 ### OQ-64 · When are win and fail checked during a resolve? — ANSWERED (CHANGED by the owner, 28 Nov 2026)
 Decision (current): Owner decision, chat 28 Nov 2026 › OQ-72, changing OQ-64: "I would like the whole match to apply and the rest continued because that is the satisfaction level." In effect Option A for the win: when the last goal is done, the whole winning match or special applies, and the rest of that move's resolve continues (falls, refills, waiting specials, second blasts, cascades, free shuffle); the win is declared only once the move has fully settled, and then the finale starts on that settled board. The fail is still checked only after the move has fully settled. No longer a trial decision. Now in IR-56, IR-57, IR-16, IR-49.
+Addition (owner, chat 28 Nov 2026, after playtesting levels 6–10): the win itself is unchanged (declared after the settle), but each goal now gets a "goal done" event the moment its count is reached, before the rest of the move's events (IR-56; open detail: OQ-101).
 History: earlier the same day the owner chose Option B "for now" (trial): the win declared the moment the last goal is done, the rest of the resolve dropped, the finale starting on the board as it was. That answer is replaced; the IR changes are in the CHANGELOG (28 Nov 2026).
 
 GDD › Core gameplay › Rules › "Win: all goals done before moves run out"; Feel, juice & sound › "Rule: game logic resolves instantly; a separate animation and sound queue plays the results". One move's resolve can have many steps (cascades, set-off specials, a Firecracker's second blast, a free shuffle: IR-17, IR-32, IR-33, IR-41). Not settled:
@@ -999,6 +1001,25 @@ Original question: IR-87 lists a story beat at level 17 (the first freed creatur
 - Option B: The level 17 beat is not driven by `story_beat`; StoryPlayer plays it from a fixed list, and the file stays `null`.
 Blocks: IR-63's test for level 17; StoryPlayer's source for the beat list. Not other levels.
 
+## New questions from the playtest changes to special placement and goal done (28 Nov 2026)
+
+### OQ-100 · Do the Firecracker and Paper Crane also move to a swapped cell? — OPEN (Option A applied provisionally)
+After the owner's 28 Nov 2026 change (Rocket and Orb appear on the swapped cell in their match, IR-40), the owner named only the Rocket and the Orb. Today:
+- GDD › Rules clarifications › OQ-02: "On the cell the player moved into; in cascades, on the lowest then leftmost cell of the match (the crossing cell for an L or T)".
+- GDD › Rules clarifications › OQ-25: "A special whose match doesn't include the player's cell | Uses the cascade placement: lowest, then left-most cell (the crossing cell for an L, T or '+')".
+So a swap's Firecracker or Crane whose match doesn't contain the target cell is placed by the cascade placement (crossing cell for a Firecracker; lowest, then left-most for a Crane).
+- Option A (applied provisionally, the rules-keeper's reading): leave the Firecracker and the Crane as they are. A swap's Firecracker or Crane goes on the target cell if its match contains it, otherwise on the crossing cell (Firecracker) or the lowest, then left-most cell (Crane).
+- Option B: the Crane and the Firecracker also appear on a swapped cell in their match when the crossing cell (or, for a Crane, the target cell) is not one: the target cell if in the match, otherwise the start cell. (Note for B: a Firecracker's crossing cell would then be used only in cascades.)
+Blocks: only the two provisional tests at the end of IR-40's test list.
+
+### OQ-101 · Goal done: two goals reached by one hit, and what the event carries — OPEN
+Owner decision, chat 28 Nov 2026 (IR-56): the game emits a "goal done" event the moment a goal's count is reached. Not settled:
+- (a) If one clear or hit finishes two goals at once (e.g. one match frees the last creature and removes the last bramble), in what order do the two goal done events come?
+- (b) What the event carries.
+- Option A: the order the goals are listed in the level file; the event carries the goal's index in that list and its obstacle ID.
+- Option B: any order; tests check only that both events come before the next fall event, and the event carries the obstacle ID only.
+Blocks: nothing (no written test depends on it); only GoalTracker's event shape, which test-engineer fixes in `tests/API_CONTRACT.md`.
+
 ---
 
 ## GDD text to update (owner only) — ALL DONE in a94a7e4
@@ -1185,6 +1206,20 @@ Added for five owner decisions without an OQ number (chat 28 Nov 2026):
 17. Rules clarifications: add rows for items 12 to 16 if the owner keeps them there.
 
 Brief (`research/match-villains/level_agent_brief.md`): nothing to change (these decisions are meta, not level files).
+
+---
+
+## GDD text to update (round 10, owner only): placement and goal done changes (chat 28 Nov 2026, after playtesting levels 6–10)
+
+GDD (`docs/gdd/zodiac-forest-gdd-final.md`), Rules clarifications table:
+1. Row OQ-02 ("On the cell the player moved into; in cascades, on the lowest then leftmost cell of the match (the crossing cell for an L or T)"): change to "A Rocket or Jade Orb made by a swap appears on the swapped cell that is in its match: the cell the player moved into if the match contains it, otherwise the cell the other piece moved into (the start cell). A Firecracker or Paper Crane made by a swap appears on the cell the player moved into. In cascades: the lowest then leftmost cell of the match (the crossing cell for an L or T)." (Last sentence pair is provisional until OQ-100.)
+2. Row OQ-25 ("A special whose match doesn't include the player's cell | Uses the cascade placement: lowest, then left-most cell (the crossing cell for an L, T or '+')"): change to "A Rocket or Orb whose match doesn't include the player's cell appears on the start cell (the other swapped cell) | A Firecracker or Crane whose match doesn't include it uses the cascade placement: the crossing cell for an L, T or '+'; lowest, then left-most for a Crane (OQ-100)." Add "If a match contains both swapped cells, the target cell."
+3. Row OQ-07 (two matches from one swap): if it mentions placement, the start-cell match's Rocket or Orb now appears on the start cell.
+4. Row OQ-64 and the Core gameplay › Rules › "Win: all goals done before moves run out" line (and round 6 item 1): add "The moment a goal's count is reached, the game shows it as achieved (a 'goal done' event) while the rest of the move still plays; the win is declared once the move has fully settled."
+5. Rows OQ-72 / Feel, juice & sound › Win finale: no change beyond item 4.
+6. Add a row for OQ-100 and OQ-101 (open).
+
+Brief and `levels_1_100_plan.csv`: nothing to change. Level tutorials (`tutorial` hint cells, IR-89) that teach a Rocket or Orb: the hint should show the swapped cell the special will appear on; a level whose design relied on left-most placement needs a look.
 
 ---
 

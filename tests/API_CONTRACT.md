@@ -301,6 +301,13 @@ They use no move, act like specials per IR-34/36, settle the board (IR-32), feed
 - `track()` in `goal_test_base.gd` is unchanged; `track_dew()` = `track()` + `attach(board)`. Set the seeds on the board BEFORE `track_dew`.
 - `goal_count_errors` for OB04: see 10.2.
 
+### 10.9 Goal done event and swap placement (28 Nov 2026: IR-56, IR-40) - NEW API
+
+- **New event type `goal_done`.** `BoardEvent.type == "goal_done"`; `data.goal: int` = index of the goal in the tracker's goal list; `data.id: String` = the goal's obstacle id (`"OB07"`...); `data.fragment: bool` = true for the fragment goal; `cell` = the cell of the event that reached the count (optional, not tested). Emitted by MatchResolver and BoosterService the moment `GoalTracker` sees a goal reach its count, appended IMMEDIATELY after the event that reached it (so `goal_done` is at index `i + 1` of that `obstacle_cleared` / `collected` / `shrine_lit` event) and before the next event of the move. One per goal per attempt: never repeated. It is not a win: `win` still comes last, after the settle. Tested in `tests/goal_tracker/test_goal_done_event.gd`.
+- **Order inside a swap.** `match`, `clear`, `obstacle_cleared`/`collected`, `goal_done`, `fall`, `refill`, ... `win`. Dew goals: `goal_done` comes inside the special that gives the last needed dew, before its `fall`.
+- **Placement change (IR-40).** A swap-made Rocket or Orb appears on the swapped cell that is in its match (target cell first, otherwise the start cell). Cascades, Firecracker and Crane unchanged (OQ-100 provisional). `special_created.cell` carries the cell.
+- Other code that reads event lists (AnimationSteps, the bot) must ignore or handle `goal_done`; it adds no board change.
+
 ## 11. LevelLoader (round 8: IR-63 to IR-77, IR-31 and IR-58 level-file parts)
 
 Tests: `tests/level_loader/`, helpers `tests/level_loader/level_fixtures.gd` (level dictionaries) and `tests/level_loader/level_loader_test_base.gd` (loads the classes by path, so a missing file fails a test with a clear message). The tests use only the calls below. godot-engineer owns the code, test-engineer owns the tests.
