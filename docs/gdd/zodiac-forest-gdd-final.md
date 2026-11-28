@@ -149,7 +149,7 @@ Standard swap-to-match on a board up to 9×9 with 4 colours, four special pieces
 - Every level starts with at least 3 valid moves, no pre-made matches, and one area where a special is easy to make.
 - No possible move: free shuffle with a short animation.
 - Specials fire when matched, swapped or tapped (tap costs a move).
-- Win: all goals done before moves run out. Leftover moves become Bamboo Rockets that fire for bonus coins ("Forest Festival" finale). Each finale Rocket is a row or column Rocket, 50/50, picked independently (seeded), and replaces a random uncovered plain piece (seeded); if none is left, it still pays 5 coins and fires from a random playable cell without replacing what is there. Finale Rockets go one at a time: the board settles fully (fall, refill, cascades, set-off specials) before the next one. Everything a move does (matches, cascades, specials) counts for it, so finishing the goals on the last move is a win with 0 finale Rockets. When the last goal is done, the rest of that move still happens in full (the rest of the match or special, falls, refills, waiting specials, second blasts, cascades, any free shuffle); the win is declared once the move has fully settled, and the finale starts on that settled board. The fail is also checked only once the move has fully settled.
+- Win: all goals done before moves run out. Leftover moves become Bamboo Rockets that fire for bonus coins ("Forest Festival" finale). Each finale Rocket is a row or column Rocket, 50/50, picked independently (seeded), and replaces a random uncovered plain piece (seeded); if none is left, it still pays 5 coins and fires from a random playable cell without replacing what is there. Finale Rockets go one at a time: the board settles fully (fall, refill, cascades, set-off specials) before the next one. Everything a move does (matches, cascades, specials) counts for it, so finishing the goals on the last move is a win with 0 finale Rockets. The moment a goal's count is reached, the game shows it as done (a "goal done" event) while the rest of the move still plays; if one hit finishes two goals, they show in goal-bar order. When the last goal is done, the rest of that move still happens in full (the rest of the match or special, falls, refills, waiting specials, second blasts, cascades, any free shuffle); the win is declared once the move has fully settled, and the finale starts on that settled board. The fail is also checked only once the move has fully settled.
 - **Fail flow:** an optional "+5 moves" when moves run out, offered up to 5 times per attempt (300 coins, then 500 each) whatever the board state; declining goes to the retry screen. No "you'll lose event progress" warning.
 - **Retries:** each attempt gets a new random seed, so a retry shows a new starting board and new refills; every "seeded" draw uses the attempt's seed. Tests and the bot pass a seed in to repeat a run exactly.
 
@@ -205,17 +205,17 @@ Every special, obstacle and layer follows this one table. MatchResolver, the GUT
 
 ### Rules clarifications (owner decisions, 27 Nov 2026)
 
-These answer the Rules Keeper's open questions OQ-01 to OQ-96 (`spec/open_questions.md`). Later questions are tracked there until answered. Rows marked *trial* are trial decisions to revisit after playtesting.
+These answer the Rules Keeper's open questions OQ-01 to OQ-101 (`spec/open_questions.md`). Later questions are tracked there until answered. Rows marked *trial* are trial decisions to revisit after playtesting.
 
 | OQ | Question | Rule |
 | --- | --- | --- |
 | 01 | Rocket direction | Fires along the line it was made from: a horizontal 4 clears its row, a vertical 4 clears its column. Its icon shows the direction |
-| 02 | Where a new special appears | On the cell the player moved into; in cascades, on the lowest then leftmost cell of the match (the crossing cell for an L or T) |
+| 02 | Where a new special appears | A special made by a swap (Rocket, Firecracker, Paper Crane or Jade Orb) appears on a swapped cell that is in its match: the cell the player moved into if the match contains it, otherwise the other swapped cell (the start cell). In cascades: the lowest then leftmost cell of the match (the crossing cell for an L or T) |
 | 03 | Special swapped with a plain piece, no match | The special fires and the swap costs a move. Snap-back applies to two plain pieces, and to a drop item swapped with a plain piece (no move used). A Jade Orb swapped with a plain piece clears that piece's colour |
 | 04 | Special hit by another special | It fires too (a chain). Set-off specials are lifted off the board and share one waiting list: the lowest, then left-most, fires next. Before each waiting special fires, pieces fall and refill; cascade matches wait until all waiting specials have fired (the Firecracker keeps full cascades between its two blasts). A set-off Jade Orb is removed without effect |
 | 05 | Cascade matches | Make specials by the same rules as player matches |
 | 06 | 6 or more in a line | Makes a Jade Orb. Mixed shapes follow the shape-priority rule |
-| 07 | One swap making two matches | Both resolve, and each can make its own special |
+| 07 | One swap making two matches | Both resolve, and each can make its own special; each appears on the swapped cell in its own match |
 | 08 | One match next to a multi-piece obstacle | One hit to that obstacle. Only up, down, left and right count as "next to", never diagonals |
 | 09 | Specials and underlays | Pieces are not obstacle layers. A special clears the piece and gives one hit to the top obstacle layer in that cell; with no overlay or blocker, the underlay (goo or dew) takes the hit. A Jade Orb covers every cell whose piece it clears |
 | 10 | Pieces cleared by a special | Don't hit neighbouring obstacles. Only matches hit neighbours; specials hit only the cells they cover |
@@ -233,7 +233,7 @@ These answer the Rules Keeper's open questions OQ-01 to OQ-96 (`spec/open_questi
 | 22 | Free shuffle | Moves only plain pieces and specials, never obstacles, fragments, drop items or pieces locked under an overlay; must leave at least one valid move and no ready-made matches |
 | 23 | When the continue offer is shown | Always when moves run out, whether or not the goals can still be reached (count and prices: row 39) |
 | 24 | Rockets made by Jade Orb + Rocket | Copy the direction of the Rocket swapped with the Orb |
-| 25 | A special whose match doesn't include the player's cell | Uses the cascade placement: lowest, then left-most cell (the crossing cell for an L, T or "+") |
+| 25 | A special whose match doesn't include the player's cell | Appears on the start cell (the other swapped cell). If a match contains both swapped cells, the cell the player moved into. Cascade placement is only for cascades |
 | 26 | Swapped specials that don't combo | The swap completes; any match it makes resolves first, then each special fires from the cell it sits in. When a swap makes a match, the swapped special, and any coloured special in a match, is lifted off the board as the match resolves; its cell refills in the fall and it fires from the cell it was in right after the swap (or where it was matched) |
 | 27 | Chain order | Set-off specials fire lowest first, then left-most, from their cell after pieces fall. A set-off Jade Orb does nothing; Orb + Orb clears other specials without firing them |
 | 28 | The "+" shape | Counts as an L/T and makes a Firecracker |
@@ -272,7 +272,7 @@ These answer the Rules Keeper's open questions OQ-01 to OQ-96 (`spec/open_questi
 | 61 | Coloured special in a match next to a shrine | Counts like a plain piece of its colour |
 | 62 | One unit of a goal (*trial*) | One obstacle fully gone (a bramble with no layers left, a moss or goo cell cleared, a pillar ground down, a creature freed, an idol cleared, a shrine lit, a drop item collected, a cell given dew); the count equals the number placed |
 | 63 | Goals finished by the last move | Everything a move does counts for it; finishing on the last move is a win with 0 finale Rockets |
-| 64 | When win and fail are checked | Both only once the move has fully settled. The winning move plays out in full, then the finale starts on the settled board (changed by OQ-72) |
+| 64 | When win and fail are checked | Both only once the move has fully settled. Each goal shows as done the moment its count is reached, while the move still plays. The winning move plays out in full, then the finale starts on the settled board (changed by OQ-72) |
 | 65 | Fragment in `goals` | An obstacle goal with a flag, e.g. `{"obstacle": "OB07", "count": 1, "fragment": true}`; its cocoon or drop item also counts toward a plain OB07 / OB11 goal on the same level |
 | 66 | Dew goal targets (*trial*) | Every playable cell is a target; progress counts cells with dew, seed cells included from the start |
 | 67 | Boosters and moves | Using a hero booster uses no move |
@@ -305,6 +305,11 @@ These answer the Rules Keeper's open questions OQ-01 to OQ-96 (`spec/open_questi
 | 94 | Win streak and the chest | The streak resets when the chest drops; the chest board's attempt uses it up, won or failed; no chest from a 6th win on level 50 |
 | 95 | Upgrade milestones at 20 and 50 | Shown, but nothing saved in the MVP; rewards come with the upgrade flow |
 | 96 | Story beats | Play once, the first time the level is reached; retries skip them |
+| 97 | What a cancelled attempt gives back | Everything: the save returns exactly to how it was before the attempt (booster use or coins, the streak chest, any booster it unlocked, a story beat it marked seen); back to the screen it started from with "This level couldn't be loaded" |
+| 98 | Tutorial hints | A `tutorial` field in the level file, `{"teach": ..., "hint_cells": [[x,y],[x,y]]}`, on levels 2, 3, 5 and 6; it changes no rule |
+| 99 | Story beat on level 17 | `"mini"` (the first freed creature); `"intro"` only on level 1 |
+| 100 | Which specials move to the swapped cell | All four: Rocket, Firecracker, Paper Crane and Jade Orb made by a swap appear on a swapped cell in their match (row 02) |
+| 101 | Goal done: two goals finished by one hit | They show as done in goal-bar order (the order listed in the level file); the event carries the goal's index and obstacle ID |
 
 ## Board layers & obstacles
 
