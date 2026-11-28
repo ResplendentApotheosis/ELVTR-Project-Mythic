@@ -1,7 +1,8 @@
 # Gravity and refill (IR-51, IR-32) and drop-item collection at the bottom (IR-30).
 # Items fall straight down first; then a cell a blocker hides from above is filled by a diagonal
 # slide (upper-left first); new pieces enter at each column's top playable cell and at spawners,
-# coloured from board.rng so they never make a match. Check: test_collectibles_and_gravity.gd.
+# coloured from board.rng so they never make a match; each refill event lists their colours (data.colors).
+# Check: test_collectibles_and_gravity.gd and test_refill_colors.gd.
 class_name BoardGravity
 extends RefCounted
 
@@ -21,6 +22,7 @@ static func apply(board: BoardModel, events: Array[BoardEvent]) -> void:
 
 ## Owner decision OQ-35: straight falls first, then one diagonal slide at a time, then refill.
 static func _fill(board: BoardModel, events: Array[BoardEvent]) -> void:
+	var first_new_event: int = events.size()
 	for _guard in range(MAX_STEPS):
 		var moves: Array = []
 		_fall_straight(board, moves)
@@ -29,8 +31,22 @@ static func _fill(board: BoardModel, events: Array[BoardEvent]) -> void:
 		if slid:
 			continue
 		if not _refill(board, events):
-			_color_new_pieces(board)
+			var real_colors: Dictionary = _color_new_pieces(board)
+			_put_colors_on_refills(events, first_new_event, real_colors)
 			return
+
+
+## Owner, 28 Nov 2026: each refill event's data.colors lists every new piece's real colour (parallel to
+## cells). While falling, a piece carries its stand-in name; here each stand-in is swapped for its colour.
+static func _put_colors_on_refills(events: Array[BoardEvent], from_index: int, real_colors: Dictionary) -> void:
+	for i in range(from_index, events.size()):
+		var e: BoardEvent = events[i]
+		if e.type != "refill":
+			continue
+		var colors: Array = []
+		for stand_in in e.data.get("colors", []):
+			colors.append(String(real_colors.get(stand_in, stand_in)))
+		e.data["colors"] = colors
 
 
 ## True if this cell stops pieces from falling through it: a content blocker, or a piece locked
@@ -103,28 +119,37 @@ static func _open_to_top(board: BoardModel, x: int, y: int) -> bool:
 ## cells (owner decision OQ-35). Returns true if any piece was added.
 static func _refill(board: BoardModel, events: Array[BoardEvent]) -> bool:
 	var filled: Array[Vector2i] = []
+	var stand_ins: Array = []   # the colours are filled in later by _put_colors_on_refills
 	for x in range(board.width):
 		for y in range(board.height - 1, -1, -1):
 			if board.is_empty(x, y) and (_open_to_top(board, x, y) or board.spawners.has(Vector2i(x, y))):
 				# A unique stand-in colour; the real colour is picked once the piece has stopped moving.
 				_next_new_id += 1
-				board.set_piece(x, y, "plain", "%s%d" % [NEW_PIECE_MARK, _next_new_id])
+				var stand_in: String = "%s%d" % [NEW_PIECE_MARK, _next_new_id]
+				board.set_piece(x, y, "plain", stand_in)
+				stand_ins.append(stand_in)
 				filled.append(Vector2i(x, y))
 	if filled.is_empty():
 		return false
 	var e: BoardEvent = BoardEvent.new("refill")
 	e.cells = filled
+	e.data = {"colors": stand_ins}
 	events.append(e)
 	return true
 
 
 ## Gives every new piece its real colour where it came to rest, bottom row first, so that the
-## refill never makes a match (tests/API_CONTRACT.md §2).
-static func _color_new_pieces(board: BoardModel) -> void:
+## refill never makes a match (tests/API_CONTRACT.md §2). Returns {stand-in name: real colour}.
+static func _color_new_pieces(board: BoardModel) -> Dictionary:
+	var real_colors: Dictionary = {}
 	for y in range(board.height - 1, -1, -1):
 		for x in range(board.width):
-			if board.get_kind(x, y) == "plain" and board.get_color(x, y).begins_with(NEW_PIECE_MARK):
-				board.set_piece(x, y, "plain", pick_refill_color(board, Vector2i(x, y)))
+			var stand_in: String = board.get_color(x, y)
+			if board.get_kind(x, y) == "plain" and stand_in.begins_with(NEW_PIECE_MARK):
+				var color: String = pick_refill_color(board, Vector2i(x, y))
+				board.set_piece(x, y, "plain", color)
+				real_colors[stand_in] = color
+	return real_colors
 
 
 ## A palette colour from board.rng that does not complete a match with pieces already placed.

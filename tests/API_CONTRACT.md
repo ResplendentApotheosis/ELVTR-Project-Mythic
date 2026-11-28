@@ -487,3 +487,64 @@ Keys: `next_level` int, `coins` int, `lives` int (when `lives < 5` and `refill_s
 ### 12.10 Not tested (spec "Not yet specified")
 
 An attempt killed while unlimited lives ran, with the next launch after they ran out (IR-38); when a beat plays relative to its level (IR-87). (Settled and now tested: the countdown during unlimited lives and buying all 5 at 5 lives, IR-81; a pre-level booster on a chest board, IR-83/84; an unreadable save, IR-78; fragments by level number, IR-85.)
+
+## 13. Grey-box logic (BoardSnapshot, AnimationSteps, BoardInput, LevelSession)
+
+Tests: `tests/greybox/`. Pure logic, no scenes. `AnimationQueue` (tweens) is not tested.
+
+- `BoardSnapshot` (static): `piece_grid(board)` -> `{cell: {kind, color, item}}` for cells with a piece or drop item; `look_at`; `obstacle_grid(board)` -> `{underlay, overlay, content}` (a multi-cell obstacle is ONE `content` entry keyed by its top-left cell); `apply_hit(obstacles, layer, cell, id, hp)` (hp 0 removes the layer; any cell of a multi-cell obstacle works); `apply_cleared(obstacles, cell, id)` (removes only a matching id); `content_key_at`. It copies: the real board is never changed.
+- `AnimationSteps` (static): `build(events, before_grid, after_board)` -> steps in event order; `match` makes no step; a `wait` step precedes each `special_created` with `data.finale` (IR-16); `shrine_lit` -> `obstacle_cleared`; `win`/`fail` -> `outcome` then the final `sync` (the list always ends with `sync`); `new_piece_looks`, `apply_fall`, `total_duration`; durations SWAP 0.15, INVALID_SWAP 0.2, CLEAR 0.12, SPECIAL 0.25, BLAST 0.2, FINALE_GAP 0.15 (GDD).
+- `BoardInput`: static `pixel_to_cell`, `cell_center`, `is_adjacent`, `drag_neighbour` (threshold 0.4 cell, longer axis wins, exact diagonal = sideways); instance `press/move/release/cancel` return `{"action": none|select|deselect|swap|tap, ...}`. Clicking a special with nothing selected is a `tap` (IR-02); only cells with a piece or drop item can be selected; a drag swaps once.
+- `LevelSession.new(level_path, save)`: states `not_started/playing/offer/won/retry`; `start(opts)`, `swap`, `tap`, `offer_price`, `can_accept_offer`, `offer_message` ("you have less than N coins", IR-37), `accept_offer`, `decline_offer`, `retry`, `retry_choices`, `buy_lives`, HUD readers (`moves_left`, `coins`, `lives`, `goal_rows`, `board`, `level_id`), `win_coins`, `finale_rockets`. Tested against IR-37, IR-56, IR-57, IR-58/71, IR-60, IR-80, IR-81. Tests use `SaveService.debug_set`, a scratch save under `user://` and `tests/level_loader/fixtures/level_fixture_012.json` (a derived scratch level is written under `user://` for the win tests).
+
+## 14. Owner decisions of 28 Nov 2026 (one board build, refill colours, debug gate, debug moves) - NEW API
+
+None of these change a rule in `spec/interaction_rules.md` (IR-77 still places pre-level specials on the finished starting board).
+
+### 14.1 One board build (tests: `tests/save_service/test_bind_tracker.gd`, `tests/greybox/test_level_session_one_build.gd`)
+
+```gdscript
+# SaveService
+func start_attempt(level: int, tracker: GoalTracker = null, pre_boosters: Array = []) -> Dictionary
+func bind_tracker(tracker: GoalTracker) -> void   # keeps the reference (as start_attempt did) and sets tracker.lives = lives(), tracker.coins = coins()
+# LevelLoader
+static var build_count: int = 0   # +1 each time a board is built (load_level, and so load_file and retry); tests reset it to 0
+# LevelSession
+func start(options: Dictionary = {}) -> bool   # options also take "pre_boosters": Array (stripped before LevelLoader sees them); retry() takes the same
+```
+
+- `start_attempt` with `tracker == null` does everything in 12.2 (accept or refuse, unlock, pay the booster, use the chest, mark the attempt open, return `pre_specials`) except the two `tracker.*` assignments. Existing calls that pass a tracker behave exactly as before (the tracker is bound at once, as if `bind_tracker` followed).
+- `bind_tracker` may be called any time while an attempt is open; `sync_attempt` / `end_attempt` take coins from the bound tracker as in 12.2. With none bound they use the save's own coins.
+- LevelSession order in `start` and `retry`: read the level id from the file, `save.start_attempt(id, null, pre_boosters)`; if refused, build NOTHING (`build_count` stays 0; state RETRY; `level_id()` still returns the id so the retry screen works; after `buy_lives()` a `retry()` works); else `LevelLoader` builds the board ONCE with `{"seed", "pre_specials": result.pre_specials}` plus the caller's options; then `save.bind_tracker(attempt.tracker)`. The board must equal what `LevelLoader.load_file(path, {"seed": n, "pre_specials": [...]})` gives (compare `BoardSnapshot.piece_grid`).
+
+### 14.2 Refill events carry colours (tests: `tests/match_resolver/test_refill_colors.gd`, `tests/greybox/test_animation_steps.gd`)
+
+- The `refill` event gets `data.colors: Array` of Strings, **parallel to `cells`**: each new piece's final colour (the real one chosen when it came to rest, never the `~new` stand-in). Refilled pieces are always `plain`. Nothing else about the event changes.
+- The colours stay on the event even if a later blast destroys those pieces (Firecracker blast 2).
+- `AnimationSteps.new_piece_looks`: a refill cell's look = `{"kind": "plain", "color": data.colors[i], "item": ""}` when `data.colors.size() == cells.size()`; otherwise the old behaviour (final board look, match colour, else `UNKNOWN_LOOK`). `shuffle` events are unchanged.
+
+### 14.3 Debug gate and debug shortcuts (tests: `tests/greybox/test_debug_gate.gd`)
+
+```gdscript
+# src/game/debug_gate.gd
+class_name DebugGate
+static func enabled(is_debug: bool = OS.is_debug_build()) -> bool   # returns is_debug
+# LevelSession
+var debug_enabled: bool = DebugGate.enabled()      # tests set it; the grey box leaves the default
+func debug_jump_to_level(level: int) -> bool       # gate on and 1 <= level <= 50: save.debug_set({"next_level": level}), true. Else false, nothing touched
+func debug_play_again(options: Dictionary = {}) -> bool   # gate on: moves the save to this level (debug_set next_level) and start(options). Gate off: false, nothing changes
+```
+
+- The grey box's `_dev_make_level_playable` becomes `session.debug_jump_to_level(id)` and "Play again" becomes `session.debug_play_again()`; with the gate off both do nothing and the buttons should be hidden.
+- Only the gate matters; `OS.is_debug_build()` itself is not tested.
+
+### 14.4 Debug "moves" override (tests: `tests/greybox/test_debug_gate.gd`)
+
+```gdscript
+# LevelSession
+var debug_moves: int = 0                 # 0 = off
+func set_debug_moves(n: int) -> void     # n <= 0 stores 0 (off)
+```
+
+- On `start` and `retry` (after the board is built), if `debug_enabled and debug_moves > 0` the board's `moves` is set to `debug_moves`. The gate is checked when the attempt starts. Setting it during an attempt changes only the NEXT start or retry. It stays until set to 0.
+- Nothing else changes: continues add +5 (IR-37), prices 300 then 500, a decline costs one life (IR-60), 0 lives still blocks retry (IR-81).

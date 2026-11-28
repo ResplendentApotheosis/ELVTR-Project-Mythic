@@ -17,6 +17,8 @@ const MIN_MATCHING_SWAPS: int = 3  # IR-69
 static var _seed_source: RandomNumberGenerator = null   # only used to pick a NEW seed when none is given
 ## Why the last load_level / load_file / retry failed ("IR-77: ..." Strings); [] after a good load.
 static var last_errors: Array = []
+## How many boards have been built (load_level, so also load_file and retry). Tests reset it to 0.
+static var build_count: int = 0
 
 
 # ---------------------------------------------------------------- public API
@@ -37,6 +39,7 @@ static func load_level(level: Dictionary, options: Dictionary = {}) -> LevelAtte
 	attempt.level_id = as_int(level.get("id"), 0)
 	attempt.seed_value = seed_value
 	attempt.board = _build_board(attempt.level, seed_value, options)
+	build_count += 1
 	attempt.tracker = GoalTracker.new(goal_list(attempt.level), attempt.level_id)
 	attempt.board.goal_tracker = attempt.tracker
 	if has_dew_goal(attempt.level):
