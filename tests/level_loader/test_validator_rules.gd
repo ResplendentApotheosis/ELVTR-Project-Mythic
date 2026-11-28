@@ -158,6 +158,24 @@ func test_IR61_validator_goal_count_must_equal_the_obstacles_placed() -> void:
 	expect_any_error(LF.valid(12, {"goals": [{"obstacle": "OB02", "count": 3}, {"obstacle": "OB03", "count": 2, "color": "red"}]}), "a colour goal")
 
 
+## Level 5 (easy, 2 goals): dew 70 of 81 cells with 5 seeds, plus brambles.
+func _level5(bramble_goal: int) -> Dictionary:
+	var underlay: Array = LF.rows(9, 9, ".")
+	for x in range(5):
+		underlay = LF.with_char(underlay, x, 8, "s")
+	var objects: Array = []
+	for x in range(4):
+		objects.append({"type": "OB02", "x": x, "y": 6, "hp": 2})
+	return LF.valid(5, {"goals": [{"obstacle": "OB04", "count": 70}, {"obstacle": "OB02", "count": bramble_goal}],
+		"objects": objects, "underlay": underlay})
+
+
+func test_IR61_level_5_dew_70_plus_four_brambles() -> void:
+	expect_valid(_level5(4), "level 5: OB04 70 + OB02 4 with 4 brambles", 5)
+	expect_any_error(_level5(3), "OB02 count 3 with 4 placed")
+	expect_any_error(_level5(5), "OB02 count 5 with 4 placed")
+
+
 func test_IR31_validator_fragment_level_needs_a_fragment_goal_inside_the_tier_count() -> void:
 	var goals: Array = [{"obstacle": "OB02", "count": 3}, {"obstacle": "OB03", "count": 2}]
 	expect_any_error(LF.valid(35, {"goals": goals}), "level 35 without a fragment goal")

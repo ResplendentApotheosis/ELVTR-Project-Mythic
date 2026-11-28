@@ -243,7 +243,7 @@ static func _resolve_matches(board: BoardModel, groups: Array[MatchGroup], from:
 		LanternShrine.fill_from_match(board, g.cells, g.color, events)   # lifted specials count too (OQ-61)
 		var kind: String = g.special_kind()
 		if kind != "":
-			var cell: Vector2i = _special_cell(g, from, to)
+			var cell: Vector2i = _special_cell(g, from, to, kind)
 			var color: String = "" if kind == "orb" else g.color
 			board.set_piece(cell.x, cell.y, kind, color)
 			var made: BoardEvent = BoardEvent.new("special_created")
@@ -297,9 +297,13 @@ static func _queued(queue: Array[FireOrder], cell: Vector2i) -> bool:
 ## doesn't contain the target cell uses the cascade placement too. Owner decision OQ-57
 ## (chat 27 Nov 2026): if that cell is covered by an overlay that survived, the special is still placed
 ## there, locked: no swap, no fall, no tap (IR-54); it can be set off or matched by colour.
-static func _special_cell(g: MatchGroup, _from: Vector2i, to: Vector2i) -> Vector2i:
+## 28 Nov 2026 (OQ-100 provisional A): a swap-made Rocket or Orb uses the target cell if it is in the
+## match, else the start cell; Firecracker and Crane keep the old rule (target, else cascade cell).
+static func _special_cell(g: MatchGroup, from: Vector2i, to: Vector2i, kind: String) -> Vector2i:
 	if to != NO_CELL and g.has_cell(to):
 		return to
+	if from != NO_CELL and g.has_cell(from):
+		return from
 	return g.cascade_cell()
 
 

@@ -9,4 +9,6 @@ var level: Dictionary = {}              # the level data this attempt was built 
 var source_path: String = ""            # the level file, or "" when built from a Dictionary
 var board: BoardModel = null            # the starting board
 var tracker: GoalTracker = null         # this attempt's goals; board.goal_tracker is the same object
+var story_beat: String = ""             # "intro" | "mini" | "chapter"; "" when the level has none (IR-63)
+var tutorial: Dictionary = {}           # the level's swap hint {teach, hint_cells}; {} when none (IR-89)
 var fragment_guardian: String = ""      # "rat" on a level with a "fragment" field, else ""

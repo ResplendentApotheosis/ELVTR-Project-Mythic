@@ -32,6 +32,9 @@ var _board_ref: WeakRef = null   # set by attach(); dew goal progress is read fr
 # Bookkeeping for one MatchResolver / BoosterService call (see GoalHook).
 var _fed: int = 0               # events of the current call already passed to observe()
 var _won_at_start: bool = false
+var _holding: bool = false   # true while one hit is applied (see hold_announce)
+var _held_at: int = -1       # event position where the first goal finished during the hold
+var _announced: Array[bool] = []   # goals whose `goal_done` event was already sent (IR-56)
 
 
 func _init(goals: Array, level_number: int = 1) -> void:
@@ -39,6 +42,7 @@ func _init(goals: Array, level_number: int = 1) -> void:
 	for g in goals:
 		_goals.append(g)
 		_done.append(0)
+		_announced.append(false)
 
 
 # ---------------------------------------------------------------- goals
@@ -134,6 +138,7 @@ func goal_id(index: int) -> String:
 func copy_for(board: BoardModel) -> GoalTracker:
 	var t: GoalTracker = GoalTracker.new(_goals.duplicate(true), level)
 	t._done = _done.duplicate()
+	t._announced = _announced.duplicate()
 	t.lives = lives
 	t.coins = coins
 	t._offers_accepted = _offers_accepted
@@ -198,6 +203,9 @@ func _end_in_fail() -> void:
 func begin_call() -> void:
 	_fed = 0
 	_won_at_start = is_won()
+	for i in range(_goals.size()):
+		if is_goal_done(i):
+			_announced[i] = true   # already done before this call: never announced again
 
 
 ## Observes the events of this call not seen yet. True if this call has just won the level.
@@ -250,3 +258,65 @@ static func goal_count_errors(goals: Array, board: BoardModel, spawn: Dictionary
 ## How many units of this obstacle id are on the board.
 static func count_placed(board: BoardModel, id: String) -> int:
 	return GoalCountCheck.count_placed(board, id)
+
+
+# ---------------------------------------------------------------- goal done events (IR-56)
+
+## Reads the events so far and, for each goal that has just reached its count, appends one `goal_done`
+## event (data.goal = index, data.id, data.fragment) at the end of `events`. Never repeats a goal.
+## Call it right after an event that can finish a goal, so the new event follows it immediately.
+func announce(events: Array[BoardEvent]) -> void:
+	feed(events)
+	if _holding:
+		# One hit is still going: remember where the first goal finished, announce at release_hold().
+		if _held_at < 0 and _has_new_done_goal():
+			_held_at = events.size()
+		return
+	_emit_goal_done(events, events.size())
+
+
+## IR-56: while one hit (a special's cover) is being applied, goals that finish are held back so
+## that two or more can be announced together, in goal-bar order.
+func hold_announce() -> void:
+	_holding = true
+	_held_at = -1
+
+
+## Ends the hold. One new goal is announced right after its own event; two or more together at the
+## end of the events, sorted by goal index.
+func release_hold(events: Array[BoardEvent]) -> void:
+	feed(events)
+	_holding = false
+	if _held_at < 0:
+		return
+	var at: int = events.size()
+	if _new_done_goals().size() == 1:
+		at = _held_at
+	_held_at = -1
+	_emit_goal_done(events, at)
+
+
+func _new_done_goals() -> Array[int]:
+	var out: Array[int] = []
+	for i in range(_goals.size()):
+		if not _announced[i] and is_goal_done(i):
+			out.append(i)
+	return out
+
+
+func _has_new_done_goal() -> bool:
+	return not _new_done_goals().is_empty()
+
+
+## Inserts one goal_done per newly finished goal (index order) starting at position `at`.
+func _emit_goal_done(events: Array[BoardEvent], at: int) -> void:
+	for i in _new_done_goals():
+		_announced[i] = true
+		var e: BoardEvent = BoardEvent.new("goal_done")
+		if not events.is_empty():
+			e.cell = events[maxi(at - 1, 0)].cell
+		e.data = {"goal": i, "id": goal_id(i), "fragment": _is_fragment_goal(i)}
+		if at < _fed:
+			_fed += 1   # inserted before the end of what was already fed
+		events.insert(at, e)
+		at += 1

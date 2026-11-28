@@ -1,0 +1,60 @@
+{
+  "id": 10,
+  "chapter": 1,
+  "tier": "intro",
+  "moves": 30,
+  "colors": 4,
+  "width": 9,
+  "height": 9,
+  "cells": [
+    "..#####..",
+    ".#######.",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########"
+  ],
+  "underlay": [
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    "........."
+  ],
+  "objects": [
+    {"type": "OB05", "x": 4, "y": 4, "w": 2, "h": 2, "hp": 2, "needs": {"red": 2, "blue": 2}}
+  ],
+  "fixed_tiles": [
+    {"x": 3, "y": 3, "tile": "green"},
+    {"x": 3, "y": 4, "tile": "red"},
+    {"x": 3, "y": 5, "tile": "red"},
+    {"x": 3, "y": 6, "tile": "green"},
+    {"x": 3, "y": 7, "tile": "yellow"},
+    {"x": 2, "y": 6, "tile": "red"},
+    {"x": 2, "y": 4, "tile": "blue"},
+    {"x": 2, "y": 5, "tile": "green"},
+    {"x": 6, "y": 3, "tile": "yellow"},
+    {"x": 6, "y": 4, "tile": "blue"},
+    {"x": 6, "y": 5, "tile": "blue"},
+    {"x": 6, "y": 6, "tile": "yellow"},
+    {"x": 6, "y": 7, "tile": "green"},
+    {"x": 7, "y": 6, "tile": "blue"},
+    {"x": 7, "y": 4, "tile": "red"},
+    {"x": 7, "y": 5, "tile": "green"},
+    {"x": 4, "y": 6, "tile": "blue"},
+    {"x": 5, "y": 6, "tile": "red"}
+  ],
+  "spawn": {"drop_items": null, "generators": null},
+  "goals": [
+    {"obstacle": "OB05", "count": 1}
+  ],
+  "story_beat": null,
+  "designer_notes": "Intro for OB05: one 2x2 lantern shrine (needs 2 red + 2 blue, 2 hp) in the middle of an open board, only 4 of 77 cells blocked. A red pair sits left of it and a blue pair right of it; one swap each ((2,6)<->(3,6) for red, (7,6)<->(6,6) for blue) makes a 3-match in column 3 or 6 that touches the shrine and fills it, so the first two obvious matches both feed it. Fixed pieces around them are pinned so no match exists at the start. Moves 30 = plan."
+}

@@ -101,6 +101,7 @@ static func check_lit(board: BoardModel, content: BoardContent, events: Array[Bo
 	var e: BoardEvent = BoardEvent.new("shrine_lit")
 	e.cell = content.rect.position
 	events.append(e)
+	GoalHook.announce(board, events)
 
 
 ## True if `cell` is outside the shrine and orthogonally next to one of its cells (OQ-08: no diagonals).

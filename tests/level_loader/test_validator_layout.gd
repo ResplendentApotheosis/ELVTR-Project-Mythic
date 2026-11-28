@@ -43,6 +43,41 @@ func test_IR63_story_beat_mini_on_hard_chapter_on_finale() -> void:
 	expect_rejected(LF.valid(50, {"story_beat": "mini"}), "IR-63", "level 50 mini")
 
 
+func test_IR63_intro_beat_on_level_1_only() -> void:
+	expect_valid(LF.valid(1, {"story_beat": "intro"}), "level 1 intro")
+	expect_rejected(LF.valid(1, {"story_beat": null}), "IR-63", "level 1 null")
+	expect_rejected(LF.valid(1, {"story_beat": "mini"}), "IR-63", "level 1 mini")
+	expect_rejected(LF.valid(1, {"story_beat": "chapter"}), "IR-63", "level 1 chapter")
+	expect_rejected(LF.valid(2, {"story_beat": "intro"}), "IR-63", "level 2 intro")
+	expect_valid(LF.valid(2, {"story_beat": null}), "level 2 null")
+	expect_rejected(LF.valid(30, {"story_beat": "intro"}), "IR-63", "level 30 intro")
+	expect_rejected(LF.valid(25, {"story_beat": "intro"}), "IR-63", "level 25 intro")
+
+
+func test_IR63_no_beat_on_other_levels() -> void:
+	expect_rejected(LF.valid(12, {"story_beat": "mini"}), "IR-63", "level 12 mini")
+	expect_valid(LF.valid(12, {"story_beat": null}), "level 12 null")
+
+
+func test_IR63_level_17_takes_mini_and_nothing_else() -> void:
+	expect_valid(LF.valid(17, {"story_beat": "mini"}), "level 17 mini")
+	expect_rejected(LF.valid(17, {"story_beat": null}), "IR-63", "level 17 null")
+	expect_rejected(LF.valid(17, {"story_beat": "intro"}), "IR-63", "level 17 intro")
+	expect_rejected(LF.valid(17, {"story_beat": "chapter"}), "IR-63", "level 17 chapter")
+
+
+func test_IR63_mini_rejected_on_levels_16_and_18_and_other_non_hard_levels() -> void:
+	for id in [16, 18, 2, 12, 14, 19, 21, 24, 26, 29, 31, 44, 49]:
+		expect_rejected(LF.valid(id, {"story_beat": "mini"}), "IR-63", "level %d mini" % id)
+		expect_valid(LF.valid(id, {"story_beat": null}), "level %d null" % id)
+
+
+func test_IR63_all_six_hard_levels_still_need_mini() -> void:
+	for id in [15, 20, 30, 35, 40, 45]:
+		expect_valid(LF.valid(id, {"story_beat": "mini"}), "level %d mini" % id)
+		expect_rejected(LF.valid(id, {"story_beat": null}), "IR-63", "level %d null" % id)
+
+
 # ---------------------------------------------------------------- IR-64
 
 func test_IR64_short_cells_row_and_wrong_row_count_are_rejected() -> void:

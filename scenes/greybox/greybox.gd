@@ -42,6 +42,7 @@ var session: LevelSession
 var input: BoardInput = null
 var _note: String = ""
 var _level_path: String = LEVEL_PATH   # the level file being played now
+var _done_now: Dictionary = {}         # goal index -> true, for goals announced by goal_done during this move's animation
 
 
 func _ready() -> void:
@@ -49,6 +50,7 @@ func _ready() -> void:
 	session = LevelSession.new(LEVEL_PATH, save)
 	queue.stage = board_view
 	queue.finished.connect(_refresh)
+	queue.goal_reached.connect(_on_goal_reached)
 	play_again_button.pressed.connect(_on_play_again)
 	accept_button.pressed.connect(_on_accept)
 	decline_button.pressed.connect(_on_decline)
@@ -149,6 +151,7 @@ func _play(events: Array[BoardEvent], before: Dictionary) -> void:
 	if events.is_empty():
 		return
 	_note = ""
+	_done_now.clear()
 	_hide_panels()
 	queue.play(events, before, session.board())
 
@@ -266,14 +269,27 @@ func _show_debug_moves() -> void:
 
 # ---------------------------------------------------------------- HUD and panels
 
+## A goal reached its count while the cascades are still playing: show it as done at once (IR-56).
+func _on_goal_reached(step: Dictionary) -> void:
+	_done_now[int(step.goal)] = true
+	_show_goals()
+
+
+func _show_goals() -> void:
+	var lines: Array[String] = ["Goals:"]
+	var rows: Array[Dictionary] = session.goal_rows()
+	for i in range(rows.size()):
+		var g: Dictionary = rows[i]
+		var goal_name: String = String(g.id) + (" (fragment)" if bool(g.fragment) else "")
+		var done: int = int(g.total) if _done_now.has(i) else int(g.done)
+		lines.append("  %s  %d / %d%s" % [goal_name, done, int(g.total), "  DONE" if done >= int(g.total) else ""])
+	goals_label.text = "\n".join(lines)
+
+
 func _refresh() -> void:
 	level_label.text = "Level %d   (grey box)" % session.level_id()
 	moves_label.text = "Moves left: %d" % session.moves_left()
-	var lines: Array[String] = ["Goals:"]
-	for g in session.goal_rows():
-		var goal_name: String = String(g.id) + (" (fragment)" if bool(g.fragment) else "")
-		lines.append("  %s  %d / %d" % [goal_name, int(g.done), int(g.total)])
-	goals_label.text = "\n".join(lines)
+	_show_goals()
 	wallet_label.text = "Coins: %d     Lives: %d" % [session.coins(), session.lives()]
 	note_label.text = _note
 	if queue.is_playing():

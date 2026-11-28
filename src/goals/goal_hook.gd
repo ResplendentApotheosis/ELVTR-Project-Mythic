@@ -29,3 +29,22 @@ static func finish(board: BoardModel, events: Array[BoardEvent], can_fail: bool)
 		fail.data = {"offer_price": tracker.offer_price()}
 		events.append(fail)
 	tracker.feed(events)   # the win / fail event is passed on too (the tracker ignores it)
+
+
+## Starts holding goal_done events while one special's hits are applied (IR-56). Pair with release().
+static func hold(board: BoardModel) -> void:
+	if board.goal_tracker != null:
+		board.goal_tracker.hold_announce()
+
+
+## Ends hold(): goals finished by the hits since then are announced together, in goal-bar order (IR-56).
+static func release(board: BoardModel, events: Array[BoardEvent]) -> void:
+	if board.goal_tracker != null:
+		board.goal_tracker.release_hold(events)
+
+
+## Call right after an event that can finish a goal (obstacle_cleared, collected, shrine_lit, a dew spread):
+## appends a `goal_done` event straight after it when that event reached a goal's count (IR-56).
+static func announce(board: BoardModel, events: Array[BoardEvent]) -> void:
+	if board.goal_tracker != null:
+		board.goal_tracker.announce(events)

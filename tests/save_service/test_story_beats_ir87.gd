@@ -48,6 +48,20 @@ func test_ir87_skipped_beat_is_marked_like_a_played_one() -> void:
 	assert_false(s.should_play_story_beat(15))
 
 
+func test_ir87_level_1_intro_plays_once_then_not_on_retry_or_after_reopen() -> void:
+	var s: Variant = open_save()
+	if s == null:
+		return
+	assert_true(s.should_play_story_beat(1), "first attempt: the intro comic plays")
+	assert_true(started(start(s, 1)))
+	s.mark_story_beat_seen(1)
+	s.end_attempt("fail")
+	assert_false(s.should_play_story_beat(1), "retry: no comic")
+	var s2: Variant = reopen()
+	if s2 != null:
+		assert_false(s2.should_play_story_beat(1), "still no comic after reopening")
+
+
 func test_ir87_level_without_a_beat_changes_nothing() -> void:
 	var s: Variant = save_with({"next_level": 16, "seen_beats": [1, 15]})
 	if s == null:

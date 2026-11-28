@@ -6,6 +6,8 @@ class_name AnimationQueue
 extends Node
 
 signal finished
+## Sent the moment a "goal_done" step is reached, so the HUD can show the goal as achieved while the rest plays.
+signal goal_reached(step: Dictionary)
 
 ## Multiply every duration (1.0 = the GDD timings; 2.0 = half speed, handy when checking by eye).
 @export var slow_motion: float = 1.0
@@ -30,6 +32,8 @@ func play(events: Array[BoardEvent], before: Dictionary, board: BoardModel) -> v
 func play_steps(steps: Array[Dictionary]) -> void:
 	_playing = true
 	for step in steps:
+		if String(step.get("type", "")) == "goal_done":
+			goal_reached.emit(step)
 		if stage != null:
 			stage.play_step(step)
 		var seconds: float = float(step.get("duration", 0.0)) * slow_motion

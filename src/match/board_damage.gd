@@ -21,7 +21,7 @@ static func hit_top_layer(board: BoardModel, cell: Vector2i, hitset: Dictionary,
 ## cleared cell is on healing dew, every covered cell gets dew (IR-53, owner decision OQ-46),
 ## including cells covered earlier by the same special. Call it AFTER the hits, so goo has taken
 ## its hit first (owner decision OQ-56, chat 27 Nov 2026).
-static func note_cleared(board: BoardModel, cleared: Array[Vector2i], covered: Array[Vector2i], hitset: Dictionary) -> void:
+static func note_cleared(board: BoardModel, cleared: Array[Vector2i], covered: Array[Vector2i], hitset: Dictionary, events: Array[BoardEvent]) -> void:
 	if not hitset.has("cleared_cells"):
 		hitset["cleared_cells"] = [] as Array[Vector2i]
 		hitset["covered_cells"] = [] as Array[Vector2i]
@@ -32,6 +32,7 @@ static func note_cleared(board: BoardModel, cleared: Array[Vector2i], covered: A
 		if not all_covered.has(c):
 			all_covered.append(c)
 	HealingDew.spread(board, all_cleared, all_covered)
+	GoalHook.announce(board, events)
 
 
 ## Hits a match gives: the layer under/over its own pieces (IR-15) and every adjacent-match
@@ -50,6 +51,7 @@ static func hit_by_match(board: BoardModel, match_cells: Array[Vector2i], events
 		elif board.underlay_hp(c.x, c.y) > 0:
 			hit_underlay(board, c, hitset, events)
 	HealingDew.spread(board, match_cells, match_cells)
+	GoalHook.announce(board, events)
 	for c in match_cells:
 		for n in neighbours(c):
 			if in_match.has(n) or not board.is_playable(n.x, n.y):
@@ -74,6 +76,7 @@ static func hit_overlay(board: BoardModel, cell: Vector2i, hitset: Dictionary, e
 	events.append(_hit_event(cell, "overlay", id, hp))
 	if hp <= 0:
 		events.append_array(ObstacleRegistry.behaviour(id).on_cleared(board, id, cell, null))
+		GoalHook.announce(board, events)
 
 
 static func hit_underlay(board: BoardModel, cell: Vector2i, hitset: Dictionary, events: Array[BoardEvent]) -> void:
@@ -89,6 +92,7 @@ static func hit_underlay(board: BoardModel, cell: Vector2i, hitset: Dictionary, 
 	events.append(_hit_event(cell, "underlay", id, hp))
 	if hp <= 0:
 		events.append_array(ObstacleRegistry.behaviour(id).on_cleared(board, id, cell, null))
+		GoalHook.announce(board, events)
 
 
 static func hit_content(board: BoardModel, content: BoardContent, hitset: Dictionary, events: Array[BoardEvent]) -> void:

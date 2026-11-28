@@ -45,7 +45,7 @@ static func level(id: int = 12, overrides: Dictionary = {}) -> Dictionary:
 		"objects": [], "fixed_tiles": [],
 		"spawn": {"drop_items": null, "generators": null},
 		"goals": [{"obstacle": "OB02", "count": 1}],
-		"story_beat": null,
+		"story_beat": "intro" if id == 1 else ("mini" if id == 17 else null),
 	}
 	for k in overrides:
 		d[k] = overrides[k]
@@ -91,7 +91,7 @@ static func valid(id: int, overrides: Dictionary = {}) -> Dictionary:
 		"width": 9, "height": 9, "cells": rows(9, 9, "#"), "underlay": rows(9, 9, "."),
 		"objects": objects, "fixed_tiles": [], "spawn": {"drop_items": null, "generators": null},
 		"goals": goals,
-		"story_beat": "mini" if tier == "hard" else ("chapter" if tier == "finale" else null),
+		"story_beat": "intro" if id == 1 else ("mini" if (tier == "hard" or id == 17) else ("chapter" if tier == "finale" else null)),
 	}
 	if fragment:
 		d["fragment"] = {"guardian": "rat", "scripted": true}

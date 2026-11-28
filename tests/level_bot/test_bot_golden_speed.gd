@@ -2,6 +2,8 @@
 # speed-up) and the bot must be fast per move. Rules touched: none. API: API_CONTRACT.md 16.3 / 16.4.
 # Check: run the GUT suite. The golden file is tests/level_bot/fixtures/golden_fixture_012_runs5_seed1.json
 # (made with: level_bot.gd -- tests/level_loader/fixtures/level_fixture_012.json --runs 5 --seed 1).
+# Re-recorded 28 Nov 2026 after IR-40 (Firecracker and Crane made by a swap also appear on a swapped cell):
+# run 0 now uses 3 moves, average moves left 23.8 (was 24.0).
 extends GutTest
 
 const FIXTURE: String = "res://tests/level_loader/fixtures/level_fixture_012.json"
