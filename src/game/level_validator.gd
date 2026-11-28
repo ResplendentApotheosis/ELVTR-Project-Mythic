@@ -1,5 +1,5 @@
-# Checks a level dictionary against the level-file rules: identity, shape, moves, colours, debuts, fragment
-# and goals (IR-63..IR-70, IR-31, IR-59, IR-61); object and fixed-tile checks live in LevelObjectChecks.
+# Checks a level dictionary against the level-file rules: identity, shape, moves, colours, debuts, fragment,
+# goals and starting drop columns (IR-63..IR-70, IR-75, IR-31, IR-59, IR-61); object and fixed-tile checks live in LevelObjectChecks.
 # Each error starts with its IR id; GoalTracker's goal errors start with "goals: ". Public entry: LevelLoader.validate.
 # Check: tests/level_loader/test_validator_layout.gd and test_validator_rules.gd.
 class_name LevelValidator
@@ -45,6 +45,7 @@ static func validate(level: Dictionary, file_id: int = -1) -> Array:
 		for e in GoalTracker.goal_count_errors(goals, layers, spawn):
 			errors.append("goals: " + String(e))
 	if layout_ok and tiles_ok:
+		_check_drop_columns(level, errors)
 		_check_start_board(level, errors)
 	return errors
 
@@ -237,6 +238,21 @@ static func _check_fragment(level: Dictionary, id: int, errors: Array) -> void:
 				errors.append("IR-31: only an OB07 entry can hold the fragment")
 			elif not cocoon_goal:
 				errors.append("IR-31: an OB07 entry holds the fragment but there is no OB07 fragment goal")
+
+
+# ---------------------------------------------------------------- IR-75
+
+## Enough columns must be able to take a starting drop item (same test the loader uses to pick them).
+static func _check_drop_columns(level: Dictionary, errors: Array) -> void:
+	var drops: Dictionary = LevelLoader.dict_of(LevelLoader.dict_of(level.get("spawn")).get("drop_items"))
+	var wanted: int = mini(LevelLoader.as_int(drops.get("max_on_board"), 0), LevelLoader.as_int(drops.get("total"), 0))
+	if wanted <= 0:
+		return
+	var board: BoardModel = LevelLoader.build_layers(level, 1)
+	var fixed: Dictionary = LevelLoader.place_fixed_tiles(board, level)
+	var eligible: int = LevelStartItems.eligible_columns(board, fixed).size()
+	if eligible < wanted:
+		errors.append("IR-75: only %d column(s) can take a starting drop item, but max_on_board needs %d" % [eligible, wanted])
 
 
 # ---------------------------------------------------------------- IR-69

@@ -1,5 +1,5 @@
 # GUT tests for IR-37 (continue offers), IR-38 (quitting is a fail) and IR-58 (a fragment is only banked on a win)
-# as GoalTracker keeps them for one attempt. Banking and "first try" live in SaveService (not built): those are pending.
+# as GoalTracker keeps them for one attempt. Banking and "first try" live in SaveService: see tests/save_service/
 # API: tests/API_CONTRACT.md section 10. Check: run the GUT suite.
 extends "res://tests/helpers/goal_test_base.gd"
 
@@ -197,9 +197,6 @@ func test_ir38_quit_with_coins_and_moves_left_no_offer_life_lost() -> void:
 	assert_eq(int(t.coins), 1000)
 
 
-func test_ir38_quit_logged_as_fail_and_first_try() -> void:
-	pending("Blocked by SaveService (attempt log: fail and first try) - not built yet")
-
 
 # ---------------------------------------------------------------- IR-58
 
@@ -245,9 +242,4 @@ func test_ir58_all_goals_done_is_a_win() -> void:
 	assert_true(t.is_won())
 
 
-func test_ir58_fragments_rat_banked_only_on_win() -> void:
-	pending("Blocked by SaveService (fragments.rat save value) - not built yet")
 
-
-func test_ir58_retry_board_has_fragment_cocoon_back() -> void:
-	pending("Covered by tests/level_loader/test_level_loader_fragment_retry.gd (IR-58 retry cases, needs LevelLoader)")

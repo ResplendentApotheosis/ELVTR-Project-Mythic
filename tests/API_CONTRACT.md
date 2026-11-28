@@ -334,6 +334,8 @@ static func retry(previous: LevelAttempt, options: Dictionary = {}) -> LevelAtte
 static func validate(level: Dictionary, file_id: int = -1) -> Array                   # [] = valid; else Strings (11.4)
 ```
 
+Load errors (IR-77): `load_level` returns `null` when an option is invalid, here a `pre_specials` name other than `"rocket"`, `"crane"`, `"firecracker"`. Nothing is placed and no board is returned. `LevelLoader.last_errors` (`static var last_errors: Array`, Strings) is cleared at the start of every `load_level` / `load_file` / `retry` call. After a failed load it holds one String per problem, each starting `"IR-77: "` and naming the bad value, e.g. `IR-77: unknown pre_special "banana"`. A successful load leaves it `[]`. The validator never sees `pre_specials`.
+
 `options` keys (all optional):
 
 | key | type | meaning |
@@ -370,3 +372,118 @@ var drop_spawned: int = 0                        # drop items placed so far in t
 ### 11.4 Validator messages
 
 `validate(level, file_id)` returns one String per problem. Each String starts with the IR it breaks, e.g. `"IR-64: row 3 of cells has 8 characters, width is 9"`. Problems found by `GoalTracker.goal_errors` / `goal_count_errors` (IR-59, IR-61, IR-31) are included as they are, prefixed with `"goals: "` (the tests only check that the list is not empty for these). `file_id` >= 0 is the number in the file name; a different `id` in the level is an IR-63 error. The validator builds a board with the loader (default options) only when the shape checks passed. Plan moves and plan tiers are read from `res://research/match-villains/levels_1_100_plan.csv`.
+
+## 12. SaveService (round 9: IR-78 to IR-87 and the SaveService parts of IR-16, IR-37, IR-38, IR-56, IR-58, IR-60, IR-70, IR-71, IR-77)
+
+Tests: `tests/save_service/`, base `tests/save_service/save_test_base.gd` (loads the class by path and checks every method below exists, so a missing one FAILS a test with a clear message). Pure logic: no scenes, no awaits, no tweens, no sounds. godot-engineer owns the code, test-engineer owns the tests.
+
+### 12.1 File and construction
+
+| File | Class (`extends RefCounted`) |
+|---|---|
+| `src/game/save_service.gd` | `SaveService` (an instance, not static) |
+
+```gdscript
+func _init(save_path: String, clock: Callable) -> void
+```
+
+- `save_path`: where the save is read from and written to. Tests use a temp `user://zf_test_save_N.json` (and delete `path`, `path + ".tmp"`, `path + ".bak"` afterwards). A missing file = a new player (500 coins, 5 lives, next level 1). The file is **JSON**, a Dictionary with a top-level integer `"schema_version"` >= 1 (other field names are the engineer's choice; the GDD example is a guide). Every change is written back at once (IR-78).
+- `clock`: a `Callable` with no arguments that returns the current time as **unix seconds (int)**. The service never reads the system clock itself. Tests pass `Callable(fake_clock, "read")` and change `fake_clock.now`.
+- Opening a save (`_init`): an attempt left open (the app was closed or killed, IR-38 / IR-92) is ended as a quit, with the `end_attempt("quit")` rules, logged as fail + quit. Lives are brought up to date lazily by `lives()` (12.4). "The game is closed and opened" in a test = drop the object and call `SaveService.new(same_path, clock)` again.
+- `start_attempt` writes an "attempt open" mark to the file at once; `end_attempt` clears it.
+
+### 12.2 Level progress and attempts (IR-79, IR-38, IR-86)
+
+```gdscript
+func next_level() -> int        # 1..50 = the only level that can be started; 51 once level 50 is won
+func can_start(level: int) -> bool   # level == next_level() (1..50) AND (lives() > 0 OR unlimited_lives_active() OR level in [25, 50])
+func start_attempt(level: int, tracker: GoalTracker, pre_boosters: Array = []) -> Dictionary
+func sync_attempt() -> void     # writes the open attempt's coins (the tracker's) into the save; call after each accepted continue
+func end_attempt(outcome: String, finale_rockets: int = 0) -> void   # outcome: "win" | "fail" | "quit"
+func retry_choices(level: int) -> Array   # Strings: ["retry"] when can_start(level), else ["wait", "buy_lives"]
+```
+
+- `start_attempt(level, tracker, pre_boosters)`:
+  - **Refused** when `can_start(level)` is false, when `pre_boosters` has more than one entry or an unknown name, when pre-level boosters are not unlocked yet (IR-83), or when the chosen one is not affordable (IR-80). Returns `{"ok": false, "reason": String}`. A refused start changes nothing: no coins spent, no unlock, no attempt opened, nothing logged.
+  - **Accepted**: returns `{"ok": true, "first_try": bool, "pre_specials": Array}`. In this order: unlock the hero boosters and the pre-level boosters whose level is `<= level` and not unlocked yet (12.6, 12.7); pay the pre-level booster (a free use, else 150 coins); use up a waiting chest (12.8); mark the attempt open; set `tracker.lives = lives()` and `tracker.coins = coins()`.
+  - `first_try` is true when this is the first attempt ever started for that level (a quit or a killed app counts, IR-86).
+  - `pre_specials` are the names LevelLoader takes (IR-77, section 11.2): `["rocket", "crane"]` for a chosen `"rocket_crane"`, `["firecracker"]` for `"firecracker"`, and `["rocket", "crane"]` when a streak chest was waiting; `[]` otherwise. A pre-level booster may share a chest board (IR-83/84, owner 28 Nov 2026): `pre_specials` is the booster's names first, then the chest's, in placement order: `["firecracker", "rocket", "crane"]` or `["rocket", "crane", "rocket", "crane"]`. The list is placed in order, the i-th name into the i-th cell (11.2 `stub_special_cells`); the booster is paid as usual, the chest costs nothing.
+- `tracker` is the attempt's `GoalTracker`. The service keeps a reference to it while the attempt is open. **Every call that reads or spends coins (`sync_attempt`, `end_attempt`, `use_hero_booster`) first takes `tracker.coins` as the current balance** (so a continue accepted on the tracker is never lost), and `use_hero_booster` sets `tracker.coins` back to the new balance.
+- `end_attempt(outcome, finale_rockets)` (does nothing if no attempt is open):
+  - Always: take `tracker.coins`; log the attempt (12.5); close the attempt; afterwards set `tracker.lives = lives()` and `tracker.coins = coins()`.
+  - `"win"`: coins += `GoalTracker.win_coins(finale_rockets)`; `next_level` += 1; streak += 1 and a chest at 6 (IR-84); a fragment level (26, 30, 33, 35, 38, 40, 45, 50) adds 1 to `fragments("rat")` and at 8 the Rat is added to `restored()` (IR-85); winning level 25 starts 10 minutes of unlimited lives (IR-81); no life is lost.
+  - `"fail"` (declined offer, or the 6th run-out; the caller has already called `tracker.decline_offer()`) and `"quit"` (also used by the launch recovery): one life lost (IR-60) unless the level is 25 or 50 or `unlimited_lives_active()`; streak = 0; `next_level` unchanged; no fragment banked (IR-58). If this takes lives to 0, `"lives_ran_out"` is logged (12.5).
+  - The service ignores `tracker.lives`: lives are the save's, because only the save knows the clock and the unlimited lives.
+- A continue's spend survives a killed app only if `sync_attempt()` ran after the accept (IR-38: "coins spent stay spent"). The UI calls it after each `accept_offer`.
+
+### 12.3 Coins (IR-80)
+
+```gdscript
+func coins() -> int
+func buy_all_lives() -> Dictionary    # {"ok": true} (150 coins -> lives 5) or {"ok": false, "reason": String, "message": String} (nothing changes). Refused with fewer than 150 coins: reason "not_enough_coins"; refused at 5 lives (IR-81): reason "already_full", message exactly "You already have 5 lives", no coins charged, not logged
+```
+
+A purchase with fewer coins than its price is refused and changes nothing. Refusals come back the same way as `start_attempt` (12.2): a Dictionary with `"ok": false` and a `"reason"` code; `buy_all_lives` adds `"message"`, the text the UI shows (IR-81: `"You already have 5 lives"` for reason `"already_full"`). A success is `{"ok": true}`. `buy_all_lives` reads `lives()` (with the clock) first, so lives that came back by time count. Prices: buy all lives 150; hero boosters 12.6; pre-level boosters 12.7; continues 300/500 are the tracker's (IR-37).
+
+### 12.4 Lives (IR-81, IR-60)
+
+```gdscript
+func lives() -> int                      # brings the refill up to date using the clock, then returns 0..5
+func unlimited_lives_active() -> bool    # true while clock() < the unlimited end time (the map badge)
+```
+
+- State: `lives` and `refill_started_at` (0 = no countdown running; set when lives drop below 5). `lives()`: if `lives < 5`, the countdown runs and `clock() >= refill_started_at`: `n = (clock() - refill_started_at) / 1200`; `lives = min(5, lives + n)`; at 5 the countdown stops, else `refill_started_at += n * 1200`. If `clock() < refill_started_at` nothing happens (a life is never taken away).
+- A loss at 5 lives starts the countdown at `clock()`; a loss with the countdown running leaves it alone. `buy_all_lives` sets lives 5 and stops the countdown.
+- Winning level 25 sets the unlimited end time `U = clock() + 600` and drops a running countdown (`refill_started_at = 0`, not resumed). While `clock() < U` no life comes back. When `clock() >= U` and `lives < 5` with no countdown running, a fresh countdown starts at `U` (not at the time the game is opened), so a game closed through `U` counts from `U`: `lives()` uses `refill_started_at = U` and the usual formula. At 5 lives when they end, no countdown starts. A failed 25 sets nothing (IR-81, owner 28 Nov 2026). A loss while unlimited lives run costs no life, so it starts no countdown.
+
+### 12.5 Logs (IR-86)
+
+```gdscript
+func attempt_log() -> Array   # in order; each entry {"level": int, "won": bool, "quit": bool, "first_try": bool}
+func life_log() -> Array      # in order; Strings "lives_ran_out" (a fail or quit took lives to 0) and "lives_bought" (buy_all_lives succeeded)
+```
+
+Entries are added only when an attempt ends (or at the launch recovery). A continue adds none. Both logs are saved.
+
+### 12.6 Hero boosters (IR-82)
+
+```gdscript
+func hero_unlocked(booster: String) -> bool          # "hoof_tap", "tail_slam", "bamboo_dash", "feather_fan"
+func hero_free_uses(booster: String) -> int          # free uses left (0 when locked)
+func use_hero_booster(booster: String) -> bool       # spends a free use, else pays the price; false (nothing changes) when locked or unaffordable
+```
+
+Unlock level / free uses / price: Hoof Tap 11 / 3 / 100, Tail Slam 23 / 2 / 200, Bamboo Dash 29 / 2 / 150, Feather Fan 36 / 2 / 100. `start_attempt(level, ...)` unlocks every booster whose level is <= `level` and not unlocked yet, giving its free uses once. The effect is BoosterService's job; this call only does the accounting and may be made with no attempt open.
+
+### 12.7 Pre-level boosters (IR-83)
+
+```gdscript
+func pre_boosters_unlocked() -> bool                 # true once a start of level >= 16 happened
+func pre_free_uses(booster: String) -> int           # "rocket_crane" or "firecracker": 1 free each when unlocked, then 150 coins at attempt start
+```
+
+### 12.8 Streak, chest, fragments, story beats (IR-84, IR-85, IR-87)
+
+```gdscript
+func streak() -> int
+func chest_waiting() -> bool          # true after the 6th win in a row (not after level 50); cleared by the next start_attempt
+func fragments(guardian: String) -> int   # "rat"
+func restored() -> Array              # Strings, e.g. ["rat"]
+func should_play_story_beat(level: int) -> bool   # true when the level has a beat (1, 15, 17, 20, 25, 30, 35, 40, 45, 50) and it is not marked seen
+func mark_story_beat_seen(level: int) -> void     # the UI calls it when the beat was shown or skipped; saved
+func seen_story_beats() -> Array      # ints, ascending
+```
+
+Starting an attempt never marks a beat seen by itself (the UI marks it).
+
+### 12.9 Test seam (not for game code)
+
+```gdscript
+func debug_set(values: Dictionary) -> void   # sets the listed fields and writes the save; an unknown key is an error (push_error)
+```
+
+Keys: `next_level` int, `coins` int, `lives` int (when `lives < 5` and `refill_started_at` is not given, the countdown starts at `clock()`), `refill_started_at` int (unix seconds), `unlimited_until` int (unix seconds), `streak` int, `chest_waiting` bool, `fragments_rat` int (does not add to `restored`; give `restored` too), `restored` Array, `hero_unlocked` Array of booster names, `hero_free` Dictionary name -> int, `pre_unlocked` bool, `pre_free` Dictionary `"rocket_crane"` / `"firecracker"` -> int, `seen_beats` Array of ints. Setting `next_level` unlocks nothing and marks no level as tried (so the first start of that level has `first_try` true).
+
+### 12.10 Not tested (spec "Not yet specified")
+
+An attempt killed while unlimited lives ran, with the next launch after they ran out (IR-38); when a beat plays relative to its level (IR-87). (Settled and now tested: the countdown during unlimited lives and buying all 5 at 5 lives, IR-81; a pre-level booster on a chest board, IR-83/84; an unreadable save, IR-78; fragments by level number, IR-85.)

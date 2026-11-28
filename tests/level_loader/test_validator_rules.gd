@@ -163,3 +163,28 @@ func test_IR31_validator_fragment_level_needs_a_fragment_goal_inside_the_tier_co
 	expect_any_error(LF.valid(35, {"goals": goals}), "level 35 without a fragment goal")
 	var five: Array = goals + [{"obstacle": "OB06", "count": 1}, {"obstacle": "OB07", "count": 1, "fragment": true}, {"obstacle": "OB07", "count": 1}]
 	expect_any_error(LF.valid(35, {"goals": five}), "5 goals on a hard level")
+
+
+# ---------------------------------------------------------------- IR-75 (starting drop item columns)
+
+## Level 36 (easy, 1 goal): OB11 goal 3, total 3, max_on_board 2. Row 0 holds a bramble in every column except
+## the ones in `open_cols`; `tiles` are fixed tiles.
+func _drop_row_level(open_cols: Array, tiles: Array = []) -> Dictionary:
+	var objects: Array = []
+	for x in range(9):
+		if not open_cols.has(x):
+			objects.append({"type": "OB02", "x": x, "y": 0, "hp": 1})
+	return LF.valid(36, {"goals": [{"obstacle": "OB11", "count": 3}], "objects": objects, "fixed_tiles": tiles,
+		"spawn": {"drop_items": {"type": "OB11", "total": 3, "max_on_board": 2}, "generators": null}})
+
+
+func test_IR75_validator_rejects_one_eligible_column_for_two_starting_items() -> void:
+	expect_rejected(_drop_row_level([4]), "IR-75", "only column 4 is eligible, max_on_board 2")
+
+
+func test_IR75_validator_accepts_two_eligible_columns() -> void:
+	expect_valid(_drop_row_level([4, 6]), "columns 4 and 6 are eligible")
+
+
+func test_IR75_validator_rejects_when_a_fixed_tile_takes_the_second_column() -> void:
+	expect_rejected(_drop_row_level([4, 6], [{"x": 6, "y": 0, "tile": "red"}]), "IR-75", "(6,0) holds a fixed tile, so only column 4 is eligible")

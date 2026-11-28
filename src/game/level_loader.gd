@@ -1,6 +1,6 @@
 # Turns a level file (level_agent_brief.md section 5 + "fragment") into a LevelAttempt: board layers,
 # fixed tiles, a seeded starting fill with no match and 3+ matching swaps, drop items and pre-level specials.
-# Never validates on load; validate() is the separate checker (LevelValidator). Instant, no awaits.
+# Never validates on load (validate() does); an unknown pre_specials name gives null + last_errors (IR-77).
 # Check: run the GUT suite; tests/level_loader/ covers it (API: tests/API_CONTRACT.md section 11).
 class_name LevelLoader
 extends RefCounted
@@ -15,6 +15,8 @@ const FILL_TRIES: int = 200        # re-draws of the starting fill until it has 
 const MIN_MATCHING_SWAPS: int = 3  # IR-69
 
 static var _seed_source: RandomNumberGenerator = null   # only used to pick a NEW seed when none is given
+## Why the last load_level / load_file / retry failed ("IR-77: ..." Strings); [] after a good load.
+static var last_errors: Array = []
 
 
 # ---------------------------------------------------------------- public API
@@ -24,7 +26,11 @@ static func level_path(id: int) -> String:
 
 
 ## Builds a new attempt from a level dictionary. Never validates: assumes a valid level.
+## Returns null (nothing placed) if options hold an unknown pre_specials name; see last_errors (IR-77).
 static func load_level(level: Dictionary, options: Dictionary = {}) -> LevelAttempt:
+	last_errors = LevelStartItems.pre_special_errors(options)
+	if not last_errors.is_empty():
+		return null
 	var seed_value: int = as_int(options["seed"], 0) if options.has("seed") else new_seed(0)
 	var attempt: LevelAttempt = LevelAttempt.new()
 	attempt.level = level.duplicate(true)
@@ -43,10 +49,13 @@ static func load_level(level: Dictionary, options: Dictionary = {}) -> LevelAtte
 
 ## Reads a JSON level file and builds an attempt; null if the file is missing or not a JSON object.
 static func load_file(path: String, options: Dictionary = {}) -> LevelAttempt:
+	last_errors = []
 	var level: Variant = read_level_file(path)
 	if not level is Dictionary:
 		return null
 	var attempt: LevelAttempt = load_level(level as Dictionary, options)
+	if attempt == null:
+		return null
 	attempt.source_path = path
 	return attempt
 
@@ -54,6 +63,7 @@ static func load_file(path: String, options: Dictionary = {}) -> LevelAttempt:
 ## IR-58, IR-71: a new attempt built again from the file (or the same dictionary), with a new seed.
 ## Lives and coins are copied from the last attempt (SaveService owns them); everything else starts fresh.
 static func retry(previous: LevelAttempt, options: Dictionary = {}) -> LevelAttempt:
+	last_errors = []
 	var opts: Dictionary = options.duplicate()
 	if not opts.has("seed"):
 		opts["seed"] = new_seed(previous.seed_value)
@@ -167,7 +177,7 @@ static func _build_board(level: Dictionary, seed_value: int, options: Dictionary
 	board.exit_columns = []
 	for c in array_of(drops.get("exit_columns")):
 		board.exit_columns.append(as_int(c, -1))
-	var fixed: Dictionary = _place_fixed_tiles(board, level)
+	var fixed: Dictionary = place_fixed_tiles(board, level)
 	for i in range(FILL_TRIES):
 		_fill(board, fixed)
 		LevelStartItems.place_drop_items(board, drops, fixed, options)
@@ -201,7 +211,7 @@ static func _place_object(board: BoardModel, o: Variant) -> void:
 
 
 ## IR-76: plain colours and specials in their cells. Returns the fixed cells (Vector2i -> true).
-static func _place_fixed_tiles(board: BoardModel, level: Dictionary) -> Dictionary:
+static func place_fixed_tiles(board: BoardModel, level: Dictionary) -> Dictionary:
 	var fixed: Dictionary = {}
 	for t in _list(level, "fixed_tiles"):
 		if not t is Dictionary:
