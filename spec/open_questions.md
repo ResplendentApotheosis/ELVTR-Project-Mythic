@@ -16,6 +16,8 @@ Status: `OPEN` / `ANSWERED`. "Blocks" names the rules whose tests can't be writt
 
 **Update (28 Nov 2026, round 6, GoalTracker answers):** Owner in chat: OQ-62 A (trial, "for now"), 63 A, 64 B (trial, "for now"), 65 B ("Basically fragment is part of the goal and must be completed to pass"), 67 A, 68 A, 69 A, 70 A; cited as "Owner decision, chat 28 Nov 2026 › OQ-xx". OQ-62 and OQ-64 are trial decisions: revisit after playtest. OPEN: OQ-66 (the owner asked what seed cells are; see the note under OQ-66), OQ-71 (which cocoon or drop item holds the fragment in the level file) and OQ-72 (how much of the winning step still happens). Also recorded: Nian's Eye (OB09) is not in levels 1–50 (owner decision, matches the GDD's level 61). GDD and brief lines to add: see "GDD and brief text to update (round 5, owner only)" at the end.
 
+**Update (28 Nov 2026, LevelLoader check):** OQ-62 to OQ-74 are all ANSWERED (see each entry). New and OPEN: OQ-75 (OB07/OB03 debut levels: GDD vs plan), OQ-76 (same pieces on a retry?), OQ-77 (shrine colours in the file), OQ-78 (OB08 in the file and its layers), OQ-79 (when and where drop items appear), OQ-80 (`fixed_tiles` names and colours), OQ-81 (smaller schema gaps), OQ-82 (pre-level booster and streak-chest placement). None blocks building LevelLoader's core; OQ-77, OQ-78 and OQ-79 block loading OB05, OB08 and OB11.
+
 ---
 
 ### OQ-01 · Bamboo Rocket: row or column? — ANSWERED
@@ -719,6 +721,175 @@ Blocks: the validator's dew check (bottom limit), GoalTracker on a goal that is 
 
 ---
 
+## New questions from the LevelLoader check (28 Nov 2026)
+
+Found while checking `level_agent_brief.md` §5 (the level JSON schema) against the spec for the LevelLoader build. IR-63 to IR-71 hold what the GDD and brief do settle.
+
+### OQ-75 · Which obstacle debuts at level 7 and which at 17: creature (OB07) or moss (OB03)? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-75: Option B (2026-11-28). In plain words: the plan stands: moss (OB03) debuts at 7, creature (OB07) at 17; the owner will change the GDD's Debut column to match (round-8 list below). Now in IR-67. New question from this: OQ-83 (the level 10 story beat).
+
+Parts that disagree:
+- GDD › Board layers & obstacles › Obstacle set › "7 | OB07 · container release | Mummified creature" and "17 | OB03 · cover cluster | Creep moss".
+- `levels_1_100_plan.csv` › row 7 "7,1,intro,…,OB03 x36,OB03" and row 17 "17,1,intro,…,OB07 x24,OB07"; rows 8, 9 and 15 use OB03 and rows 18–20 use OB07.
+- GDD › Board layers & obstacles › "10 debut in the MVP … following `levels_1_100_plan.csv`", while `level_agent_brief.md` intro says "debut levels are in the GDD's obstacle table, which wins over this file and the plan".
+Under the GDD table, plan levels 8, 9 and 15 use moss before it debuts, and level 7 teaches the wrong obstacle.
+- Option A: The GDD table stands (creature at 7, moss at 17); the owner re-plans rows 7–20 of the plan CSV.
+- Option B: The plan stands (moss at 7, creature at 17); the owner changes the GDD's Debut column for OB07 and OB03.
+Blocks: IR-67 tests for OB03 and OB07; level-designer for levels 7–20. Not LevelLoader.
+
+### OQ-76 · Does a retry start with the same pieces as the last attempt? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-76: Option A (2026-11-28). In plain words: each attempt gets a new seed, so a retry shows a new random starting board and new refills; tests and the bot pass a seed in to repeat a run exactly. Now in IR-72, IR-71, IR-69.
+
+GDD says: Core gameplay › "Every level starts with at least 3 valid moves, no pre-made matches"; several rules use "the level's seeded random number generator" (finale Rockets, Crane shrine ties, IR-16, IR-49). Nothing says where the seed comes from or whether it changes between attempts. The file lists no piece colours (only optional `fixed_tiles`), so the starting pieces are random.
+- Option A: Each attempt gets a new seed: a retry shows a new random starting board (and new refills). Tests and the bot pass a seed in to repeat a run exactly.
+- Option B: The seed is fixed per level (e.g. from its id): every attempt starts with the same board, and the same moves give the same refills.
+Blocks: an IR-71 test on the starting pieces after a retry. Not the rest of LevelLoader.
+
+### OQ-77 · How the level file lists the colours a lantern shrine (OB05) needs — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-77: Option A (2026-11-28). In plain words: a count per colour on the object, `"needs": {"red": 2, "blue": 1}`; the colours must be among the level's colours. Now in IR-73, IR-66, IR-55. Missing/empty `needs` or a count of 0: OQ-88 (c).
+
+GDD says: Obstacle set › OB05 "Collect the colours it shows to light it"; IR-55 tests use shrines that "still need 2 R and 1 B". `level_agent_brief.md` §5 gives OB05 only `type`, `x`, `y`, `w`, `h`, `hp`; no field says which colours, or how many of each, it needs.
+- Option A: A count per colour on the object, e.g. `{"type": "OB05", "x": 3, "y": 3, "w": 2, "h": 2, "hp": 3, "needs": {"red": 2, "blue": 1}}`.
+- Option B: A list with one entry per piece needed, e.g. `"needs": ["red", "red", "blue"]`.
+Either way, the colours must be among the level's `colors` (IR-68). Blocks: loading OB05 (levels 10, 11, 12, 16, 20, 24, 25, 27, 32, 33, 35, 38, 49). The rest of LevelLoader can be built.
+
+### OQ-78 · Paper-screen lantern (OB08): how it is written in the file, and which layers it fills — ANSWERED (trial)
+Decision: Owner decision, chat 28 Nov 2026 › OQ-78: Option B, "for now" (2026-11-28; trial, revisit after playtest). In plain words: the lantern is a content obstacle (no piece in its cell) with `"color"` and `hp`; adjacent matches or specials take the screen off (its hp), then an adjacent match of its colour lights it (goal +1). Now in IR-74 (new OB08 behaviour rule), IR-66, IR-14, IR-54, IR-61, IR-49. Parts this doesn't settle: OQ-84.
+
+GDD says: Obstacle set › "22 | OB08 · shutter + colour | Paper-screen lantern | Open the screen, then match its colour to light it"; Cell layer model › "3 · Overlay | Cover clusters, shutters"; Rules clarifications › OQ-29 "Pieces under an overlay (moss, shutter)". The brief's schema has no colour field, and nothing says what is under the screen (a piece, or the lantern itself), what opens it (hits, `hp`) or what "match its colour" means once open. The spec has no OB08 behaviour rule yet (this also affects MatchResolver).
+- Option A: The screen is an overlay with `hp`, over a plain piece (locked like moss, IR-54); the entry has a `"color"`; once the screen is gone, a match of that colour that includes the cell lights it (goal +1).
+- Option B: The lantern is a content obstacle (no piece in its cell) with `"color"` and `hp`: adjacent matches or specials take the screen off (its `hp`), then an adjacent match of its colour lights it (goal +1).
+Blocks: loading OB08 (levels 22–25, 39, 40, 43, 45–47, 49, 50) and every OB08 rule. The rest of LevelLoader can be built.
+
+### OQ-79 · When and where drop items (OB11) appear — ANSWERED (trial)
+Decision: Owner decision, chat 28 Nov 2026 › OQ-79: Option B, trial (2026-11-28): "Let's try B; if it is too easy during test, we move to A." In plain words: the first `max_on_board` items are placed in the top row at the start (seeded columns); after that each collected item is replaced at the next refill at the top of a random column (seeded), until `total` have appeared. Now in IR-75, IR-31, IR-69. Parts this doesn't settle: OQ-85.
+
+GDD says: Obstacle set › OB11 "Bring it to the bottom row to collect it"; `level_agent_brief.md` §5 › "`spawn.drop_items`: e.g. `{"type":"OB11","total":3,"max_on_board":1,"exit_columns":[2,6]}`". Nothing says whether any are on the board at the start, in which column a new one enters, or when (only that at most `max_on_board` are on the board and `total` appear in all).
+- Option A: None at the start. Whenever fewer than `max_on_board` are on the board and fewer than `total` have appeared, the next refill brings one in at the top playable cell of a random column (seeded) in place of a new piece.
+- Option B: The first `max_on_board` items are placed in the top row at the start (seeded columns); after that, each collected item is replaced at the next refill at the top of a random column (seeded), until `total` have appeared.
+Blocks: loading and spawning drop items (levels 34–36, 38, 39, 45, 48, 50), IR-31's `fragment_item` spawn order in play. Not the rest of LevelLoader.
+
+### OQ-80 · `fixed_tiles`: which tile names exist, and what colour a fixed special has — ANSWERED (trial)
+Decision: Owner decision, chat 28 Nov 2026 › OQ-80: Option A, trial (2026-11-28): "move to B during test if too easy". In plain words: names `red`, `yellow`, `blue`, `green`, `line_h`, `line_v`, `firecracker`, `crane`, `orb`; a coloured special takes an optional `"color"`, random (seeded) if absent; only on cells that would hold a piece (under moss allowed). Now in IR-76, IR-69. `"color"` on an `orb`: OQ-88 (b).
+
+`level_agent_brief.md` §5 says only: "`fixed_tiles`: optional pre-placed colours or power-ups, e.g. `{"x":4,"y":8,"tile":"line_h"}`". Rules clarifications › OQ-18: "Rockets, Firecrackers and Cranes keep the colour they were made from". So a fixed Rocket needs a colour, and the names for colours, column Rockets, Firecrackers, Cranes and Jade Orbs aren't given; nor whether a fixed tile may sit in a cell under moss or on an obstacle.
+- Option A: Names `red`, `yellow`, `blue`, `green`, `line_h`, `line_v`, `firecracker`, `crane`, `orb`; a coloured special takes an extra `"color"` field, and gets a random colour (seeded) if it has none; only on cells that would hold a piece (under moss allowed).
+- Option B: The same names, but `"color"` is required on every Rocket, Firecracker and Crane (the validator rejects one without it); fixed tiles never go under moss.
+Blocks: loading any `fixed_tiles` entry other than the `line_h` example (and that entry's colour). The plan lists no fixed tiles in levels 1–50, so not LevelLoader's core.
+
+### OQ-81 · Smaller schema gaps — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-81: Option A for all parts (2026-11-28). In plain words: (a) a 3-colour level names its colours, e.g. `"color_set": ["red","yellow","blue"]`; (b) underlay on a `.` cell is rejected; (c) no spawners in levels 1–50, no field yet; (d) `hp` 1–3 for OB03, OB05, OB06 and OB07. Now in IR-68, IR-65, IR-64, IR-66. Parts this doesn't settle: OQ-87 (the brief's own OB06 example has `hp` 4), OQ-88 (a) (`color_set` on a 4-colour level).
+
+(a) Which 3 colours a 3-colour intro level uses. GDD › Core gameplay "4 colours on every level (3 only on a very cramped intro level)". (b) May `underlay` mark goo or dew on a `.` cell? Brief §6 only forbids objects on `.` cells. (c) Spawner cells: IR-51 and GDD › Rules clarifications › OQ-19 refer to "spawner cells where the level has them" and Cell layer model › "0 · Floor | … spawner, exit", but `cells` has only `#` and `.`. (d) The allowed `hp` for OB03, OB05, OB06 and OB07 (the GDD gives only OB02 "up to 3 layers", OB10 `1`–`3` and OB12 "2").
+- Option A: (a) the level file says which, e.g. `"color_set": ["red", "yellow", "blue"]`; (b) no, rejected; (c) no spawners in levels 1–50, so no field is needed yet; (d) 1–3 for all four.
+- Option B: (a) always red, yellow and blue (green dropped); (b) allowed but ignored; (c) add a cell character, e.g. `S` = playable spawner cell; (d) no limit beyond `hp` ≥ 1.
+Blocks: (a) 3-colour levels (none in the plan for 1–50); (b), (d) validator checks; (c) any spawner level. None blocks LevelLoader's core.
+
+### OQ-82 · Where pre-level booster and streak-chest specials appear on the starting board — ANSWERED (owner changed Option A)
+Decision: Owner decision, chat 28 Nov 2026 › OQ-82: Option A, modified by the owner (2026-11-28): "Rocket's direction would be towards direction with highest number of targets". In plain words: each special replaces a random plain piece of the finished starting board (seeded), not under moss, taking that piece's colour; the board still has no match; the Rocket is a row or column Rocket, whichever of its row and its column holds more goal obstacles. A tie was not settled by the owner: the producer proposed a seeded 50/50, recorded as provisional (AI) pending owner confirmation in OQ-86. Now in IR-77. Later the same day the owner confirmed the seeded 50/50 and the target counting (OQ-86 (a) A, (b) A).
+
+GDD says: Meta & economy › Booster unlocks › "16 | Pre-level boosters | Start with a Rocket + Crane, or a Firecracker"; Currencies › "Win streak | 6 wins in a row: a chest drops a free Rocket and Crane onto the next board". Nothing says which cells they take, their colour, or the Rocket's direction.
+- Option A: Each replaces a random plain piece of the finished starting board (seeded), not under moss, taking that piece's colour; the Rocket's direction is 50/50 (seeded); the board still has no match.
+- Option B: They are placed before the random fill, on random free cells (seeded) with a random colour, and the fill avoids making a match with them.
+Blocks: pre-level boosters and the streak chest at load. Both are on CLAUDE.md's cut list if a milestone slips. Not LevelLoader's core.
+
+---
+
+## New questions from applying the owner's answers to OQ-75 to OQ-82 (28 Nov 2026)
+
+### OQ-83 · The level 10 story beat needs a freed creature, but creatures now debut at 17 — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-83: Option A (2026-11-28). In plain words: the "First freed creature tells of a dark beast at the river" beat moves to level 17, the creature intro (owner-only GDD edit, round-8 list item 18). Noted in IR-67; no rule depends on it.
+
+Parts that disagree:
+- GDD › Story › Story beats › "10 | First freed creature tells of a dark beast at the river | Short dialogue".
+- Owner decision, chat 28 Nov 2026 › OQ-75 (Option B): creature (OB07) debuts at 17; `levels_1_100_plan.csv` has no OB07 before row 17 (row 10 is "OB05 x1").
+No creature can be freed in levels 1–16, so the level 10 beat can't happen as written.
+- Option A: Move the beat to the first level where a creature is freed (level 17, the creature intro), with the owner's wording.
+- Option B: Keep the beat at level 10 and reword it so it doesn't need a freed creature (e.g. it follows the first lantern shrine lit, which debuts at 10).
+Blocks: the level 10 / 17 dialogue only. No IR and no LevelLoader test depends on it.
+
+### OQ-84 · Paper-screen lantern (OB08): parts OQ-78's answer doesn't settle — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-84: (a) A, (b) B, (c) B, (d) B, (e) A (2026-11-28). In plain words: a lit lantern is removed and its cell fills by falling; a match of the lantern's colour that takes the screen's last hit also lights it; a special, combo, booster or Orb + Orb covering an open lantern lights it; a Crane landing is one screen hit on a closed lantern and lights an open one; `hp` 1–3 and `"color"` one of the level's colours. Now in IR-74, IR-49, IR-66. The lantern itself stays a trial (OQ-78).
+
+Parts that, read together, leave this open:
+- Owner decision, chat 28 Nov 2026 › OQ-78 (Option B, trial): "adjacent matches or specials take the screen off (its `hp`), then an adjacent match of its colour lights it (goal +1)".
+- GDD › Obstacle set › OB08 "Open the screen, then match its colour to light it"; OB05 (the other lantern) "a lit shrine is removed and its cells fill by normal falling".
+- GDD › Interaction rules › "Where the Paper Crane flies" and Rules clarifications › OQ-17, OQ-34 (hits left per goal type; OB08 is not named).
+- `level_agent_brief.md` §5 gives `hp` ranges only for OB02, OB10 and OB12; OQ-81 (d) set 1–3 for OB03, OB05, OB06, OB07, not OB08.
+(a) What a lit lantern leaves.
+- Option A: It is removed and its cell fills by normal falling (like a lit shrine).
+- Option B: It stays on the board, lit, as a blocker with no piece; it is no longer an obstacle (not hit, not a Crane target).
+(b) The match that takes the screen's last hit is of the lantern's colour.
+- Option A: It only opens the screen; a later match of its colour lights it.
+- Option B: It opens the screen and lights the lantern in the same match.
+(c) A special (or combo, booster, Orb + Orb) covering an open lantern.
+- Option A: Nothing happens; only a match of its colour lights it.
+- Option B: It lights the lantern.
+(d) The Paper Crane and an OB08 goal.
+- Option A: Hits left = remaining screen `hp` + 1 for each unlit lantern; a landing acts like a special covering the cell (one screen hit; on an open lantern, as (c) says).
+- Option B: Like a shrine landing: on a closed lantern it is one screen hit; on an open lantern it counts as a match of its colour and lights it.
+(e) Allowed values.
+- Option A: `hp` 1–3; `"color"` one of the level's colours (as OB05 `needs`, IR-73).
+- Option B: `hp` ≥ 1 with no top limit; `"color"` one of the level's colours.
+Blocks: IR-74 tests for these parts, IR-49 for OB08 goals, the validator's OB08 checks; levels 22–25, 39, 40, 43, 45–47, 49, 50. The rest of IR-74 can be built.
+
+### OQ-85 · Drop items (OB11): parts OQ-79's answer doesn't settle — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-85: Option A for (a), (b), (c) and (d) (2026-11-28). In plain words: starting items go in the top playable cell of different columns whose top cell holds an uncovered plain piece; a replacement enters in the same refill, in a column that gets a new piece then; items collected in the same move are all replaced in that refill, in different columns; starting items are numbered left to right. Now in IR-75, IR-76, IR-69. Left as "Not yet specified" in IR-75 (minor, level-designer avoids them): fewer eligible starting columns than `max_on_board`; more items to replace than columns refilling; numbering of two items entering in the same refill.
+
+Parts that, read together, leave this open:
+- Owner decision, chat 28 Nov 2026 › OQ-79 (Option B, trial): "The first `max_on_board` items are placed in the top row at the start (seeded columns); after that, each collected item is replaced at the next refill at the top of a random column (seeded), until `total` have appeared".
+- GDD › Rules clarifications › OQ-35 "Every column refills at its top playable cell" (IR-51); `cells` may make row 0 of a column a `.` cell (IR-64); row 0 may hold an obstacle, moss or a fixed tile (IR-66, IR-76).
+(a) Where the starting items go when row 0 of a column is not a plain uncovered piece.
+- Option A: In each column's top playable cell; only columns whose top playable cell holds an uncovered plain piece (no obstacle, no moss, no fixed tile) can be picked.
+- Option B: Only row 0 cells that are playable and hold an uncovered plain piece can be picked; the validator rejects a level with fewer such cells than `max_on_board`.
+(b) Which column a replacement item may enter.
+- Option A: Picked (seeded) among the columns that get a new piece in that refill, so it always enters in that refill.
+- Option B: Picked (seeded) among all columns; if that column gets no new piece in that refill, the item enters at the next refill that brings a new piece into it.
+(c) Two or more items collected in the same move.
+- Option A: All are replaced in the same refill, each in a different column.
+- Option B: One item enters per refill until the board is back to `max_on_board`.
+(d) How the items placed together at the start are numbered (for `fragment_item`, IR-31).
+- Option A: Left to right.
+- Option B: In the order the seed draws their columns.
+Blocks: IR-75 tests on these parts; `fragment_item` on levels with `max_on_board` ≥ 2. Levels with `max_on_board` 1 on a full top row are not blocked.
+
+### OQ-86 · Pre-level / streak-chest Rocket: a tie between row and column, and what counts as a "target" — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-86: (a) A, (b) A (2026-11-28). In plain words: a tie (0 and 0 included) is a seeded 50/50, now an owner decision, no longer provisional; each goal obstacle with a cell in the line counts once, dew counts the line's playable cells without dew, each drop item counts 1. Now in IR-77.
+
+Parts that, read together, leave this open:
+- Owner decision, chat 28 Nov 2026 › OQ-82 (Option A, changed): "Rocket's direction would be towards direction with highest number of targets" (read by the producer as: row or column, whichever line holds more goal obstacles).
+- GDD › Meta & economy › Booster unlocks › "Start with a Rocket + Crane, or a Firecracker"; Currencies › Win streak "a chest drops a free Rocket and Crane onto the next board". Neither says a direction.
+(a) Row and column hold the same number (including 0 and 0). The producer proposed a seeded 50/50; that is a provisional AI choice, not an owner decision.
+- Option A: Seeded 50/50 (the producer's proposal).
+- Option B: A fixed side on a tie, e.g. always a row Rocket.
+(b) What counts as a target in a line. Both options count only obstacles of the level's goals; say so if non-goal obstacles should count too.
+- Option A: Each goal obstacle with at least one cell in the line counts once (a 2×2 pillar crossing the row = 1); dew goal: playable cells in the line without dew; drop items on the board: 1 each.
+- Option B: Count cells: each cell in the line holding a goal obstacle counts (a 2×2 pillar with 2 cells in the row = 2); dew and drop items as in A.
+Blocks: IR-77 tests on ties and on multi-cell, dew and drop-item lines. IR-77's single-cell bramble tests are not blocked.
+
+### OQ-87 · Petrified pillar `hp`: 1–3 (OQ-81) or 4 (the brief's example)? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-87: Option B (2026-11-28). In plain words: OB06 allows `hp` 1–4; OB03, OB05 and OB07 stay 1–3; the brief's example stands. Now in IR-66.
+
+Parts that disagree:
+- Owner decision, chat 28 Nov 2026 › OQ-81 (Option A (d)): `hp` "1–3 for all four" (OB03, OB05, OB06, OB07).
+- `level_agent_brief.md` §5 example › `{"type": "OB06", "x": 1, "y": 0, "w": 1, "h": 4, "hp": 4}` (both pillars in the example have `hp` 4).
+OQ-81 did not quote this example (the rules-keeper missed it), so the answer may not have meant to rule it out.
+- Option A: 1–3 stands for OB06; the owner changes the brief's example to `hp` 3 or less.
+- Option B: OB06 allows 1–4 (OB03, OB05, OB07 stay 1–3); the example stands.
+Blocks: the validator's check for OB06 `hp` 4 only. Spec tests that used the example's `hp` 4 now use 3 (valid either way).
+
+### OQ-88 · Smaller gaps from OQ-77, OQ-80 and OQ-81 — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-88: Option A for all parts (2026-11-28). In plain words: the validator rejects a `color_set` on a 4-colour level, a `"color"` on an `orb` tile, and an OB05 entry with a missing or empty `needs` or a count of 0. Now in IR-68, IR-76, IR-73.
+
+- OQ-81 (Option A (a)): a 3-colour level names its colours in `color_set`. (a) May a 4-colour level carry a `color_set`?
+- OQ-80 (Option A): "a coloured special takes an extra `"color"` field"; IR-50: the Jade Orb has no colour. (b) What about a `"color"` on an `orb` tile?
+- OQ-77 (Option A): `"needs": {"red": 2, "blue": 1}`; GDD › OB05 "Collect the colours it shows to light it". (c) An OB05 entry with no `needs`, an empty `needs`, or a colour with count 0?
+- Option A: (a) rejected; (b) rejected; (c) rejected (every shrine needs at least 1 piece of each colour it names).
+- Option B: (a) allowed but ignored; (b) allowed but ignored; (c) allowed: no colours means it is lit only when its `hp` reaches 0; a 0 count is ignored.
+Blocks: validator checks only. Not LevelLoader for valid files.
+
+---
+
 ## GDD text to update (owner only) — ALL DONE in a94a7e4
 
 Checked line by line against the GDD on 27 Nov 2026. All 12 contradictions are now fixed:
@@ -835,4 +1006,47 @@ Brief (`research/match-villains/level_agent_brief.md`):
 3. §4 Goals ("OB04 spread goals must not exceed 90% of playable cells"): add "and must be more than the number of seed cells (`s`), so at least one new dew cell is needed".
 4. §6 checklist ("OB04 count ≤ 90% of playable cells", round 5 item 10): make it "number of seed cells < OB04 count ≤ 90% of playable cells".
 
-Owner decision with no IR (chat 28 Nov 2026): **Nian's Eye (OB09) is not in levels 1–50.** This matches GDD › Board layers & obstacles ("Nian's Eye moves to level 61"; "Hazards | None in the MVP") and CLAUDE.md's out-of-scope list. Note for level-designer: never place OB09 in levels 1–50, even though `levels_1_100_plan.csv` still lists it at levels 46–50 until the owner makes edit 14.
+---
+
+## GDD/brief text to update (owner only), round 8: decisions OQ-75 to OQ-88 (chat 28 Nov 2026)
+
+Items 1–17 cover OQ-75 to OQ-82; items 4, 5, 7 and 15 were updated and items 18–25 added for OQ-83 to OQ-88.
+
+GDD (`docs/gdd/zodiac-forest-gdd-final.md`):
+1. Board layers & obstacles › Obstacle set › Debut column (OQ-75 B): Creep moss (OB03) "17" → "7"; Mummified creature (OB07) "7" → "17" (and move the rows so the table stays in debut order). The level 10 story beat moves to 17: item 18.
+2. Board layers & obstacles › Cell layer model (OQ-78 B, trial): "3 · Overlay | Cover clusters, shutters" → "Cover clusters"; "2 · Content" add "(paper-screen lantern: adjacent matches and specials take off its screen; then an adjacent match of its colour lights it)".
+3. Rules clarifications › rows 19, 21 and 29 say "(moss, shutter)": the paper-screen lantern is no longer an overlay, so "(moss)".
+4. Obstacle set › OB08 ("Open the screen, then match its colour to light it"): add "A one-cell content obstacle (no piece) with a colour and a screen of `hp` hits. Each adjacent match, of any colour, or each special takes one hit off the screen; once it is open, an adjacent match of its colour lights it (trial). A match of its colour that takes the screen's last hit also lights it. A special, combo, booster or Orb + Orb covering an open lantern lights it. A Paper Crane landing is one screen hit on a closed lantern and lights an open one. A lit lantern is removed and its cell fills by normal falling. `hp` 1–3." (OQ-84.)
+5. Obstacle set › OB11 ("Bring it to the bottom row to collect it"): add "The first `max_on_board` items start in the top playable cells of different columns (seeded), only in columns whose top playable cell holds an uncovered plain piece, numbered left to right; every item collected in a move is replaced in the next refill, each in a different column (seeded) among the columns that get a new piece in that refill, until `total` have appeared (trial)." (OQ-79, OQ-85.)
+6. Core gameplay › Rules (or Technical design): add "Each attempt gets a new random seed, so a retry shows a new starting board and new refills; every 'seeded' draw uses the attempt's seed. Tests and the bot pass a seed in to repeat a run exactly." (OQ-76 A.)
+7. Meta & economy › Booster unlocks › Pre-level boosters, and Currencies › Win streak: add "Each special replaces a random plain piece of the starting board (seeded), not under moss, and takes its colour; a Rocket points along its row or its column, whichever holds more targets, 50/50 (seeded) on a tie. Targets in a line: each goal obstacle with a cell in it counts once; for a dew goal, its playable cells without dew; each drop item, 1." (OQ-82, OQ-86.)
+8. Rules clarifications: add rows 75 to 82 (marking 78, 79 and 80 as trial decisions to revisit after playtest).
+
+Brief (`research/match-villains/level_agent_brief.md`):
+9. §5 `objects`: OB05 entries get `"needs": {"red": 2, "blue": 1}` (a count per colour, colours among the level's colours) (OQ-77 A).
+10. §5 `objects`: OB08 entries are `{"type": "OB08", "x": 4, "y": 3, "hp": 2, "color": "red"}`; the cell holds no piece (OQ-78 B, trial).
+11. §5 `fixed_tiles`: tile names `red`, `yellow`, `blue`, `green`, `line_h`, `line_v`, `firecracker`, `crane`, `orb`; optional `"color"` on a Rocket, Firecracker or Crane (seeded random if absent); only on cells that would hold a piece, under moss allowed (OQ-80 A, trial).
+12. §4 Colours and §5: a 3-colour level names its colours, e.g. `"color_set": ["red", "yellow", "blue"]` (OQ-81 A (a)).
+13. §5 `underlay` and §6: "No underlay (`1`–`3`, `s`) on a `.` cell" (OQ-81 A (b)).
+14. §5: "No spawner cells in levels 1–50" (OQ-81 A (c)).
+15. §5 / §6: "`hp` 1–3 for OB03, OB05, OB07 and OB08; 1–4 for OB06" (OQ-81 A (d), OQ-87 B, OQ-84 (e) A); the §5 example's two OB06 entries with `"hp": 4` stand.
+16. §5 `spawn.drop_items`: add the spawn behaviour of item 5 (OQ-79 B, trial).
+17. §6 checklist: add "OB05 `needs`, OB08 `color` and fixed-tile colours are among the level's colours; obstacles debut as in the GDD table (moss 7, creature 17)".
+
+Added for OQ-83 to OQ-88:
+
+GDD (`docs/gdd/zodiac-forest-gdd-final.md`):
+18. Story › Story beats › "10 | First freed creature tells of a dark beast at the river | Short dialogue": move the row to level 17 (the creature intro), with the owner's wording (OQ-83 A).
+19. Interaction rules › "Where the Paper Crane flies" and Rules clarifications › OQ-17 / OQ-34 (hits left per goal type): add "paper-screen lantern: a landing is one screen hit on a closed lantern and lights an open one, so hits left = remaining screen hp + 1 for each unlit lantern" (OQ-84 (d) B; the hits-left count follows from it, as in IR-49).
+20. Rules clarifications: add rows 83 to 88.
+
+Brief (`research/match-villains/level_agent_brief.md`):
+21. §5 `objects` (item 10): OB08 `hp` 1–3; `"color"` required, one of the level's colours (OQ-84 (e) A).
+22. §5 `objects` (item 9) and §6: "OB05 `needs` is required, names at least one colour, and every count is at least 1" (OQ-88 A (c)).
+23. §4 Colours / §5 (item 12): "Only a 3-colour level has `color_set`; a 4-colour level must not" (OQ-88 A (a)).
+24. §5 `fixed_tiles` (item 11): "an `orb` tile has no `"color"`" (OQ-88 A (b)).
+25. §5 `spawn.drop_items` (item 16): use item 5's wording (OQ-85 A).
+
+---
+
+Owner decision with no IR (chat 28 Nov 2026): **Nian's Eye (OB09) is not in levels 1–50.** This matches GDD › Board layers & obstacles ("Nian's Eye moves to level 61"; "Hazards | None in the MVP") and CLAUDE.md's out-of-scope list. Note for level-designer: never place OB09 in levels 1–50, even though `levels_1_100_plan.csv` still lists it at levels 46–50 until the owner makes round 5 edit 14.
