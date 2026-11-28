@@ -142,7 +142,7 @@ func test_cli_levels_with_jobs_writes_one_report_per_level_and_a_line_each() -> 
 		"--levels", "1-3", "--jobs", "2", "--runs", "2", "--seed", str(SEED),
 		"--dir", ProjectSettings.globalize_path(FIX_DIR), "--out", ProjectSettings.globalize_path(out_dir),
 	]
-	assert_eq(OS.execute(_godot(), args, output, true), 0)
+	assert_eq(OS.execute(_godot(), args, output, true), 0, "exit 0 when every level ran")
 	var expected: Array[String] = _fixture_paths()
 	for i in range(3):
 		var report: String = out_dir + "/level_%03d_bot.json" % (i + 1)
@@ -156,3 +156,20 @@ func test_cli_levels_with_jobs_writes_one_report_per_level_and_a_line_each() -> 
 	var text: String = "\n".join(PackedStringArray(output))
 	for n in ["level 1 ", "level 2 ", "level 3 "]:
 		assert_true(text.contains(n), "a summary line for '%s'" % n.strip_edges())
+
+
+func test_cli_levels_exits_1_when_a_level_is_missing_but_others_still_write_reports() -> void:
+	if _godot() == "" or not FileAccess.file_exists(CLI_PATH):
+		pending("GODOT_BIN not set or CLI missing")
+		return
+	var out_dir: String = "user://zf_bot_many_missing_%d" % Time.get_ticks_usec()
+	_scratch_dirs.append(out_dir)
+	var output: Array = []
+	var args: PackedStringArray = [
+		"--headless", "--path", ProjectSettings.globalize_path("res://"), "-s", CLI_PATH, "--",
+		"--levels", "1-4", "--jobs", "2", "--runs", "1", "--seed", str(SEED),
+		"--dir", ProjectSettings.globalize_path(FIX_DIR), "--out", ProjectSettings.globalize_path(out_dir),
+	]
+	assert_eq(OS.execute(_godot(), args, output, true), 1, "level 4 does not exist: exit 1")
+	for i in range(1, 4):
+		assert_true(FileAccess.file_exists(out_dir + "/level_%03d_bot.json" % i), "level %d still ran and wrote its report" % i)

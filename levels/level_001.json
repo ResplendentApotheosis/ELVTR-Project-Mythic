@@ -1,0 +1,55 @@
+{
+  "id": 1,
+  "chapter": 1,
+  "tier": "intro",
+  "moves": 30,
+  "colors": 4,
+  "width": 9,
+  "height": 8,
+  "cells": [
+    ".#######.",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########"
+  ],
+  "underlay": [
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    "........."
+  ],
+  "objects": [
+    {"type": "OB02", "x": 0, "y": 6, "hp": 1},
+    {"type": "OB02", "x": 1, "y": 6, "hp": 1},
+    {"type": "OB02", "x": 2, "y": 6, "hp": 1},
+    {"type": "OB02", "x": 3, "y": 6, "hp": 1},
+    {"type": "OB02", "x": 5, "y": 6, "hp": 1},
+    {"type": "OB02", "x": 6, "y": 6, "hp": 1},
+    {"type": "OB02", "x": 7, "y": 6, "hp": 1},
+    {"type": "OB02", "x": 8, "y": 6, "hp": 1},
+    {"type": "OB02", "x": 0, "y": 7, "hp": 1},
+    {"type": "OB02", "x": 1, "y": 7, "hp": 1},
+    {"type": "OB02", "x": 2, "y": 7, "hp": 1},
+    {"type": "OB02", "x": 3, "y": 7, "hp": 1},
+    {"type": "OB02", "x": 4, "y": 7, "hp": 1},
+    {"type": "OB02", "x": 5, "y": 7, "hp": 1},
+    {"type": "OB02", "x": 6, "y": 7, "hp": 1},
+    {"type": "OB02", "x": 7, "y": 7, "hp": 1},
+    {"type": "OB02", "x": 8, "y": 7, "hp": 1}
+  ],
+  "fixed_tiles": [],
+  "spawn": {"drop_items": null, "generators": null},
+  "goals": [
+    {"obstacle": "OB02", "count": 17}
+  ],
+  "story_beat": null,
+  "designer_notes": "Intro for OB02: a one-layer bramble band fills the bottom two rows under six open rows, so any match in row 5 (or a vertical match ending there) breaks brambles. 17 brambles on 70 playable cells = 24% blocked. The notch at (4,6) gives a second contact line. Plan values kept (30 moves, OB02 x17). The intro comic beat for level 1 is not in the schema's story_beat values, so story_beat is null."
+}
