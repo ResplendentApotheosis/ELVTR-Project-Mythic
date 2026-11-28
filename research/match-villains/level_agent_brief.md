@@ -18,6 +18,7 @@ You are the level designer for an original zodiac-themed match-3 game built in G
 ## 4. Design rules
 
 **Teaching**
+- 2-layer brambles (OB02 `hp` 2) are fine on levels 2 and 3. Level 5 lists its brambles as a second goal (OB04 ×70 and OB02 ×4): easy levels have 1 or 2 goals.
 - Intro level: the new obstacle is the only goal. Place it where the first 2–3 obvious matches touch it. Keep the board simple and open, with fewer than 30% of cells blocked.
 - The 3–5 levels after an intro should each include the newest obstacle, paired with one or two familiar ones.
 
@@ -94,6 +95,7 @@ You are the level designer for an original zodiac-themed match-3 game built in G
     {"obstacle": "OB02", "count": 1},
     {"obstacle": "OB03", "count": 1}
   ],
+  "tutorial": null,
   "story_beat": "mini",
   "designer_notes": "Columns flank the board so side matches grind them; blockers are spread evenly to keep it open."
 }
@@ -110,7 +112,8 @@ You are the level designer for an original zodiac-themed match-3 game built in G
 - `spawn.drop_items`: e.g. `{"type":"OB11","total":3,"max_on_board":1,"exit_columns":[2,6]}`. On a fragment level whose fragment rides a drop item, add `"fragment_item": n` (the n-th item spawned carries it), e.g. `{"type":"OB11","total":3,"max_on_board":1,"exit_columns":[2,6],"fragment_item":2}`. The first `max_on_board` items start in the top playable cells of different columns (seeded), only in columns whose top playable cell holds an uncovered plain piece, numbered left to right; every item collected in a move is replaced in the next refill, each in a different column (seeded) among the columns that get a new piece in that refill, until `total` have appeared (trial).
 - Fragment levels: the fragment's cocoon is the OB07 entry in `objects` with `"fragment": true`, and `goals` lists the fragment as `{"obstacle": "OB07", "count": 1, "fragment": true}` (or `"OB11"` for a drop item). The fragment's cocoon or item also counts toward a plain OB07 / OB11 goal on the same level.
 - `spawn.generators`: generator settings, e.g. for OB17.
-- `story_beat`: `null`, `"mini"` (on hard levels) or `"chapter"` (on finales).
+- `tutorial`: optional; `null` or absent = no hint. Otherwise `{"teach": "<name>", "hint_cells": [[x,y],[x,y]]}`, e.g. `"tutorial": {"teach": "rocket", "hint_cells": [[3, 4], [4, 4]]}`. `teach` is `"rocket"` (4 in a row), `"firecracker"` (L/T match), `"crane"` (2×2 match) or `"orb"` (5 in a row). `hint_cells` is exactly two different, orthogonally adjacent playable cells inside the board, each holding a piece at the start (not a content obstacle): the swap the player is shown. Used on tutorial levels (2, 3, 5, 6). It changes no rule (no extra move, no booster). Pin the tiles with `fixed_tiles` so that swapping the two cells really makes the taught special; the validator does not check this.
+- `story_beat`: `"intro"` (level 1 only: the opening comic, plays once before the board), `"mini"` (on hard levels and on level 17, the first freed creature), `"chapter"` (on finales), otherwise `null`. `"intro"` on any other level is invalid, `"mini"` anywhere else is invalid, and level 1 or level 17 with `null` is invalid.
 
 **Loading in Godot 4**
 ```gdscript
@@ -128,3 +131,4 @@ var level: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://l
 - [ ] Hard/finale boards have no isolated pockets: every playable cell connects to the main area through at least 2 neighbours.
 - [ ] Drop items have an unblocked path to an exit column.
 - [ ] Moves are within ±2 of the plan; any change is explained in `designer_notes`.
+- [ ] `story_beat` is `"intro"` on level 1 only, `"mini"` on hard levels and level 17, `"chapter"` on finales, else `null`; if `tutorial` is present, `teach` is one of rocket / firecracker / crane / orb and `hint_cells` is two different, adjacent, playable cells inside the board, each holding a piece (no `.`, no content obstacle), and the swap makes the taught special.
