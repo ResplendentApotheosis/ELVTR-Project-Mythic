@@ -62,6 +62,9 @@ func _ready() -> void:
 	session = LevelSession.new(LEVEL_PATH, save)
 	queue.stage = board_view
 	queue.finished.connect(_on_queue_finished)
+	$Background.color = ObstacleTheme.BACKGROUND   # plain forest green; the placeholder skin lives in src/theme/
+	hoof_button.icon = ObstacleTheme.hoof_icon()
+	hoof_button.expand_icon = false
 	hoof_button.pressed.connect(_on_hoof_button)
 	queue.goal_reached.connect(_on_goal_reached)
 	play_again_button.pressed.connect(_on_play_again)
