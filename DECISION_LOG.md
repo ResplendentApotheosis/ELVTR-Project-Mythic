@@ -18,6 +18,8 @@ Who decided what, and who made what: the owner (human) or AI. Newest first. Use 
 
 | Date | What | Decided by | Made by | Where |
 |---|---|---|---|---|
+| 2026-11-28 | Owner playtested the round-10 changes (specials on the swapped cell, goals marked done at once): "feels better now" | Human | — | grey box |
+| 2026-11-28 | Merged PR #10 (levels 6–10, tutorial hints, story beats, round 10) into `main` | Human | AI | GitHub |
 | 2026-11-28 | Bot re-run on levels 1–10 after round 10 (500 runs, seed 1, uncalibrated): no level moved by more than about 1.2 points; L8 91.8% pass; L2, 3, 5, 6, 9 still too easy for the bot as before, kept until calibration | AI | godot-engineer (bot), producer | `reports/balance/levels_001-010_round5.md` |
 | 2026-11-28 | Level 2 hint check with the real resolver found seed 14 could make a Crane before the Rocket; three tiles pinned ((3,2) blue, (2,3) green, (3,4) blue); new permanent test checks the hint swaps on levels 2, 3, 5, 6 (seeds 1–20); bot golden fixture 012 re-recorded for the new placement | AI | test-engineer, level-designer | `tests/levels/test_tutorial_hints.gd`, `levels/level_002.json`, `tests/level_bot/fixtures/` |
 | 2026-11-28 | GDD round 10 built: IR-40 and IR-43 for all four swap-made specials (OQ-100 B), IR-56 goal-bar order for goals finished by one hit (OQ-101 A); spec points at GDD rows 02, 07, 25, 100, 101; suite 845 pass | AI | rules-keeper, test-engineer, godot-engineer | `spec/`, `src/match/`, `src/goals/`, `tests/` |
