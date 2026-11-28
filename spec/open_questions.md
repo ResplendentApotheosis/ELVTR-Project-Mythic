@@ -1022,7 +1022,7 @@ Owner decision, chat 28 Nov 2026 (IR-56): the game emits a "goal done" event the
 
 ## New questions from making Hoof Tap playable in the grey box (28 Nov 2026)
 
-The first five are about the level-flow side of Hoof Tap (IR-90); all five are now ANSWERED by the owner (chat 28 Nov 2026). OQ-107 to OQ-110 follow from the OQ-106 answer and are OPEN, each with Option A applied provisionally. Already answered, so not asked again: free uses are given once and kept between levels and retries (IR-82, OQ-93); a fragment or drop item hit by Hoof Tap is collected and the tap is a use (IR-34, GDD › Interaction rules › "Hero boosters on fragments and drop items").
+The first five are about the level-flow side of Hoof Tap (IR-90); all five are now ANSWERED by the owner (chat 28 Nov 2026). OQ-107 to OQ-110 followed from the OQ-106 answer and are now ANSWERED too (OQ-107 B, OQ-108 A, OQ-109 A, OQ-110 A); OQ-111 and OQ-112 are new and OPEN. Already answered, so not asked again: free uses are given once and kept between levels and retries (IR-82, OQ-93); a fragment or drop item hit by Hoof Tap is collected and the tap is a use (IR-34, GDD › Interaction rules › "Hero boosters on fragments and drop items").
 
 ### OQ-102 · How the player uses Hoof Tap: button, arm, tap a cell, cancel — ANSWERED
 Decision: Owner decision, chat 28 Nov 2026: Option A (arm-then-tap). Now in IR-90.
@@ -1059,29 +1059,45 @@ GDD says: Meta & economy › Hoof Tap "Clears the piece in one cell"; Interactio
 - Option B: a booster hitting a special sets it off as row 04 says.
 Blocks: a Hoof Tap test on a special cell (none written yet); IR-90 (d) lists only plain pieces, obstacles and collectibles.
 
-### OQ-107 · Hoof Tap on a Jade Orb: which colour? — OPEN
+### OQ-107 · Hoof Tap on a Jade Orb: which colour? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option B (a Hoof Tap on a Jade Orb acts as an Orb tap: the Orb is removed and the most common colour is cleared as IR-19 says, ties by IR-47; the booster's own top-layer hit on the cell still happens; no move used; can win). Now in IR-36, IR-19, IR-41, IR-02, IR-90. Details the GDD does not settle: OQ-111, OQ-112.
 GDD says: Rules clarifications › row 04 and 27 "A set-off Jade Orb is removed without effect"; Interaction rules › "Tapping a Jade Orb | Clears every piece of the most common colour". A Hoof Tap is not a player tap on the Orb, and the GDD gives the Orb no colour of its own.
 - Option A (provisional, in IR-36): treated as a set-off Orb: removed without effect, no colour cleared.
 - Option B: it acts as an Orb tap and clears the most common colour (IR-19), without using a move.
 Blocks: the Hoof Tap on a Jade Orb test in IR-36.
 
-### OQ-108 · Hoof Tap on a special locked under moss: is it fired? — OPEN
+### OQ-108 · Hoof Tap on a special locked under moss: is it fired? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option A (the Hoof Tap works on it). Now in IR-36, IR-90.
 GDD says: Rules clarifications › row 29 and 57 "(can't be swapped, fall or be tapped); another special can set it off"; the owner's OQ-106 B says a Hoof Tap fires a special "as in row 04". The GDD doesn't say whether a booster counts as "another special" here.
 - Option A (provisional): the Hoof Tap works on it: the piece is cleared, the moss takes the booster's hit, and the special fires as a set-off special (IR-41).
 - Option B: the Hoof Tap fires it only if the moss is gone; on a covered special it just hits the moss and clears nothing (or is refused like a tap, IR-02).
 Blocks: the covered-special tests in IR-36 and IR-90 (d).
 
-### OQ-109 · Hoof Tap on a special: does the tapped cell take the booster's hit and the special's own hit? — OPEN
+### OQ-109 · Hoof Tap on a special: does the tapped cell take the booster's hit and the special's own hit? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option A (both count). Now in IR-36.
 GDD says: Rules clarifications › OQ-36 "every booster clears the piece and gives the top obstacle layer one hit"; row 04 "each set-off special is a separate special for the one-hit rules" (IR-41); Crane row 16 "It also clears its own starting cell when it takes off". Nothing about one cell getting a hit from both a booster and the special it set off.
 - Option A (provisional): both count: a cell with moss hp 2 under a tapped Rocket ends at hp 0 (booster hit, then the Rocket's blast covers its own cell). The booster and the set-off special are separate for the one-hit rules.
 - Option B: the tapped cell takes the booster's hit only; the special's hits on that one cell are skipped.
 Blocks: the covered-cell test in IR-36 (Rocket under moss hp 2); any Firecracker or Crane tap on an obstacle cell.
 
-### OQ-110 · Tail Slam and Bamboo Dash on specials — OPEN
+### OQ-110 · Tail Slam and Bamboo Dash on specials — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option A (all boosters set off a special they hit). Now in IR-36.
 GDD says: Interaction rules › "Hero boosters on everything else | Like a special: one hit per cell"; Rules clarifications › row 04. The owner's answer to OQ-106 spoke of Hoof Tap; the OQ-106 option text said "a booster hitting a special sets it off". Tail Slam (23) and Bamboo Dash (29) are not yet built.
 - Option A (provisional, in IR-36): all boosters set off a special they hit, as row 04.
 - Option B: only Hoof Tap fires a special; Tail Slam and Bamboo Dash clear it without firing.
 Blocks: Tail Slam / Bamboo Dash tests (levels 23 and 29); not Hoof Tap.
+
+### OQ-111 · Hoof Tap on a Jade Orb when no uncovered plain piece is on the board — OPEN
+GDD says: Interaction rules › "Tapping a Jade Orb | Clears every piece of the most common colour on the board"; OQ-33 "Only plain pieces count". Nothing about a board with no uncovered plain piece (so no "most common colour"), for a tap or a Hoof Tap.
+- Option A (applied provisionally): the use goes through: the Orb is removed, the booster's hit on its cell happens, no colour is cleared, no colour-clear event; the use is spent.
+- Option B: the use is refused like a tap on nothing (IR-02): nothing spent, nothing changes, the button stays armed.
+Blocks: an edge-case test in IR-36 / IR-90 (not written yet).
+
+### OQ-112 · Hoof Tap on a Jade Orb: when is the colour counted and cleared, relative to the fall? — OPEN
+GDD says: Rules clarifications › row 04 (a special set off by another special is lifted, then falls and refills, then fires); Interaction rules › "Tapping a Jade Orb" (a tapped Orb acts at once). The owner's OQ-107 B says a Hoof Tap on an Orb acts as an Orb tap; the GDD doesn't say whether it is counted at once or after a fall like a set-off special.
+- Option A (applied provisionally): at once: the Orb's cell is cleared and the colour is counted on the board as it stands (the Orb isn't a plain piece, so it doesn't affect the count), both clears happen together, then one fall and refill.
+- Option B: like a set-off special: the Orb's cell is cleared, pieces fall and refill, and then the most common colour of the new board is counted and cleared.
+Blocks: the exact event order and colour in the Hoof Tap on an Orb tests (IR-36); the colour result differs only if the refill changes which colour is most common.
 
 ---
 

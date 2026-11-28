@@ -666,16 +666,16 @@ func set_busy(value: bool) -> void                       # the scene sets true w
   - `ok` false always comes with `events == []`.
 - `set_busy(true)` disarms an armed button (OQ-105 A). While armed, `swap` and `tap` return `[]` and use no move (OQ-105 A, ignored input).
 - A cancelled start (IR-88) leaves Hoof Tap locked again, free uses 0 (SaveService already does this); the state reads it.
-- A Hoof Tap on a special (28 Nov 2026, IR-36, OQ-106 B, OQ-107..110 Option A provisional) is tested in `tests/boosters/test_hoof_tap_special_ir36.gd` and, through the session, in this file (T8/T13 "OQ106_B", "OQ108_A"): see 10.10. `use_hero_booster` returns those events unchanged; a Rocket on the cell is a normal use (free use or 100 coins, no move, can win).
+- A Hoof Tap on a special (28 Nov 2026, IR-36, OQ-106 B, OQ-107 B, OQ-108..110 A, OQ-111/112 A provisional) is tested in `tests/boosters/test_hoof_tap_special_ir36.gd` and, through the session, in this file (T8/T13 "OQ106_B", "OQ108_A"): see 10.10. `use_hero_booster` returns those events unchanged; a Rocket on the cell is a normal use (free use or 100 coins, no move, can win).
 - NOT tested: Tail Slam / Bamboo Dash / Feather Fan flow in the level, Option B variants, the scene's button visuals.
 
-### 10.10 Booster on a special (IR-36, OQ-106 B; OQ-107..110 Option A) - NEW behaviour of `BoosterService.hoof_tap / tail_slam / bamboo_dash`
+### 10.10 Booster on a special (IR-36, OQ-106 B; OQ-107 B; OQ-108..112 A) - NEW behaviour of `BoosterService.hoof_tap / tail_slam / bamboo_dash`
 
 No new methods. Event order for `hoof_tap` on a special at C (no obstacle), nothing else changing:
 1. `booster` (data.name, cell = C).
 2. `clear` with `source == "booster"`, `cells == [C]` (the booster's own clear: the special is lifted off the board; any obstacle hit on C happens here, one hit to the top layer, OQ-109 A).
 3. `fall`, `refill` (cascade matches do NOT resolve yet, IR-41).
-4. The special fires from C as a set-off special (IR-41): Rocket `rocket_fire` (cell C, kind, cells), then its `clear`, `fall`, `refill`; Firecracker `blast`(index 1) with its `clear`, `fall`, `refill`, cascades, `blast`(index 2)...; Crane `crane_target`, `crane_takeoff` (cell C), `crane_landing`; Jade Orb: nothing (removed without effect: no `orb_fire`, no `clear` with source `orb`, OQ-107 A).
+4. The special fires from C as a set-off special (IR-41): Rocket `rocket_fire` (cell C, kind, cells), then its `clear`, `fall`, `refill`; Firecracker `blast`(index 1) with its `clear`, `fall`, `refill`, cascades, `blast`(index 2)...; Crane `crane_target`, `crane_takeoff` (cell C), `crane_landing`; Jade Orb (OQ-107 B): NOT set off; it acts as a tapped Orb at once (OQ-112 A, provisional): step 2's booster `clear` removes the Orb's cell (and gives its one top-layer hit, never two), then `orb_fire` (`color` = most common uncovered plain colour, ties R,Y,B,G, IR-47; `cells` = those pieces, never the Orb's own cell) with its `clear` (`source` `orb`), all BEFORE the single `fall`/`refill`; cascades and `goal_done`/`win` as in step 5. No uncovered plain piece (OQ-111 A, provisional): no `orb_fire`, the Orb is still removed and the use goes through. An Orb set off by another special (not a booster) is still removed with no `orb_fire` (IR-41). Moves never change.
 5. Further set-off specials, lowest then left-most (IR-41); then cascades, `goal_done` as usual (right after the event that reached a count), and `win` last if the goals are done.
 - Covered special (moss etc.): same, OQ-108 A. The cell takes the booster's hit AND the special's own hit (OQ-109 A): Rocket under moss hp 2 ends at 0. The Crane/Rocket etc. still fire.
 - `tail_slam` and `bamboo_dash` set off every special they cover the same way (OQ-110 A); several lifted specials go on the shared waiting list.

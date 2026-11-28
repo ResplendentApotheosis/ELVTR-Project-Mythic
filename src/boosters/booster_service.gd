@@ -10,7 +10,35 @@ static func hoof_tap(board: BoardModel, cell: Vector2i) -> Array[BoardEvent]:
 	var cells: Array[Vector2i] = []
 	if board.is_playable(cell.x, cell.y):
 		cells.append(cell)
+	if board.is_playable(cell.x, cell.y) and board.get_kind(cell.x, cell.y) == "orb":
+		return _hoof_tap_orb(board, cell)
 	return _hit_cells(board, "hoof_tap", cell, cells)
+
+
+## Hoof Tap on a Jade Orb acts as an Orb tap (OQ-107 B): the booster's one hit on the cell, the Orb
+## goes, then every uncovered plain piece of the most common colour clears (OQ-112 A: counted before
+## anything falls). With no such piece the Orb is just removed (OQ-111 A). Then one fall and refill.
+static func _hoof_tap_orb(board: BoardModel, cell: Vector2i) -> Array[BoardEvent]:
+	var events: Array[BoardEvent] = []
+	GoalHook.begin(board)
+	var cells: Array[Vector2i] = [cell]
+	events.append(_booster_event("hoof_tap", cell, cells))
+	var color: String = SpecialFiring.most_common_color(board)
+	var targets: Array[Vector2i] = SpecialFiring.plain_cells_of(board, color)
+	var waiting: Array[FireOrder] = []
+	SpecialFiring.cover(board, cells, {}, "booster", waiting, events)
+	waiting.clear()   # the tapped Orb itself is already removed and has no second effect
+	if not targets.is_empty():
+		var e: BoardEvent = BoardEvent.new("orb_fire")
+		e.cell = cell
+		e.color = color
+		e.cells = targets
+		events.append(e)
+		SpecialFiring.cover(board, targets, {}, "orb", waiting, events)
+	SpecialFiring.fire_set_offs(board, waiting, events)
+	MatchResolver.stabilise(board, events)
+	GoalHook.finish(board, events, false)   # a booster never causes a fail (IR-62)
+	return events
 
 
 ## One hit to every cell of the 3x3 square around `center` (IR-36).

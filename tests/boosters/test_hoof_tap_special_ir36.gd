@@ -1,4 +1,4 @@
-# GUT tests for IR-36 (a booster sets off a special it hits, OQ-106 B) with Option A of OQ-107..OQ-110 (provisional).
+# GUT tests for IR-36 (a booster sets off a special, OQ-106 B; Hoof Tap on a Jade Orb = Orb tap, OQ-107 B) with OQ-108..OQ-112 Option A.
 # Hoof Tap on a Rocket / Firecracker / Crane / Orb, covered specials, wins, Tail Slam and Bamboo Dash on specials.
 # API: tests/API_CONTRACT.md 10.6 and 10.10. Check: run the GUT suite.
 extends "res://tests/helpers/goal_test_base.gd"
@@ -123,40 +123,227 @@ func test_IR36_hoof_tap_on_a_crane_prefers_the_fragment_cocoon_over_a_bramble() 
 	assert_eq(board.moves, 10)
 
 
-# ---------------------------------------------------------------- Jade Orb (OQ-107 A)
+# ---------------------------------------------------------------- Jade Orb (OQ-107 B: acts as an Orb tap)
 
-func test_IR36_OQ107_A_hoof_tap_on_a_jade_orb_removes_it_without_effect() -> void:
-	var board: BoardModel = BB.with_counts({"R": 20, "Y": 18, "B": 17, "G": 16}, {Vector2i(4, 4): "O"})
+func _orb_board(counts: Dictionary, extra: Dictionary = {}) -> BoardModel:
+	var reserved: Dictionary = {Vector2i(4, 4): "O"}
+	for k in extra:
+		reserved[k] = extra[k]
+	var board: BoardModel = BB.with_counts(counts, reserved)
 	board.palette = BB.spread_palette()
 	board.moves = 10
-	var before: Dictionary = {}
-	for c in ["R", "Y", "B", "G"]:
-		before[c] = BB.find_color(board, c).size()
-	var events: Variant = booster("hoof_tap", [board, Vector2i(4, 4)])
-	if events == null:
+	return board
+
+
+## Runs Hoof Tap on the Orb at (4, 4), trying board seeds 1..80 until the fall after the colour clear
+## forms no match (no "match" event), so the board-state asserts stay simple. Deterministic.
+## `setup` is a Callable taking the board (obstacles etc.). Returns {"board", "events"} or {} (test failed).
+func _calm_run(counts: Dictionary, extra: Dictionary, setup: Callable) -> Dictionary:
+	for seed_value in range(1, 81):
+		var reserved: Dictionary = {Vector2i(4, 4): "O"}
+		for k in extra:
+			reserved[k] = extra[k]
+		var board: BoardModel = BB.with_counts(counts, reserved, 9, 9, seed_value)
+		board.palette = BB.spread_palette()
+		board.moves = 10
+		if setup.is_valid():
+			setup.call(board)
+		var events: Variant = booster("hoof_tap", [board, Vector2i(4, 4)])
+		if events == null:
+			return {}
+		if EV.count(events, "match") == 0:
+			return {"board": board, "events": events, "seed": seed_value}
+	fail_test("no cascade-free seed found in 1..80 for this board")
+	return {}
+
+
+## Colour of the single orb_fire event, or a note saying how many there were.
+func _orb_colour(events: Array) -> String:
+	var fires: Array = EV.of_type(events, "orb_fire")
+	if fires.size() != 1:
+		return "<%d orb_fire events>" % fires.size()
+	return String(fires[0].color)
+
+
+func test_IR36_OQ107_B_hoof_tap_on_a_jade_orb_clears_the_most_common_colour() -> void:
+	var counts: Dictionary = {"R": 20, "Y": 18, "B": 17, "G": 16}
+	var counts_before: Dictionary = {"Y": 18, "B": 17, "G": 16}
+	var run: Dictionary = _calm_run(counts, {}, Callable())
+	if run.is_empty():
 		return
-	assert_eq(EV.count(events, "orb_fire"), 0, "no colour-clear event (row 04)")
-	assert_eq(EV.count(events, "rocket_fire"), 0)
-	for c in ["R", "Y", "B", "G"]:
-		assert_eq(BB.find_color(board, c).size(), before[c], "all %s pieces stay" % c)
+	var start: BoardModel = BB.with_counts(counts, {Vector2i(4, 4): "O"}, 9, 9, int(run["seed"]))
+	var reds: Array[Vector2i] = BB.find_color(start, "R")
+	var board: BoardModel = run["board"]
+	var events: Array = run["events"]
+	assert_eq(_orb_colour(events), "R", "colour-clear event for red")
+	var fire: BoardEvent = EV.of_type(events, "orb_fire")[0]
+	assert_eq(fire.cells.size(), 20, "all 20 red cleared")
+	assert_false(fire.cells.has(Vector2i(4, 4)), "the colour clear never covers the Orb's own cell (IR-36)")
+	var cleared: Dictionary = EV.cleared(events)
+	for c in reds:
+		assert_true(cleared.has(c), "red at %s cleared" % c)
+	assert_true(cleared.has(Vector2i(4, 4)), "the Orb's cell is cleared")
+	for c in ["Y", "B", "G"]:
+		assert_eq(BB.find_color(board, c).size(), counts_before[c], "all %s stay" % c)
+	assert_eq(BB.find_color(board, "R").size(), 0, "no red left (the refill uses other colours)")
 	assert_eq(BB.find_kind(board, "orb").size(), 0, "the Orb is gone")
-	assert_eq(board.moves, 10)
-	for e in EV.of_type(events, "clear"):
-		assert_ne(e.source, "orb")
+	assert_eq(board.moves, 10, "IR-62: no move used")
 	_no_fail(events)
 
 
-func test_IR36_OQ107_A_orb_alone_on_goo_hp2_leaves_goo_hp1() -> void:
-	var board: BoardModel = _board()
-	BB.put(board, "O", [[3, 3]])
-	board.set_underlay(3, 3, "OB10", 2)
-	var events: Variant = booster("hoof_tap", [board, Vector2i(3, 3)])
+func test_IR36_OQ107_B_orb_tie_goes_to_red_by_ir47() -> void:
+	var board: BoardModel = _orb_board({"R": 18, "Y": 18, "B": 17, "G": 16})
+	var events: Variant = booster("hoof_tap", [board, Vector2i(4, 4)])
 	if events == null:
 		return
-	assert_eq(board.underlay_hp(3, 3), 1, "the booster's hit on the cell still happens")
-	assert_eq(EV.count(events, "orb_fire"), 0)
-	assert_eq(BB.find_kind(board, "orb").size(), 0)
+	assert_eq(_orb_colour(events), "R", "tie: R, Y, B, G order (IR-47)")
+
+
+func test_IR36_OQ107_B_orb_picks_yellow_when_yellow_and_blue_tie_above_the_rest() -> void:
+	var board: BoardModel = _orb_board({"R": 10, "Y": 19, "B": 19, "G": 10})
+	var events: Variant = booster("hoof_tap", [board, Vector2i(4, 4)])
+	if events == null:
+		return
+	assert_eq(_orb_colour(events), "Y", "tie Y/B: Y first (IR-47)")
+
+
+func test_IR36_OQ107_B_covered_pieces_and_specials_do_not_count_and_stay() -> void:
+	var covered: Array = [Vector2i(0, 0), Vector2i(8, 0), Vector2i(0, 8)]
+	var extra: Dictionary = {Vector2i(8, 8): "RF"}
+	for c in covered:
+		extra[c] = "R"
+	var board: BoardModel = _orb_board({"R": 17, "Y": 18, "B": 16, "G": 16}, extra)
+	for c in covered:
+		board.set_overlay(c.x, c.y, "OB03", 1)
+	var events: Variant = booster("hoof_tap", [board, Vector2i(4, 4)])
+	if events == null:
+		return
+	assert_eq(_orb_colour(events), "Y", "17 uncovered R < 18 Y: covered R and the Firecracker do not count")
+	for c in covered:
+		assert_eq(board.get_color(c.x, c.y), "R", "covered R at %s stays" % c)
+		assert_eq(board.overlay_hp(c.x, c.y), 1, "its moss is not hit")
+	assert_eq(EV.count(events, "blast"), 0, "the Firecracker does not fire (IR-19)")
+	assert_eq(board.get_kind(8, 8), "firecracker", "the Firecracker stays")
 	assert_eq(board.moves, 10)
+
+
+func test_IR36_OQ107_B_orb_on_goo_hp2_takes_one_booster_hit_and_cleared_red_on_goo_is_hit() -> void:
+	var setup: Callable = func(b: BoardModel) -> void:
+		b.set_underlay(4, 4, "OB10", 2)
+		b.set_underlay(6, 6, "OB10", 1)
+	var run: Dictionary = _calm_run({"R": 20, "Y": 18, "B": 17, "G": 16}, {Vector2i(6, 6): "R"}, setup)
+	if run.is_empty():
+		return
+	var board: BoardModel = run["board"]
+	var events: Array = run["events"]
+	assert_eq(_orb_colour(events), "R")
+	assert_eq(board.underlay_hp(4, 4), 1, "the booster's one hit; the colour clear does not cover the Orb's cell")
+	assert_eq(board.underlay_hp(6, 6), 0, "a red piece on goo hp 1 is cleared: its goo is hit and removed (IR-09)")
+	assert_eq(board.moves, 10)
+
+
+func test_IR36_OQ107_B_orb_on_moss_hp2_takes_exactly_one_hit() -> void:
+	var setup: Callable = func(b: BoardModel) -> void:
+		b.set_overlay(4, 4, "OB03", 2)
+	var run: Dictionary = _calm_run({"R": 20, "Y": 18, "B": 17, "G": 16}, {}, setup)
+	if run.is_empty():
+		return
+	var board: BoardModel = run["board"]
+	assert_eq(board.overlay_hp(4, 4), 1, "one hit, not two (the Orb's effect does not hit its own cell)")
+	assert_eq(BB.find_color(board, "R").size(), 0, "red still cleared")
+	assert_eq(board.moves, 10)
+
+
+func test_IR36_OQ107_B_orb_under_moss_hp1_loses_the_moss_and_clears_the_colour_OQ108_A() -> void:
+	var board: BoardModel = _orb_board({"R": 20, "Y": 18, "B": 17, "G": 16}, {Vector2i(2, 6): "O"})
+	board.set_overlay(2, 6, "OB03", 1)
+	var events: Variant = booster("hoof_tap", [board, Vector2i(2, 6)])
+	if events == null:
+		return
+	assert_eq(board.overlay_hp(2, 6), 0, "the moss is removed (the booster's hit)")
+	assert_eq(_orb_colour(events), "R", "the covered Orb acts as a tapped Orb")
+	assert_eq(board.moves, 10)
+
+
+func test_IR36_OQ107_B_orb_hoof_tap_can_win_after_the_board_settles_IR56() -> void:
+	var board: BoardModel = _orb_board({"R": 20, "Y": 18, "B": 17, "G": 16}, {Vector2i(6, 6): "R"})
+	board.add_content("OB02", 6, 6, 1)
+	var t: Variant = track(board, [obstacle_goal("OB02", 1)])
+	if t == null:
+		return
+	var events: Variant = booster("hoof_tap", [board, Vector2i(4, 4)])
+	if events == null:
+		return
+	assert_eq(_orb_colour(events), "R")
+	assert_eq(board.content_hp(6, 6), 0, "bramble under the cleared red is removed")
+	assert_eq(EV.count(events, "goal_done"), 1)
+	assert_eq(EV.count(events, "win"), 1)
+	assert_eq(events[events.size() - 1].type, "win", "win last, after the board settles (IR-56)")
+	assert_gt(EV.index_of(events, "win"), EV.index_of(events, "refill"))
+	assert_eq(board.moves, 10, "IR-62")
+
+
+func test_IR36_OQ107_B_orb_hoof_tap_does_not_destroy_a_hatchling() -> void:
+	var board: BoardModel = _orb_board({"R": 20, "Y": 18, "B": 17, "G": 16}, {Vector2i(4, 5): "H"})
+	var events: Variant = booster("hoof_tap", [board, Vector2i(4, 4)])
+	if events == null:
+		return
+	assert_eq(_orb_colour(events), "R")
+	var first_fall: int = EV.index_of(events, "fall")
+	var head: Array = events.slice(0, first_fall) if first_fall >= 0 else events
+	assert_false(EV.cleared(head).has(Vector2i(4, 5)), "the hatchling cell is not cleared (IR-28)")
+
+
+func test_IR36_OQ107_B_orb_set_off_by_another_special_is_still_removed_without_effect_IR41() -> void:
+	var board: BoardModel = _orb_board({"R": 20, "Y": 18, "B": 17, "G": 16}, {Vector2i(0, 4): "Y-"})
+	var events: Variant = booster("hoof_tap", [board, Vector2i(0, 4)])
+	if events == null:
+		return
+	assert_eq(EV.count(events, "rocket_fire"), 1)
+	assert_eq(EV.count(events, "orb_fire"), 0, "a set-off Orb has no colour effect (IR-41)")
+	for e in EV.of_type(events, "clear"):
+		assert_ne(e.source, "orb")
+	assert_eq(BB.find_kind(board, "orb").size(), 0, "the Orb in the Rocket's row is removed")
+	assert_eq(board.moves, 10)
+
+
+func test_IR36_OQ111_A_orb_with_no_uncovered_plain_piece_is_removed_and_the_use_goes_through() -> void:
+	var board: BoardModel = BB.blank()
+	board.palette = BB.spread_palette()
+	board.moves = 10
+	for y in range(9):
+		for x in range(9):
+			if not (x == 4 and (y == 4 or y == 5)):
+				BB.put(board, "#", [[x, y]])
+	BB.put(board, "O", [[4, 4]])
+	BB.put(board, "R", [[4, 5]])
+	board.set_overlay(4, 5, "OB03", 2)
+	board.set_underlay(4, 4, "OB10", 2)
+	var events: Variant = booster("hoof_tap", [board, Vector2i(4, 4)])
+	if events == null:
+		return
+	assert_eq(EV.count(events, "orb_fire"), 0, "no colour-clear event (OQ-111 A)")
+	assert_eq(BB.find_kind(board, "orb").size(), 0, "the Orb is removed")
+	assert_eq(board.underlay_hp(4, 4), 1, "the booster's hit on the cell happens")
+	assert_eq(board.get_color(4, 5), "R", "the covered piece stays")
+	assert_eq(board.overlay_hp(4, 5), 2, "and its moss is not hit")
+	assert_eq(board.moves, 10)
+	_no_fail(events)
+
+
+func test_IR36_OQ112_A_orb_colour_is_counted_at_once_before_the_fall() -> void:
+	var run: Dictionary = _calm_run({"R": 20, "Y": 18, "B": 17, "G": 16}, {}, Callable())
+	if run.is_empty():
+		return
+	var events: Array = run["events"]
+	var i_fire: int = EV.index_of(events, "orb_fire")
+	assert_gte(i_fire, 0)
+	assert_eq(EV.count_between(events, "fall", 0, i_fire), 0, "no fall before the colour clear (OQ-112 A)")
+	assert_eq(EV.count_between(events, "refill", 0, i_fire), 0)
+	assert_gt(EV.index_of(events, "fall"), i_fire, "one fall and refill after both clears")
+	assert_gt(EV.index_of(events, "refill"), EV.index_of(events, "fall"))
+	assert_eq(EV.count(events, "fall"), 1, "one fall (no cascade on this board)")
+	assert_gte(EV.index_of_clear(events, "booster"), 0, "the booster's own clear of the Orb's cell is present")
 
 
 # ---------------------------------------------------------------- covered specials (OQ-108 A, OQ-109 A)
