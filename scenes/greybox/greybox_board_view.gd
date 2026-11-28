@@ -1,22 +1,13 @@
-# Grey-box board view: draws the floor, obstacles (underlay = tinted cell, content = grey block, overlay = outline)
-# and one GreyboxPieceTile per piece, and plays AnimationQueue steps with short tweens. It only shows things:
-# every rule comes from the logic, and the final "sync" step makes the picture match the real board exactly.
+# Board view: draws the floor and the obstacles (underlay = under the piece, content = blocker, overlay = over the
+# piece) and one GreyboxPieceTile per piece, all through ObstacleTheme, and plays AnimationQueue steps with short
+# tweens. It only shows things: every rule comes from the logic, and the final "sync" step makes the picture match.
 # Check: F5 the greybox scene; make matches and watch pieces swap, pop, fall and drop in.
 class_name GreyboxBoardView
 extends Node2D
 
 const NO_CELL: Vector2i = Vector2i(-1, -1)
-const FLOOR_A: Color = Color(0.22, 0.24, 0.27)
-const FLOOR_B: Color = Color(0.26, 0.28, 0.31)
-const CONTENT_COLOR: Color = Color(0.45, 0.45, 0.48)
-const OVERLAY_COLOR: Color = Color(0.55, 0.95, 0.55)
 const SELECT_COLOR: Color = Color(1.0, 1.0, 0.3)
 const FLASH_COLOR: Color = Color(1.0, 1.0, 1.0, 0.7)
-const UNDERLAY_TINTS: Dictionary = {
-	"OB04": Color(0.45, 0.80, 0.95, 0.55),   # healing dew
-	"OB10": Color(0.60, 0.30, 0.70, 0.65),   # creep goo
-}
-const OTHER_UNDERLAY: Color = Color(0.8, 0.5, 0.2, 0.6)
 
 @export var cell_size: float = 64.0
 
@@ -261,64 +252,36 @@ func _center(cell: Vector2i) -> Vector2:
 
 # ---------------------------------------------------------------- drawing
 
-## Floor, underlays and content blockers (under the pieces).
+## Floor, underlays and content blockers (under the pieces). All looks come from ObstacleTheme.
 func _draw() -> void:
 	if board == null:
 		return
 	var font: Font = ThemeDB.fallback_font
 	for y in range(board.height):
 		for x in range(board.width):
-			if not board.is_playable(x, y):
-				continue
-			var r: Rect2 = Rect2(Vector2(x, y) * cell_size, Vector2(cell_size, cell_size))
-			draw_rect(r, FLOOR_A if (x + y) % 2 == 0 else FLOOR_B)
+			if board.is_playable(x, y):
+				ObstacleTheme.draw_floor(self, _cell_rect(Vector2i(x, y)), x, y)
 	for cell in _obstacles.underlay:
 		var u: Dictionary = _obstacles.underlay[cell]
-		var r: Rect2 = Rect2(Vector2(cell) * cell_size, Vector2(cell_size, cell_size))
-		draw_rect(r.grow(-1.0), UNDERLAY_TINTS.get(u.id, OTHER_UNDERLAY))
-		_label(self, font, "%s %d" % [u.id, u.hp], r.position + Vector2(0, cell_size - 3), cell_size, 10, Color.WHITE)
+		ObstacleTheme.draw_underlay(self, _cell_rect(cell), String(u.id), int(u.hp))
 	for key in _obstacles.content:
 		var c: Dictionary = _obstacles.content[key]
 		var rect: Rect2i = c.rect
 		var r: Rect2 = Rect2(Vector2(rect.position) * cell_size, Vector2(rect.size) * cell_size).grow(-3.0)
-		draw_rect(r, CONTENT_COLOR)
-		draw_rect(r, Color.BLACK, false, 2.0)
-		var text: String = "%s %d" % [c.id, c.hp]
-		if bool(c.fragment):
-			text += " F"
-		_label(self, font, text, r.position + Vector2(0, 20), r.size.x, 13, Color.WHITE)
-		var extra: String = _content_extra(c)
-		if extra != "":
-			_label(self, font, extra, r.position + Vector2(0, 36), r.size.x, 11, Color.WHITE)
+		ObstacleTheme.draw_content(self, r, c, font)
 
 
-## Overlays (an outline over the piece) and the selected cell, drawn above the pieces.
+## Overlays (moss over a piece) and the selected cell, drawn above the pieces.
 func _draw_overlays() -> void:
 	if board == null:
 		return
 	var font: Font = ThemeDB.fallback_font
 	for cell in _obstacles.overlay:
 		var o: Dictionary = _obstacles.overlay[cell]
-		var r: Rect2 = Rect2(Vector2(cell) * cell_size, Vector2(cell_size, cell_size)).grow(-2.0)
-		_overlay_layer.draw_rect(r, OVERLAY_COLOR, false, 4.0)
-		_overlay_layer.draw_rect(Rect2(r.position, Vector2(r.size.x, 14)), Color(0, 0, 0, 0.6))
-		_label(_overlay_layer, font, "%s %d" % [o.id, o.hp], r.position + Vector2(0, 11), r.size.x, 10, OVERLAY_COLOR)
+		ObstacleTheme.draw_overlay(_overlay_layer, _cell_rect(cell).grow(-2.0), String(o.id), int(o.hp), font)
 	if selected != NO_CELL:
-		var s: Rect2 = Rect2(Vector2(selected) * cell_size, Vector2(cell_size, cell_size))
-		_overlay_layer.draw_rect(s, SELECT_COLOR, false, 3.0)
+		_overlay_layer.draw_rect(_cell_rect(selected), SELECT_COLOR, false, 3.0)
 
 
-## Shrine needs ("R2 B1") or a lantern colour, for the second label line.
-func _content_extra(c: Dictionary) -> String:
-	var parts: Array[String] = []
-	var needs: Dictionary = c.get("needs", {})
-	for colour in needs:
-		if int(needs[colour]) > 0:
-			parts.append("%s%d" % [colour, int(needs[colour])])
-	if String(c.get("color", "")) != "":
-		parts.append(String(c.color))
-	return " ".join(parts)
-
-
-func _label(target: CanvasItem, font: Font, text: String, pos: Vector2, width: float, font_size: int, color: Color) -> void:
-	target.draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_CENTER, width, font_size, color)
+func _cell_rect(cell: Vector2i) -> Rect2:
+	return Rect2(Vector2(cell) * cell_size, Vector2(cell_size, cell_size))

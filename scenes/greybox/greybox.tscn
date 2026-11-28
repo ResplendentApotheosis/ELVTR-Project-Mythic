@@ -82,8 +82,8 @@ text = ""
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 autowrap_mode = 3
-text = "Click a piece then a neighbour, or drag a piece toward a neighbour, to swap. Click a special (R- R| FC CR ORB) to fire it.
-Grey block = content obstacle (id hp). Green outline = overlay. Tinted cell = underlay (blue = dew, purple = goo)."
+text = "Click a piece then a neighbour, or drag a piece toward a neighbour, to swap. Click a special to fire it.
+Rings, moss layers and stone blocks show the hits left."
 
 [node name="DebugPanel" type="VBoxContainer" parent="."]
 visible = false
