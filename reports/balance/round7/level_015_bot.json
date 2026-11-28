@@ -1,0 +1,3012 @@
+{
+	"avg_goal_progress_on_fail": 0.873263888888889,
+	"avg_moves_left_on_win": 9.06404958677686,
+	"level": 15,
+	"results": [
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 18,
+			"moves_used": 10,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 0.861111111111111,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 16,
+			"moves_used": 12,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 2,
+			"moves_used": 26,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 1,
+			"moves_used": 27,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 1,
+			"moves_used": 27,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 1,
+			"moves_used": 27,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 0.944444444444444,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 1,
+			"moves_used": 27,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 20,
+			"moves_used": 8,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 16,
+			"moves_used": 12,
+			"won": true
+		},
+		{
+			"goal_progress": 0.805555555555556,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 2,
+			"moves_used": 26,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 2,
+			"moves_used": 26,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 1,
+			"moves_used": 27,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 16,
+			"moves_used": 12,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 0.888888888888889,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 16,
+			"moves_used": 12,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 2,
+			"moves_used": 26,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 17,
+			"moves_used": 11,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 16,
+			"moves_used": 12,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 2,
+			"moves_used": 26,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 17,
+			"moves_used": 11,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 16,
+			"moves_used": 12,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 1,
+			"moves_used": 27,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 0.805555555555556,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 17,
+			"moves_used": 11,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 17,
+			"moves_used": 11,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 16,
+			"moves_used": 12,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 19,
+			"moves_used": 9,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 0.972222222222222,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 0.916666666666667,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 1,
+			"moves_used": 27,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 17,
+			"moves_used": 11,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 2,
+			"moves_used": 26,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 18,
+			"moves_used": 10,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 18,
+			"moves_used": 10,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 0.972222222222222,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 19,
+			"moves_used": 9,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 0.944444444444444,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 2,
+			"moves_used": 26,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 2,
+			"moves_used": 26,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 0.944444444444444,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 2,
+			"moves_used": 26,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 0.972222222222222,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 19,
+			"moves_used": 9,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 16,
+			"moves_used": 12,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 2,
+			"moves_used": 26,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 2,
+			"moves_used": 26,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 15,
+			"moves_used": 13,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 0.416666666666667,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 2,
+			"moves_used": 26,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 16,
+			"moves_used": 12,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 0.722222222222222,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 0.861111111111111,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 3,
+			"moves_used": 25,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 17,
+			"moves_used": 11,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 16,
+			"moves_used": 12,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 13,
+			"moves_used": 15,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 1,
+			"moves_used": 27,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 4,
+			"moves_used": 24,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 12,
+			"moves_used": 16,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 1,
+			"moves_used": 27,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 7,
+			"moves_used": 21,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 2,
+			"moves_used": 26,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 11,
+			"moves_used": 17,
+			"won": true
+		},
+		{
+			"goal_progress": 0.972222222222222,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 6,
+			"moves_used": 22,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 14,
+			"moves_used": 14,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 5,
+			"moves_used": 23,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 10,
+			"moves_used": 18,
+			"won": true
+		},
+		{
+			"goal_progress": 0.972222222222222,
+			"moves_left": 0,
+			"moves_used": 28,
+			"won": false
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 17,
+			"moves_used": 11,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 9,
+			"moves_used": 19,
+			"won": true
+		},
+		{
+			"goal_progress": 1.0,
+			"moves_left": 8,
+			"moves_used": 20,
+			"won": true
+		}
+	],
+	"runs": 500,
+	"seed": 1,
+	"tier": "hard",
+	"win_rate": 0.968,
+	"wins": 484
+}

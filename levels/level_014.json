@@ -1,0 +1,60 @@
+{
+  "id": 14,
+  "chapter": 1,
+  "tier": "easy",
+  "moves": 26,
+  "colors": 4,
+  "width": 9,
+  "height": 9,
+  "cells": [
+    "#########",
+    ".#######.",
+    "..#####..",
+    "...###...",
+    "...###...",
+    "...###...",
+    "..#####..",
+    ".#######.",
+    "#########"
+  ],
+  "underlay": [
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    "........."
+  ],
+  "objects": [
+    {"type": "OB06", "x": 2, "y": 0, "w": 1, "h": 3, "hp": 3},
+    {"type": "OB06", "x": 6, "y": 0, "w": 1, "h": 3, "hp": 3},
+    {"type": "OB06", "x": 2, "y": 6, "w": 1, "h": 3, "hp": 3},
+    {"type": "OB06", "x": 4, "y": 6, "w": 1, "h": 3, "hp": 4},
+    {"type": "OB06", "x": 6, "y": 6, "w": 1, "h": 3, "hp": 3},
+    {"type": "OB03", "x": 1, "y": 1, "hp": 2},
+    {"type": "OB03", "x": 3, "y": 1, "hp": 2},
+    {"type": "OB03", "x": 5, "y": 1, "hp": 2},
+    {"type": "OB03", "x": 7, "y": 1, "hp": 2},
+    {"type": "OB03", "x": 3, "y": 2, "hp": 3},
+    {"type": "OB03", "x": 5, "y": 2, "hp": 3},
+    {"type": "OB03", "x": 3, "y": 6, "hp": 3},
+    {"type": "OB03", "x": 5, "y": 6, "hp": 3},
+    {"type": "OB03", "x": 1, "y": 7, "hp": 2},
+    {"type": "OB03", "x": 3, "y": 7, "hp": 3},
+    {"type": "OB03", "x": 5, "y": 7, "hp": 3},
+    {"type": "OB03", "x": 7, "y": 7, "hp": 2},
+    {"type": "OB03", "x": 1, "y": 8, "hp": 2},
+    {"type": "OB03", "x": 7, "y": 8, "hp": 2}
+  ],
+  "fixed_tiles": [],
+  "spawn": {"drop_items": null, "generators": null},
+  "goals": [
+    {"obstacle": "OB06", "count": 5},
+    {"obstacle": "OB03", "count": 14}
+  ],
+  "story_beat": null,
+  "designer_notes": "Hourglass: 9-wide bulbs at top and bottom, a 3-wide neck in rows 3-5 (51 cells). Five 1x3 pillars: two in the top bulb (hp 3), three across the bottom bulb (hp 3, 4, 3) with moss as the familiar partner. Plan lists only OB06 x3; the extra pillars and the moss goal are additions, not cuts. [redesign 2026-11-28] Was 3 pillars (hp 2,2,3) + 12 moss (hp 1-2), about 23 hits; now 5 pillars (16 hits) + 14 moss (6 at hp 3, 8 at hp 2 = 34 hits) = 50 hits on 26 moves. 29 of 51 cells blocked (57%). Moves unchanged at 26 (plan 28 -2)."
+}

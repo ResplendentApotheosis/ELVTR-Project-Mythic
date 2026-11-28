@@ -24,6 +24,10 @@ var finale_rockets: int = 0      # moves left at the win
 var debug_enabled: bool = DebugGate.enabled()   # debug shortcuts allowed? (never in a release build)
 var debug_moves: int = 0         # debug only: moves for the NEXT start or retry (0 = the file's moves)
 
+const HERO_PRICE: int = 100   # coins for a Hoof Tap use when no free uses are left
+
+var _armed: String = ""          # the hero booster waiting for a cell tap ("" = none)
+var _busy: bool = false          # true while the scene plays a move's events
 var _save: SaveService
 var _level_path: String
 var _level_id: int = 0           # read from the file, so the retry screen knows the level even with no board
@@ -59,6 +63,8 @@ func retry(options: Dictionary = {}) -> bool:
 ## says yes is the board built, once, with the specials it handed back (IR-77); then the tracker is bound.
 func _begin(options: Dictionary, is_retry: bool) -> bool:
 	notice = ""
+	_armed = ""
+	_busy = false
 	_level_id = _read_level_id()
 	if _level_id <= 0:
 		last_error = "could not load %s" % _level_path
@@ -116,7 +122,12 @@ func _read_level_id() -> int:
 func debug_jump_to_level(level: int) -> bool:
 	if not debug_enabled or level < 1 or level > 50:
 		return false
-	_save.debug_set({"next_level": level})
+	var values: Dictionary = {"next_level": level}
+	if level == MetaRules.HERO_BOOSTERS["hoof_tap"].level:
+		# So starting level 11 hands out Hoof Tap and its 3 free uses again (the save only does it once).
+		values["hero_unlocked"] = []
+		values["hero_free"] = {"hoof_tap": 0}
+	_save.debug_set(values)
 	return true
 
 
@@ -140,7 +151,7 @@ func set_debug_moves(n: int) -> void:
 ## The player drags `from` into `to`. Returns every event to play (an empty list when not playing).
 ## A winning move also returns the finale's events (fire_finale), after the `win` event.
 func swap(from: Vector2i, to: Vector2i) -> Array[BoardEvent]:
-	if state != PLAYING:
+	if state != PLAYING or _armed != "":
 		return [] as Array[BoardEvent]
 	var events: Array[BoardEvent] = MatchResolver.swap(attempt.board, from, to)
 	_after_move(events)
@@ -149,11 +160,73 @@ func swap(from: Vector2i, to: Vector2i) -> Array[BoardEvent]:
 
 ## The player taps a cell (IR-02). Tapping a non-special returns no events and uses no move.
 func tap(cell: Vector2i) -> Array[BoardEvent]:
-	if state != PLAYING:
+	if state != PLAYING or _armed != "":
 		return [] as Array[BoardEvent]
 	var events: Array[BoardEvent] = MatchResolver.tap(attempt.board, cell)
 	_after_move(events)
 	return events
+
+
+# ---------------------------------------------------------------- hero boosters (IR-90)
+
+## What the button shows: {"unlocked", "free_uses", "price", "armed", "usable"}. Works with no attempt.
+func hero_booster_state(booster: String) -> Dictionary:
+	var unlocked: bool = _save.hero_unlocked(booster)
+	return {
+		"unlocked": unlocked,
+		"free_uses": _save.hero_free_uses(booster),
+		"price": HERO_PRICE,
+		"armed": _armed == booster and booster != "",
+		"usable": unlocked and state == PLAYING and not _busy,
+	}
+
+
+## The button tap. Free. True = now armed. False when locked, not playing, or a move is still playing.
+func arm_hero_booster(booster: String) -> bool:
+	if booster != "hoof_tap" or not bool(hero_booster_state(booster).usable):
+		return false
+	_armed = booster
+	return true
+
+
+## A second tap on the button, or a tap away from the cells. Spends nothing.
+func cancel_hero_booster() -> void:
+	_armed = ""
+
+
+## "" when nothing is armed, else "hoof_tap".
+func armed_hero_booster() -> String:
+	return _armed
+
+
+## The scene sets this while a move's events play. A move starting disarms the button (OQ-105 A).
+func set_busy(value: bool) -> void:
+	_busy = value
+	if value:
+		_armed = ""
+
+
+## The cell tap while armed: pays (free use first, else coins), then runs Hoof Tap on that cell.
+## Returns {"ok", "reason", "events"}; events is empty whenever ok is false.
+func use_hero_booster(cell: Vector2i) -> Dictionary:
+	var none: Array[BoardEvent] = []
+	if state != PLAYING:
+		_armed = ""
+		return {"ok": false, "reason": "not_playing", "events": none}
+	if _busy:
+		_armed = ""
+		return {"ok": false, "reason": "busy", "events": none}
+	if _armed == "":
+		return {"ok": false, "reason": "not_armed", "events": none}
+	if not attempt.board.is_playable(cell.x, cell.y):
+		_armed = ""   # OQ-104 A: a hole counts as a non-cell area
+		return {"ok": false, "reason": "non_playable_cell", "events": none}
+	if not _save.use_hero_booster(_armed):
+		return {"ok": false, "reason": "not_enough_coins", "events": none}   # stays armed (OQ-103 A)
+	_armed = ""
+	var events: Array[BoardEvent] = BoosterService.hoof_tap(attempt.board, cell)
+	_after_move(events)
+	return {"ok": true, "reason": "", "events": events}
 
 
 ## Reads the last event: `win` -> finale, coins, save (IR-16, IR-56); `fail` -> offer or retry (IR-37, IR-57).
@@ -237,6 +310,8 @@ func level_id() -> int:
 
 
 func moves_left() -> int:
+	if state == WON:
+		return finale_rockets   # the finale Rockets use the moves up; show what the player had left at the win
 	return attempt.board.moves if attempt != null else 0
 
 

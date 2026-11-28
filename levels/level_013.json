@@ -1,0 +1,63 @@
+{
+  "id": 13,
+  "chapter": 1,
+  "tier": "intro",
+  "moves": 30,
+  "colors": 4,
+  "width": 9,
+  "height": 9,
+  "cells": [
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########"
+  ],
+  "underlay": [
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    "........."
+  ],
+  "objects": [
+    {"type": "OB06", "x": 2, "y": 3, "w": 1, "h": 4, "hp": 2},
+    {"type": "OB06", "x": 6, "y": 3, "w": 1, "h": 4, "hp": 2}
+  ],
+  "fixed_tiles": [
+    {"x": 3, "y": 2, "tile": "blue"},
+    {"x": 3, "y": 3, "tile": "red"},
+    {"x": 3, "y": 4, "tile": "red"},
+    {"x": 3, "y": 5, "tile": "green"},
+    {"x": 3, "y": 6, "tile": "yellow"},
+    {"x": 4, "y": 3, "tile": "yellow"},
+    {"x": 4, "y": 4, "tile": "blue"},
+    {"x": 4, "y": 5, "tile": "red"},
+    {"x": 4, "y": 6, "tile": "yellow"},
+    {"x": 5, "y": 5, "tile": "green"},
+    {"x": 5, "y": 6, "tile": "blue"},
+    {"x": 7, "y": 2, "tile": "green"},
+    {"x": 7, "y": 3, "tile": "blue"},
+    {"x": 7, "y": 4, "tile": "blue"},
+    {"x": 7, "y": 5, "tile": "yellow"},
+    {"x": 7, "y": 6, "tile": "red"},
+    {"x": 8, "y": 3, "tile": "red"},
+    {"x": 8, "y": 4, "tile": "green"},
+    {"x": 8, "y": 5, "tile": "blue"},
+    {"x": 8, "y": 6, "tile": "green"}
+  ],
+  "spawn": {"drop_items": null, "generators": null},
+  "goals": [
+    {"obstacle": "OB06", "count": 2}
+  ],
+  "story_beat": null,
+  "designer_notes": "Intro for OB06: two 1x4 pillars (hp 2) stand at columns 2 and 6, rows 3-6, under three fully open top rows; only 8 of 81 cells are blocked. A red pair in column 3 and a blue pair in column 7 sit beside them: swap (3,5)<->(4,5) makes a red column match and swap (7,5)<->(8,5) a blue one, both touching a pillar, so the first two obvious matches hit the pillars. Pinned pieces make no pre-made match. Moves 30 = plan."
+}

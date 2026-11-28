@@ -199,11 +199,11 @@ static func _pop_lowest(waiting: Array[FireOrder]) -> FireOrder:
 ## Most common colour among plain pieces; ties go R, Y, B, G, then other colours A-Z (IR-19, IR-47).
 ## Owner decisions: coloured specials are not counted (OQ-33); plain pieces under an overlay are
 ## not counted (OQ-42, chat 27 Nov 2026).
-static func most_common_color(board: BoardModel) -> String:
+static func most_common_color(board: BoardModel, skip: Vector2i = Vector2i(-1, -1)) -> String:
 	var counts: Dictionary = {}
 	for y in range(board.height):
 		for x in range(board.width):
-			if _orb_can_take(board, x, y):
+			if Vector2i(x, y) != skip and _orb_can_take(board, x, y):
 				var c: String = board.get_color(x, y)
 				counts[c] = int(counts.get(c, 0)) + 1
 	var order: Array[String] = ["R", "Y", "B", "G"]
@@ -224,13 +224,13 @@ static func most_common_color(board: BoardModel) -> String:
 
 
 ## Cells the Jade Orb clears or converts for this colour: uncovered plain pieces only (OQ-33, OQ-42).
-static func plain_cells_of(board: BoardModel, color: String) -> Array[Vector2i]:
+static func plain_cells_of(board: BoardModel, color: String, skip: Vector2i = Vector2i(-1, -1)) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
 	if color == "":
 		return out
 	for y in range(board.height):
 		for x in range(board.width):
-			if _orb_can_take(board, x, y) and board.get_color(x, y) == color:
+			if Vector2i(x, y) != skip and _orb_can_take(board, x, y) and board.get_color(x, y) == color:
 				out.append(Vector2i(x, y))
 	return out
 

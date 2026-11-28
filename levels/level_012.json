@@ -1,0 +1,42 @@
+{
+  "id": 12,
+  "chapter": 1,
+  "tier": "medium",
+  "moves": 24,
+  "colors": 4,
+  "width": 9,
+  "height": 9,
+  "cells": [
+    "..##.##..",
+    ".###.###.",
+    ".###.###.",
+    ".###.###.",
+    ".#######.",
+    ".###.###.",
+    ".###.###.",
+    ".###.###.",
+    "..##.##.."
+  ],
+  "underlay": [
+    ".........",
+    ".........",
+    "......s..",
+    ".........",
+    "....s....",
+    ".........",
+    ".........",
+    ".........",
+    "........."
+  ],
+  "objects": [
+    {"type": "OB05", "x": 2, "y": 3, "w": 2, "h": 2, "hp": 3, "needs": {"yellow": 3, "green": 2}}
+  ],
+  "fixed_tiles": [],
+  "spawn": {"drop_items": null, "generators": null},
+  "goals": [
+    {"obstacle": "OB05", "count": 1},
+    {"obstacle": "OB04", "count": 45}
+  ],
+  "story_beat": null,
+  "designer_notes": "Split halves: two 3-wide towers joined only by the 1-cell bridge at (4,4); 51 playable cells. The lantern shrine (hp 3, needs 3 yellow + 2 green) sits on (2..3, 3..4), covering the bridge's only left-hand neighbour (3,4): no dew can enter the left half until the shrine is cleared, so the priority choice is shrine first (slow, needs specific colours) or spread dew in the right half first. Dew goal 45 of 51 (88%, cap 45.9) with 2 seeds at (6,2) and (4,4). [redesign 2026-11-28] Board shrunk from 69 to 51 playable cells, dew goal 62 -> 45 (same 88-90% share), shrine hp 2 -> 3 with needs 2+2 -> 3+2, moved from the left tower's lower corner to the bridge mouth so it gates the whole left half (25 cells, 21 not under the shrine). Moves unchanged at 24."
+}

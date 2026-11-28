@@ -639,3 +639,44 @@ static func run_many(paths: Array[String], runs: int, seed: int, jobs: int) -> A
 - `run_many`: one `run()` dictionary per path, in path order, every level with the SAME seed (not offset by level). The result is identical whatever `jobs` is (1, 2, 8): compared as JSON text. A path that cannot be played gives a dictionary with a non-empty `"error"` String (in its place, the other levels still run). `[]` paths gives `[]`.
 - CLI `level_bot.gd -- --levels 1-5 --jobs 5 [--dir path] [--runs N] [--seed S] [--out dir]`: writes `level_NNN_bot.json` per level (into `reports/balance/`, or into the `--out` directory), prints one summary line per level starting `level N ` (the existing single-level line format). Exit code: 1 when any level in the range cannot be played (the other levels still run and still write their reports); 0 only when every level ran. The single-level form `-- <path> ...` keeps working.
 - Fixtures: `tests/level_bot/fixtures/level_001.json` .. `level_003.json` are copies of `level_fixture_012.json` with their own ids.
+
+## 17. Hoof Tap in a level (IR-90, OQ-102..OQ-106 Option A, provisional) - NEW API
+
+Tests: `tests/greybox/test_level_session_hoof_tap_ir90.gd`. Everything is on `LevelSession` (src/game/level_session.gd); the scene only calls these and plays the returned events. Pure logic, no awaits.
+
+```gdscript
+# LevelSession
+func hero_booster_state(booster: String) -> Dictionary   # {"unlocked": bool, "free_uses": int, "price": int, "armed": bool, "usable": bool}
+func arm_hero_booster(booster: String) -> bool           # the button tap; true = now armed
+func cancel_hero_booster() -> void                       # second tap on the button, or a tap on a non-cell area; always safe
+func armed_hero_booster() -> String                      # "" when nothing is armed, else "hoof_tap"
+func use_hero_booster(cell: Vector2i) -> Dictionary      # {"ok": bool, "reason": String, "events": Array[BoardEvent]}
+func set_busy(value: bool) -> void                       # the scene sets true while a move's events play, false when settled
+```
+
+- `hero_booster_state("hoof_tap")` works with or without an attempt (reads the SaveService). `unlocked` / `free_uses` come from `SaveService.hero_unlocked / hero_free_uses`; `price` is 100 always; `armed` is true while armed; `usable` = unlocked AND state PLAYING AND not busy (it does NOT depend on coins or free uses: arming with 90 coins works).
+- `arm_hero_booster`: free, no events. False (nothing armed) when locked, state is not PLAYING (not_started, offer, won, retry) or busy. Only "hoof_tap" is specified.
+- `cancel_hero_booster`: disarms; nothing spent; no-op when not armed.
+- `use_hero_booster(cell)` (the cell tap):
+  - Not armed -> `{"ok": false, "reason": "not_armed", "events": []}`; nothing changes (a locked booster can never be armed, so this is also the locked refusal).
+  - State not PLAYING -> reason `"not_playing"`; busy -> reason `"busy"`; nothing changes. (Arming is already refused in those states, so these only arise when the state changed after arming; any armed button is disarmed.)
+  - Cell not a playable cell of the board (a hole, or outside the grid) -> reason `"non_playable_cell"`, nothing spent, board unchanged, and the button is DISARMED (OQ-104 A).
+  - Then `SaveService.use_hero_booster("hoof_tap")` (free use first, else 100 coins taken from `tracker.coins`; sets `tracker.coins` back, 12.2 / 12.6). Refused -> reason `"not_enough_coins"`, events `[]`, board and moves untouched, button stays ARMED (OQ-103 A).
+  - Accepted -> disarm, `BoosterService.hoof_tap(board, cell)`, return `{"ok": true, "reason": "", "events": <its events>}`. Then, like `swap`/`tap`: if the last event is `win`, append `MatchResolver.fire_finale`, set `finale_rockets`, `win_coins`, call `end_attempt("win", ...)`, state WON (coins afterwards: 500 + 20 + 5 x moves). A booster never produces a `fail` (IR-62), so no OFFER/RETRY transition.
+  - `ok` false always comes with `events == []`.
+- `set_busy(true)` disarms an armed button (OQ-105 A). While armed, `swap` and `tap` return `[]` and use no move (OQ-105 A, ignored input).
+- A cancelled start (IR-88) leaves Hoof Tap locked again, free uses 0 (SaveService already does this); the state reads it.
+- A Hoof Tap on a special (28 Nov 2026, IR-36, OQ-106 B, OQ-107 B, OQ-108..110 A, OQ-111 A, OQ-112 B, OQ-113 A provisional) is tested in `tests/boosters/test_hoof_tap_special_ir36.gd` and, through the session, in this file (T8/T13 "OQ106_B", "OQ108_A"): see 10.10. `use_hero_booster` returns those events unchanged; a Rocket on the cell is a normal use (free use or 100 coins, no move, can win).
+- NOT tested: Tail Slam / Bamboo Dash / Feather Fan flow in the level, Option B variants, the scene's button visuals.
+
+### 10.10 Booster on a special (IR-36, OQ-106 B; OQ-107 B; OQ-108..111 A; OQ-112 B; OQ-113 A) - NEW behaviour of `BoosterService.hoof_tap / tail_slam / bamboo_dash`
+
+No new methods. Event order for `hoof_tap` on a special at C (no obstacle), nothing else changing:
+1. `booster` (data.name, cell = C).
+2. `clear` with `source == "booster"`, `cells == [C]` (the booster's own clear: the special is lifted off the board; any obstacle hit on C happens here, one hit to the top layer, OQ-109 A).
+3. `fall`, `refill` (cascade matches do NOT resolve yet, IR-41).
+4. The special fires from C as a set-off special (IR-41): Rocket `rocket_fire` (cell C, kind, cells), then its `clear`, `fall`, `refill`; Firecracker `blast`(index 1) with its `clear`, `fall`, `refill`, cascades, `blast`(index 2)...; Crane `crane_target`, `crane_takeoff` (cell C), `crane_landing`; Jade Orb (OQ-107 B, OQ-112 B, OQ-113 A provisional): NOT set off, but timed like a set-off special: step 2's booster `clear` removes the Orb's cell only (its one top-layer hit, never two), then `fall`, `refill` (cascades not yet), THEN `orb_fire` (`cell` = the Orb's cell; `color` = most common colour among the UNCOVERED PLAIN pieces of the REFILLED board, ties R,Y,B,G, IR-47; `cells` = those pieces; the piece now in the Orb's own cell is excluded from both the count and the clear, and takes no second hit) with its `clear` (`source` `orb`), then that clear's `fall`, `refill`, cascades and `goal_done`/`win` as in step 5. Full order: booster, clear(booster), fall, refill, orb_fire, clear(orb), fall, refill, cascades. The count is on the board AFTER the first fall/refill, so a piece that falls or is refilled in can change the colour (tested with the new piece fixed as Y or R). No uncovered plain piece on the refilled board (OQ-111 A): `orb_fire` is STILL sent, with `color == ""` and `cells == []`, no orb `clear`; the Orb is gone, Rockets/other specials are not fired, the use goes through. A board with no plain piece before the fall but one after is counted normally. An Orb set off by another special (not a booster) is still removed with no `orb_fire` (IR-41). Moves never change.
+5. Further set-off specials, lowest then left-most (IR-41); then cascades, `goal_done` as usual (right after the event that reached a count), and `win` last if the goals are done.
+- Covered special (moss etc.): same, OQ-108 A. The cell takes the booster's hit AND the special's own hit (OQ-109 A): Rocket under moss hp 2 ends at 0. The Crane/Rocket etc. still fire.
+- `tail_slam` and `bamboo_dash` set off every special they cover the same way (OQ-110 A); several lifted specials go on the shared waiting list.
+- Moves never change; no `fail` event.

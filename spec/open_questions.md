@@ -1020,6 +1020,94 @@ Owner decision, chat 28 Nov 2026 (IR-56): the game emits a "goal done" event the
 - Option A: the order the goals are listed in the level file; the event carries the goal's index in that list and its obstacle ID.
 - Option B: any order; tests check only that both events come before the next fall event, and the event carries the obstacle ID only.
 
+## New questions from making Hoof Tap playable in the grey box (28 Nov 2026)
+
+The first five are about the level-flow side of Hoof Tap (IR-90); all five are now ANSWERED by the owner (chat 28 Nov 2026). OQ-107 to OQ-110 followed from the OQ-106 answer and are now ANSWERED too (OQ-107 B, OQ-108 A, OQ-109 A, OQ-110 A); OQ-111 and OQ-112 are new and OPEN. Already answered, so not asked again: free uses are given once and kept between levels and retries (IR-82, OQ-93); a fragment or drop item hit by Hoof Tap is collected and the tap is a use (IR-34, GDD › Interaction rules › "Hero boosters on fragments and drop items").
+
+### OQ-102 · How the player uses Hoof Tap: button, arm, tap a cell, cancel — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option A (arm-then-tap). Now in IR-90.
+GDD says: Meta & economy › Booster unlocks › Hoof Tap "Clears the piece in one cell of the player's choice"; Feel › "Using a booster shows that hero acting on the board with one line". Nothing about a button, arming, cancelling or what the button shows.
+- Option A (provisional, the owner's grey-box proposal): a button that shows locked before Hoof Tap unlocks, then its free uses left, then the price (100); tap it to arm (free), tap a playable cell to use, tap the button again or a non-cell area to cancel with nothing spent; one arm = one use.
+- Option B: no arming step: the player drags the Kancil icon straight onto a cell (the drop is the use; dropping anywhere else cancels).
+Blocks: the grey-box Hoof Tap button; IR-90 (a) and (b) tests. Not the effect (IR-34, IR-36) or the accounting (IR-82).
+
+### OQ-103 · A refused use (not enough coins): does the button stay armed? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option A (the button stays armed after a not-enough-coins refusal). Now in IR-90.
+GDD says: Meta & economy › Coins "No purchase (continue, life refill, booster) can be made with fewer coins than its price"; Booster unlocks › "each use costs its price at the moment of use". Not stated: what the UI does after the refusal.
+- Option A (provisional): the use is refused with a message, the button stays armed so the player can cancel or tap another cell; nothing is spent either way.
+- Option B: the refusal also disarms the button; the player must tap the button again.
+Blocks: IR-90 test (c) only (refused use leaves everything else unchanged under both).
+
+### OQ-104 · Armed Hoof Tap and a tap on a non-playable cell — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option A (a tap on a hole of the board shape counts as a non-cell area: it cancels the armed button, nothing spent). Now in IR-90.
+Owner's request: "a tap on a non-playable cell is not a use and spends nothing" and "any non-cell area cancels". Not stated: whether a non-playable cell (a hole in the board shape, IR-64) counts as a cell (stay armed) or as a non-cell area (cancel).
+- Option A (provisional): it counts as a non-cell area: the button disarms; nothing spent.
+- Option B: it counts as a cell: nothing is used and the button stays armed.
+Blocks: IR-90 (d) test on non-playable cells.
+
+### OQ-105 · When exactly Hoof Tap can't be used, and what happens to an armed button then — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option A (not usable while a move or booster resolves, in the finale, on the result screens, or during the continue offer). Now in IR-90.
+GDD says: Rules clarifications › row 67 "Using a hero booster uses no move"; Core gameplay › Win (finale Rockets after the win); Interaction rules › Continue offer (shown when moves run out). The GDD never says whether a booster can be used while a move is resolving, during the finale, or while the continue offer is shown.
+- Option A (provisional): no use while a move or an earlier booster is still resolving, during the win finale, on the win/fail/retry screens or while the continue offer is shown; the button can't be armed then, and a button armed before a move started is disarmed when it starts (a swap or special tap while armed is ignored, so this only arises through input timing).
+- Option B: the button may be armed during the continue offer (moves 0), and a use there can still finish the goals and win without paying the offer; resolving and result screens as in A.
+Blocks: IR-90 (e) tests; LevelSession input handling. B changes IR-37's flow, so the owner should decide it.
+
+### OQ-106 · Hoof Tap on a cell holding a special: does the special fire? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option B (a Hoof Tap on a cell holding a special fires that special as in Rules clarifications row 04, a chain, instead of just clearing the piece). Now in IR-36, IR-41, IR-90. Follow-up details: OQ-107 to OQ-110.
+GDD says: Meta & economy › Hoof Tap "Clears the piece in one cell"; Interaction rules › "Hero boosters on everything else | Like a special: one hit per cell, top layer only"; Rules clarifications › row 04 "Special hit by another special | It fires too (a chain)". A booster is "like a special" for hits only, and row 04 speaks of a special hitting a special.
+- Option A (provisional): the piece is just cleared (a Rocket, Firecracker or Crane there is removed without firing); the Orb likewise; no chain.
+- Option B: a booster hitting a special sets it off as row 04 says.
+Blocks: a Hoof Tap test on a special cell (none written yet); IR-90 (d) lists only plain pieces, obstacles and collectibles.
+
+### OQ-107 · Hoof Tap on a Jade Orb: which colour? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option B (a Hoof Tap on a Jade Orb acts as an Orb tap: the Orb is removed and the most common colour is cleared as IR-19 says, ties by IR-47; the booster's own top-layer hit on the cell still happens; no move used; can win). Now in IR-36, IR-19, IR-41, IR-02, IR-90. Details the GDD does not settle: OQ-111, OQ-112.
+GDD says: Rules clarifications › row 04 and 27 "A set-off Jade Orb is removed without effect"; Interaction rules › "Tapping a Jade Orb | Clears every piece of the most common colour". A Hoof Tap is not a player tap on the Orb, and the GDD gives the Orb no colour of its own.
+- Option A (provisional, in IR-36): treated as a set-off Orb: removed without effect, no colour cleared.
+- Option B: it acts as an Orb tap and clears the most common colour (IR-19), without using a move.
+Blocks: the Hoof Tap on a Jade Orb test in IR-36.
+
+### OQ-108 · Hoof Tap on a special locked under moss: is it fired? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option A (the Hoof Tap works on it). Now in IR-36, IR-90.
+GDD says: Rules clarifications › row 29 and 57 "(can't be swapped, fall or be tapped); another special can set it off"; the owner's OQ-106 B says a Hoof Tap fires a special "as in row 04". The GDD doesn't say whether a booster counts as "another special" here.
+- Option A (provisional): the Hoof Tap works on it: the piece is cleared, the moss takes the booster's hit, and the special fires as a set-off special (IR-41).
+- Option B: the Hoof Tap fires it only if the moss is gone; on a covered special it just hits the moss and clears nothing (or is refused like a tap, IR-02).
+Blocks: the covered-special tests in IR-36 and IR-90 (d).
+
+### OQ-109 · Hoof Tap on a special: does the tapped cell take the booster's hit and the special's own hit? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option A (both count). Now in IR-36.
+GDD says: Rules clarifications › OQ-36 "every booster clears the piece and gives the top obstacle layer one hit"; row 04 "each set-off special is a separate special for the one-hit rules" (IR-41); Crane row 16 "It also clears its own starting cell when it takes off". Nothing about one cell getting a hit from both a booster and the special it set off.
+- Option A (provisional): both count: a cell with moss hp 2 under a tapped Rocket ends at hp 0 (booster hit, then the Rocket's blast covers its own cell). The booster and the set-off special are separate for the one-hit rules.
+- Option B: the tapped cell takes the booster's hit only; the special's hits on that one cell are skipped.
+Blocks: the covered-cell test in IR-36 (Rocket under moss hp 2); any Firecracker or Crane tap on an obstacle cell.
+
+### OQ-110 · Tail Slam and Bamboo Dash on specials — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option A (all boosters set off a special they hit). Now in IR-36.
+GDD says: Interaction rules › "Hero boosters on everything else | Like a special: one hit per cell"; Rules clarifications › row 04. The owner's answer to OQ-106 spoke of Hoof Tap; the OQ-106 option text said "a booster hitting a special sets it off". Tail Slam (23) and Bamboo Dash (29) are not yet built.
+- Option A (provisional, in IR-36): all boosters set off a special they hit, as row 04.
+- Option B: only Hoof Tap fires a special; Tail Slam and Bamboo Dash clear it without firing.
+Blocks: Tail Slam / Bamboo Dash tests (levels 23 and 29); not Hoof Tap.
+
+### OQ-111 · Hoof Tap on a Jade Orb when no uncovered plain piece is on the board — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option A (the use goes through, the Orb is removed, the use is spent), judged after the fall (OQ-112 B), i.e. on the refilled board. Now in IR-36, IR-90.
+GDD says: Interaction rules › "Tapping a Jade Orb | Clears every piece of the most common colour on the board"; OQ-33 "Only plain pieces count". Nothing about a board with no uncovered plain piece (so no "most common colour"), for a tap or a Hoof Tap.
+- Option A (applied provisionally): the use goes through: the Orb is removed, the booster's hit on its cell happens, no colour is cleared, no colour-clear event; the use is spent.
+- Option B: the use is refused like a tap on nothing (IR-02): nothing spent, nothing changes, the button stays armed.
+Blocks: an edge-case test in IR-36 / IR-90 (not written yet).
+
+### OQ-112 · Hoof Tap on a Jade Orb: when is the colour counted and cleared, relative to the fall? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option B (like a set-off special: the Orb's cell clears with the booster's own hit, pieces fall and refill, then the most common colour of the new board, uncovered plain pieces with the IR-47 tie-break, is cleared, followed by its fall, refill and cascades; the Orb's own cell is not part of that clear). Now in IR-36, IR-19, IR-41, IR-02, IR-90. Detail left open: OQ-113.
+GDD says: Rules clarifications › row 04 (a special set off by another special is lifted, then falls and refills, then fires); Interaction rules › "Tapping a Jade Orb" (a tapped Orb acts at once). The owner's OQ-107 B says a Hoof Tap on an Orb acts as an Orb tap; the GDD doesn't say whether it is counted at once or after a fall like a set-off special.
+- Option A (applied provisionally): at once: the Orb's cell is cleared and the colour is counted on the board as it stands (the Orb isn't a plain piece, so it doesn't affect the count), both clears happen together, then one fall and refill.
+- Option B: like a set-off special: the Orb's cell is cleared, pieces fall and refill, and then the most common colour of the new board is counted and cleared.
+Blocks: the exact event order and colour in the Hoof Tap on an Orb tests (IR-36); the colour result differs only if the refill changes which colour is most common.
+
+### OQ-113 · Hoof Tap on a Jade Orb: is the piece in the Orb's own cell, after the refill, counted and cleared? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option A (the piece that falls into the Orb's own cell is excluded from both the colour count and the clear, and takes no second hit). Now in IR-36 and IR-90. Same as the code and tests already built.
+GDD says: Rules clarifications › row 09 "A Jade Orb covers every cell whose piece it clears"; OQ-33 "only plain pieces count towards the most common colour, and only plain pieces are cleared". The owner's OQ-112 B says "the Orb's own cell is not part of that clear" but after the refill the Orb's cell holds a new plain piece (or one that fell in); the GDD doesn't say whether it counts or is cleared.
+- Option A (chosen): the Orb's own cell is excluded from both the count and the clear: a piece there is neither counted nor cleared, and the cell takes no second hit.
+- Option B: only the clear excludes it: the piece there is counted like any uncovered plain piece, but is not cleared and takes no second hit.
+Blocks: IR-36 test for a refill piece in the Orb's cell that decides the colour; the no-piece test.
+
 ---
 
 ## GDD text to update (owner only) — ALL DONE in a94a7e4
