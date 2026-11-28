@@ -250,4 +250,4 @@ func test_ir58_fragments_rat_banked_only_on_win() -> void:
 
 
 func test_ir58_retry_board_has_fragment_cocoon_back() -> void:
-	pending("Needs LevelLoader: see tests/test_level_loader.gd (IR-58 retry cases)")
+	pending("Covered by tests/level_loader/test_level_loader_fragment_retry.gd (IR-58 retry cases, needs LevelLoader)")

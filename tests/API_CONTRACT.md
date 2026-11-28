@@ -300,3 +300,73 @@ They use no move, act like specials per IR-34/36, settle the board (IR-32), feed
 - NEW `GoalTracker.attach(board: BoardModel) -> void`. Called by whoever starts an attempt (LevelLoader; the test helper `track_dew`). After it, `goal_units_done(i)` of an `"OB04"` goal = the number of playable cells that have dew on that board RIGHT NOW (seed cells counted from the start, no double counting, kept up to date after every move; capped or not at `count` is OQ-73, not tested), and `is_goal_done` / `is_won` use it, so a move that gives the last cells dew ends in `win`. How it reads the board (live reference, a `dew_given` event, ...) is the coder's choice.
 - `track()` in `goal_test_base.gd` is unchanged; `track_dew()` = `track()` + `attach(board)`. Set the seeds on the board BEFORE `track_dew`.
 - `goal_count_errors` for OB04: see 10.2.
+
+## 11. LevelLoader (round 8: IR-63 to IR-77, IR-31 and IR-58 level-file parts)
+
+Tests: `tests/level_loader/`, helpers `tests/level_loader/level_fixtures.gd` (level dictionaries) and `tests/level_loader/level_loader_test_base.gd` (loads the classes by path, so a missing file fails a test with a clear message). The tests use only the calls below. godot-engineer owns the code, test-engineer owns the tests.
+
+### 11.1 Files and classes
+
+| File | Class (`extends RefCounted`) |
+|---|---|
+| `src/game/level_loader.gd` | `LevelLoader` (static functions only) |
+| `src/game/level_attempt.gd` | `LevelAttempt` (plain data, one attempt) |
+
+```gdscript
+class_name LevelAttempt
+var level_id: int
+var seed_value: int                     # the seed this attempt used (IR-72); board.rng is seeded from it
+var level: Dictionary                   # the level data it was built from
+var source_path: String = ""            # "" when built from a Dictionary
+var board: BoardModel                   # starting board, moves = level.moves, palette = the level's colours
+var tracker: GoalTracker                # built from level.goals, level id passed in; board.goal_tracker == tracker;
+                                        # attach(board) already called when the level has an OB04 goal
+var fragment_guardian: String = ""      # "rat" on a level with a "fragment" field, else ""
+```
+
+### 11.2 LevelLoader (all `static`)
+
+```gdscript
+static func level_path(id: int) -> String                                            # "res://levels/level_%03d.json"
+static func load_level(level: Dictionary, options: Dictionary = {}) -> LevelAttempt   # never validates; assumes a valid level
+static func load_file(path: String, options: Dictionary = {}) -> LevelAttempt         # JSON file (numbers arrive as floats: cast them); null if missing or not JSON
+static func retry(previous: LevelAttempt, options: Dictionary = {}) -> LevelAttempt   # IR-58, IR-71
+static func validate(level: Dictionary, file_id: int = -1) -> Array                   # [] = valid; else Strings (11.4)
+```
+
+`options` keys (all optional):
+
+| key | type | meaning |
+|---|---|---|
+| `seed` | int | use this seed (IR-72). Absent: a new random seed |
+| `pre_specials` | Array of String | `"rocket"`, `"crane"`, `"firecracker"`: pre-level / streak-chest specials placed on the finished starting board (IR-77) |
+| `stub_drop_columns` | Array of int | test seam: the columns the seeded draw picks for the starting drop items, in draw order (IR-75). Items are still numbered left to right |
+| `stub_special_cells` | Array of Vector2i | test seam: cell replaced by the i-th pre-level special instead of the seeded pick (IR-77) |
+| `stub_tie_pick` | String | test seam: `"row"` or `"column"`: the 50/50 Rocket tie draw (IR-77, IR-86) |
+
+`retry(previous, options)` rebuilds from `previous.source_path` (re-reads the file) when it is not empty, else from `previous.level`. The new attempt has a new seed (never `previous.seed_value`, unless `options.seed` says so) and copies `previous.tracker.lives` and `previous.tracker.coins` (those belong to SaveService, which wires them in later); every other tracker value starts fresh (offers back to the 1st, IR-71).
+
+Level dictionary: exactly `level_agent_brief.md` section 5. Colour names `"red"`, `"yellow"`, `"blue"`, `"green"` become `"R"`, `"Y"`, `"B"`, `"G"` on the board. `colors` 4 = all four, `colors` 3 = the three in `color_set`.
+
+### 11.3 What the loader builds (new members, everything else is the BoardModel of sections 2 and 2b)
+
+```gdscript
+# on BoardModel
+func content_color(x: int, y: int) -> String     # OB08 paper-screen lantern colour as "R","Y","B","G"; "" otherwise
+var drop_total: int = 0                          # spawn.drop_items.total (0 = no drop items)
+var drop_max_on_board: int = 0
+var drop_fragment_item: int = 0                  # spawn.drop_items.fragment_item (0 = none)
+var drop_spawned: int = 0                        # drop items placed so far in this attempt (the starting ones count); MatchResolver adds to it later
+```
+
+- `cells` and `underlay` as IR-64 / IR-65: `#` playable, `.` not playable; underlay `1`-`3` = `set_underlay(x, y, "OB10", hp)`, `s` = `set_underlay(x, y, "OB04", 1)`.
+- Dew goal (an `"OB04"` goal in `goals`): every playable cell is a dew target (`set_dew_target`), then `tracker.attach(board)`.
+- Objects: OB02, OB05, OB06, OB07, OB08, OB12 = `add_content(id, x, y, hp, w, h, fragment)` (`w`, `h` default 1; `"fragment": true` on an OB07 entry sets the fragment flag); OB05 also `set_shrine_needs` with the `needs` colours converted to `"R"`.. letters; OB08 colour readable by `content_color`; OB03 = `set_overlay(x, y, "OB03", hp)`, keeps a plain piece under it.
+- Order: shape, underlay, objects, fixed tiles, plain fill (seeded), drop items (IR-75), then pre-level specials (IR-77). So the same level and seed with and without `pre_specials` gives the same board except the cells the specials replaced.
+- Fixed tiles (IR-76): `red`/`yellow`/`blue`/`green` = plain piece; `line_h` = `"rocket_row"`, `line_v` = `"rocket_col"`, `firecracker`, `crane` with the entry's `"color"` or a seeded colour; `orb` = `"orb"` (no colour).
+- Starting drop items: kind `"drop"`, `get_drop_item` = `"OB11"`, or `"fragment"` for item number `fragment_item` (items numbered left to right, 1-based).
+- Fragment cocoon: `board.get_content(x, y).fragment` (existing `BoardContent.fragment`).
+
+### 11.4 Validator messages
+
+`validate(level, file_id)` returns one String per problem. Each String starts with the IR it breaks, e.g. `"IR-64: row 3 of cells has 8 characters, width is 9"`. Problems found by `GoalTracker.goal_errors` / `goal_count_errors` (IR-59, IR-61, IR-31) are included as they are, prefixed with `"goals: "` (the tests only check that the list is not empty for these). `file_id` >= 0 is the number in the file name; a different `id` in the level is an IR-63 error. The validator builds a board with the loader (default options) only when the shape checks passed. Plan moves and plan tiers are read from `res://research/match-villains/levels_1_100_plan.csv`.

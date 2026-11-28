@@ -16,6 +16,11 @@ var spawners: Array = []
 var palette: Array = ["R", "Y", "B", "G"]
 var rng: RandomNumberGenerator
 var goal_tracker: GoalTracker = null   # null = no goals tracked (the resolver behaves as before)
+# Drop items for this attempt (IR-75), set by LevelLoader from spawn.drop_items.
+var drop_total: int = 0            # items that appear in the whole attempt (0 = no drop items)
+var drop_max_on_board: int = 0
+var drop_fragment_item: int = 0    # the n-th item spawned carries the fragment (0 = none, IR-31)
+var drop_spawned: int = 0          # items placed so far in this attempt (the starting ones count)
 
 # One entry per cell, index = y * width + x.
 var _playable: Array[bool] = []
@@ -120,6 +125,13 @@ func set_shrine_needs(x: int, y: int, needs: Dictionary) -> void:
 		c.needs = needs.duplicate()
 
 
+## Sets the colour of the paper-screen lantern (OB08) at this cell, e.g. "R".
+func set_content_color(x: int, y: int, color: String) -> void:
+	var c: BoardContent = get_content(x, y)
+	if c != null:
+		c.color = color
+
+
 # ---------------------------------------------------------------- queries (contract)
 
 func in_bounds(x: int, y: int) -> bool:
@@ -178,6 +190,12 @@ func dew_targets_left() -> int:
 			if is_uncovered_dew_target(x, y):
 				n += 1
 	return n
+
+
+## Colour of the paper-screen lantern (OB08) at this cell as "R", "Y", "B" or "G"; "" otherwise.
+func content_color(x: int, y: int) -> String:
+	var c: BoardContent = get_content(x, y)
+	return c.color if c != null and c.id == "OB08" else ""
 
 
 ## What the lantern shrine at this cell still needs ({} if there is no shrine).
