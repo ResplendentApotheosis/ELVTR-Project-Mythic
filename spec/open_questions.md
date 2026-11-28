@@ -1087,17 +1087,25 @@ GDD says: Interaction rules › "Hero boosters on everything else | Like a speci
 - Option B: only Hoof Tap fires a special; Tail Slam and Bamboo Dash clear it without firing.
 Blocks: Tail Slam / Bamboo Dash tests (levels 23 and 29); not Hoof Tap.
 
-### OQ-111 · Hoof Tap on a Jade Orb when no uncovered plain piece is on the board — OPEN
+### OQ-111 · Hoof Tap on a Jade Orb when no uncovered plain piece is on the board — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option A (the use goes through, the Orb is removed, the use is spent), judged after the fall (OQ-112 B), i.e. on the refilled board. Now in IR-36, IR-90.
 GDD says: Interaction rules › "Tapping a Jade Orb | Clears every piece of the most common colour on the board"; OQ-33 "Only plain pieces count". Nothing about a board with no uncovered plain piece (so no "most common colour"), for a tap or a Hoof Tap.
 - Option A (applied provisionally): the use goes through: the Orb is removed, the booster's hit on its cell happens, no colour is cleared, no colour-clear event; the use is spent.
 - Option B: the use is refused like a tap on nothing (IR-02): nothing spent, nothing changes, the button stays armed.
 Blocks: an edge-case test in IR-36 / IR-90 (not written yet).
 
-### OQ-112 · Hoof Tap on a Jade Orb: when is the colour counted and cleared, relative to the fall? — OPEN
+### OQ-112 · Hoof Tap on a Jade Orb: when is the colour counted and cleared, relative to the fall? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026: Option B (like a set-off special: the Orb's cell clears with the booster's own hit, pieces fall and refill, then the most common colour of the new board, uncovered plain pieces with the IR-47 tie-break, is cleared, followed by its fall, refill and cascades; the Orb's own cell is not part of that clear). Now in IR-36, IR-19, IR-41, IR-02, IR-90. Detail left open: OQ-113.
 GDD says: Rules clarifications › row 04 (a special set off by another special is lifted, then falls and refills, then fires); Interaction rules › "Tapping a Jade Orb" (a tapped Orb acts at once). The owner's OQ-107 B says a Hoof Tap on an Orb acts as an Orb tap; the GDD doesn't say whether it is counted at once or after a fall like a set-off special.
 - Option A (applied provisionally): at once: the Orb's cell is cleared and the colour is counted on the board as it stands (the Orb isn't a plain piece, so it doesn't affect the count), both clears happen together, then one fall and refill.
 - Option B: like a set-off special: the Orb's cell is cleared, pieces fall and refill, and then the most common colour of the new board is counted and cleared.
 Blocks: the exact event order and colour in the Hoof Tap on an Orb tests (IR-36); the colour result differs only if the refill changes which colour is most common.
+
+### OQ-113 · Hoof Tap on a Jade Orb: is the piece in the Orb's own cell, after the refill, counted and cleared? — OPEN
+GDD says: Rules clarifications › row 09 "A Jade Orb covers every cell whose piece it clears"; OQ-33 "only plain pieces count towards the most common colour, and only plain pieces are cleared". The owner's OQ-112 B says "the Orb's own cell is not part of that clear" but after the refill the Orb's cell holds a new plain piece (or one that fell in); the GDD doesn't say whether it counts or is cleared.
+- Option A (applied provisionally): the Orb's own cell is excluded from both the count and the clear: a piece there is neither counted nor cleared, and the cell takes no second hit.
+- Option B: only the clear excludes it: the piece there is counted like any uncovered plain piece, but is not cleared and takes no second hit.
+Blocks: IR-36 test for a refill piece in the Orb's cell that decides the colour; the no-piece test.
 
 ---
 

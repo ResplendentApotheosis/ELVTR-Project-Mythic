@@ -475,6 +475,89 @@ func test_IR90_T8_OQ108_A_hoof_tap_on_a_special_under_moss_is_a_use() -> void:
 	assert_eq(int(s.hero_booster_state("hoof_tap").free_uses), 2)
 
 
+func test_IR90_T8_OQ107_B_hoof_tap_on_a_jade_orb_clears_the_colour_counted_after_the_fall() -> void:
+	var s: Variant = _playing(500, 3)
+	if s == null:
+		return
+	var b: BoardModel = s.board()
+	b.palette = BB.spread_palette()   # refills bring no R/Y/B/G piece
+	BB.apply_token(b, 3, 3, "O")
+	for c in [Vector2i(3, 1), Vector2i(6, 1), Vector2i(2, 5), Vector2i(6, 6)]:
+		b.set_piece(c.x, c.y, "plain", "R")   # 4 red, far apart: the only colour with more than one piece
+	var moves: int = s.moves_left()
+	var r: Dictionary = _arm_and_use(s, CELL)
+	assert_true(bool(r.get("ok", false)), str(r))
+	var events: Array = r.get("events", [])
+	var seq: Array = []
+	for e in events:
+		if ["clear", "fall", "refill", "orb_fire"].has((e as BoardEvent).type):
+			seq.append((e as BoardEvent).type)
+	assert_eq(seq.slice(0, 7), ["clear", "fall", "refill", "orb_fire", "clear", "fall", "refill"], "OQ-112 B order")
+	var i_fire: int = _type_index(events, "orb_fire")
+	assert_gte(i_fire, 0, "IR-36: the tapped Orb acts as an Orb tap")
+	if i_fire >= 0:
+		assert_eq(String((events[i_fire] as BoardEvent).color), "R")
+		assert_eq((events[i_fire] as BoardEvent).cells.size(), 4, "the 4 red pieces; not the Orb's cell")
+		assert_gt(i_fire, _type_index(events, "refill"), "counted after the first refill")
+	assert_eq(BB.find_color(b, "R").size(), 0, "no red left")
+	assert_eq(int(s.hero_booster_state("hoof_tap").free_uses), 2, "a use that spends a free use")
+	assert_eq(s.coins(), 500)
+	assert_eq(s.moves_left(), moves, "IR-62: no move used")
+	assert_eq(s.state, LevelSession.PLAYING)
+	assert_eq(_type_index(events, "fail"), -1)
+	assert_eq(s.armed_hero_booster(), "")
+
+
+func test_IR90_T8_OQ107_B_hoof_tap_on_a_jade_orb_with_no_free_uses_costs_100() -> void:
+	var s: Variant = _playing(500, 0)
+	if s == null:
+		return
+	var b: BoardModel = s.board()
+	b.palette = BB.spread_palette()
+	BB.apply_token(b, 3, 3, "O")
+	b.set_piece(3, 1, "plain", "R")
+	b.set_piece(6, 6, "plain", "R")
+	var r: Dictionary = _arm_and_use(s, CELL)
+	assert_true(bool(r.get("ok", false)), str(r))
+	assert_gte(_type_index(r.events, "orb_fire"), 0)
+	assert_eq(s.coins(), 400)
+	assert_eq(_save.coins(), 400)
+
+
+func test_IR90_T8_OQ111_A_hoof_tap_on_a_jade_orb_with_no_plain_piece_is_still_a_use() -> void:
+	var s: Variant = _playing(500, 3)
+	if s == null:
+		return
+	var b: BoardModel = s.board()
+	b.palette = BB.spread_palette()
+	var keep: Array = [Vector2i(2, 3), Vector2i(3, 3), Vector2i(4, 3)]
+	for y in range(b.height):
+		for x in range(b.width):
+			if b.is_playable(x, y) and not keep.has(Vector2i(x, y)):
+				b.set_playable(x, y, false)
+	b.set_piece(2, 3, "rocket_row", "R")
+	b.set_piece(3, 3, "orb", "")
+	b.set_piece(4, 3, "rocket_col", "Y")
+	var moves: int = s.moves_left()
+	var r: Dictionary = _arm_and_use(s, CELL)
+	assert_true(bool(r.get("ok", false)), str(r))
+	var fires: Array = []
+	for e in r.events:
+		if (e as BoardEvent).type == "orb_fire":
+			fires.append(e)
+	assert_eq(fires.size(), 1, "orb_fire with no colour")
+	if fires.size() == 1:
+		assert_eq(String((fires[0] as BoardEvent).color), "")
+		assert_true((fires[0] as BoardEvent).cells.is_empty(), "nothing cleared")
+	assert_eq(_type_index(r.events, "rocket_fire"), -1, "the Rockets do not fire")
+	assert_eq(b.get_kind(2, 3), "rocket_row", "the Rockets stay")
+	assert_eq(b.get_kind(4, 3), "rocket_col")
+	assert_eq(int(s.hero_booster_state("hoof_tap").free_uses), 2, "the use is spent (OQ-111 A)")
+	assert_eq(s.moves_left(), moves)
+	assert_eq(s.state, LevelSession.PLAYING)
+	assert_eq(_type_index(r.events, "fail"), -1)
+
+
 func test_IR90_T13_OQ106_B_a_set_off_rocket_can_win_the_level() -> void:
 	var s: Variant = _playing(500, 1, _creature_level())
 	if s == null:
