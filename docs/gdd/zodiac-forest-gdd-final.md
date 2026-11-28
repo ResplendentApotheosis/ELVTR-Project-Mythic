@@ -199,13 +199,13 @@ Every special, obstacle and layer follows this one table. MatchResolver, the GUT
 | Firecracker's double blast | The two blasts together count as one hit on any single obstacle |
 | Which obstacles are multi-cell | Petrified pillar (OB06) and any obstacle drawn across 2 or more cells. Creep moss (OB03) is one obstacle per cell |
 | Hero boosters on fragments and drop items | Never deleted. Hoof Tap, Tail Slam and Bamboo Dash collect a fragment or drop item they hit; Feather Fan moves pieces only, never fragments or drop items |
-| Hero boosters on everything else | Like a special: one hit per cell, top layer only; a multi-cell obstacle takes at most one hit per use. Bamboo Dash's diagonal follows the same rule |
+| Hero boosters on everything else | Like a special: one hit per cell, top layer only; a multi-cell obstacle takes at most one hit per use. Bamboo Dash's diagonal follows the same rule. A booster that hits a special sets it off (a chain, row 04), and the cell takes both the booster's hit and the special's own hit; this includes a special locked under moss. Hoof Tap on a Jade Orb acts as an Orb tap: the Orb's cell clears, pieces fall and refill, then the most common colour on the new board is cleared (the Orb's own cell left out); if no plain piece is left, the use still counts and the Orb is removed |
 | Continue offer | Always shown when moves run out (never after quitting), whether or not the goals can still be reached. Up to 5 offers per attempt: the 1st costs 300 coins, the 2nd to 5th cost 500 each. A player who can't pay still sees the offer with "you have less than N coins" (N = that offer's price) and can only decline. Declining ends the attempt and goes to the retry screen |
 | Quitting mid-level | Counts as a fail: costs a life (except on finales) and counts as that level's first try. Goes straight to the fail result, with no continue offer. Closing the app, a crash or the phone killing it mid-level counts as a quit (life lost where a fail costs one, first try used and logged, win streak reset); the next launch opens the map, not the level |
 
 ### Rules clarifications (owner decisions, 27 Nov 2026)
 
-These answer the Rules Keeper's open questions OQ-01 to OQ-101 (`spec/open_questions.md`). Later questions are tracked there until answered. Rows marked *trial* are trial decisions to revisit after playtesting.
+These answer the Rules Keeper's open questions OQ-01 to OQ-113 (`spec/open_questions.md`). Later questions are tracked there until answered. Rows marked *trial* are trial decisions to revisit after playtesting.
 
 | OQ | Question | Rule |
 | --- | --- | --- |
@@ -310,6 +310,18 @@ These answer the Rules Keeper's open questions OQ-01 to OQ-101 (`spec/open_quest
 | 99 | Story beat on level 17 | `"mini"` (the first freed creature); `"intro"` only on level 1 |
 | 100 | Which specials move to the swapped cell | All four: Rocket, Firecracker, Paper Crane and Jade Orb made by a swap appear on a swapped cell in their match (row 02) |
 | 101 | Goal done: two goals finished by one hit | They show as done in goal-bar order (the order listed in the level file); the event carries the goal's index and obstacle ID |
+| 102 | How Hoof Tap is used | Arm then tap: the button arms it, a cell tap uses it; the button again or a tap off the board cancels, nothing spent |
+| 103 | Hoof Tap refused for coins | The tap is refused and the button stays armed |
+| 104 | Armed Hoof Tap on a hole in the board | Counts as off the board: cancels, nothing spent |
+| 105 | When Hoof Tap can't be used | While a move or booster resolves, in the win finale, on result screens and during the continue offer |
+| 106 | Hoof Tap on a special | Sets it off (a chain, row 04) instead of just clearing it |
+| 107 | Hoof Tap on a Jade Orb | Acts as an Orb tap: the most common colour is cleared; no move used; can win |
+| 108 | Hoof Tap on a special under moss | Works: the special is set off |
+| 109 | Booster hit plus the special's own hit | Both count on the tapped cell |
+| 110 | Tail Slam and Bamboo Dash on specials | Every booster sets off a special it hits |
+| 111 | Hoof Tap on an Orb with no plain piece left | The use goes through, the Orb is removed, the use is spent (judged after the fall) |
+| 112 | Timing of Hoof Tap on an Orb | Like a set-off special: the Orb's cell clears, pieces fall and refill, then the most common colour of the new board is cleared, then its fall, refill and cascades |
+| 113 | The Orb's own cell after the refill | Left out of both the colour count and the clear |
 
 ## Board layers & obstacles
 
@@ -464,7 +476,7 @@ A booster unlocks when its level is first started, so it can be used on that lev
 
 | Unlock | Booster | Type | Effect | Free uses, then |
 | --- | --- | --- | --- | --- |
-| 11 | Kancil's Hoof Tap | In-level | Clears the piece in one cell of the player's choice and gives that cell's top obstacle layer one hit | 3 free, then 100 coins each |
+| 11 | Kancil's Hoof Tap | In-level | Clears the piece in one cell of the player's choice and gives that cell's top obstacle layer one hit. Tap the button to arm it, then tap a cell; tapping the button again, or anywhere off the board (a hole in the board shape included), cancels with nothing spent. With too few coins the tap is refused and the button stays armed. Can't be used while a move or booster resolves, in the win finale, on result screens or during the continue offer | 3 free, then 100 coins each |
 | 16 | Pre-level boosters | Pre-level | Start with a Rocket + Crane, or a Firecracker. Each special replaces a random plain piece of the starting board (seeded), not under moss, and takes its colour; a Rocket points along its row or its column, whichever holds more targets, 50/50 (seeded) on a tie. Targets in a line: each goal obstacle with a cell in it counts once; for a dew goal, its playable cells without dew; each drop item, 1 | 1 each free, then 150 coins each |
 | 23 | Binturong's Tail Slam | In-level | Smashes a 3×3 block (one hit to every cell in it) | 2 free, then 200 coins each |
 | 29 | Red Panda's Bamboo Dash | In-level | Clears one full line in any direction: a row, a column or a diagonal | 2 free, then 150 coins each |
