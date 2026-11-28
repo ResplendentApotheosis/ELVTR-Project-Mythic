@@ -1020,6 +1020,40 @@ Owner decision, chat 28 Nov 2026 (IR-56): the game emits a "goal done" event the
 - Option A: the order the goals are listed in the level file; the event carries the goal's index in that list and its obstacle ID.
 - Option B: any order; tests check only that both events come before the next fall event, and the event carries the obstacle ID only.
 
+## New questions from making Hoof Tap playable in the grey box (28 Nov 2026)
+
+All five are about the level-flow side of Hoof Tap (IR-90). Each has Option A applied provisionally in IR-90 and its tests; the owner decides. Already answered, so not asked again: free uses are given once and kept between levels and retries (IR-82, OQ-93); a fragment or drop item hit by Hoof Tap is collected and the tap is a use (IR-34, GDD › Interaction rules › "Hero boosters on fragments and drop items").
+
+### OQ-102 · How the player uses Hoof Tap: button, arm, tap a cell, cancel — OPEN
+GDD says: Meta & economy › Booster unlocks › Hoof Tap "Clears the piece in one cell of the player's choice"; Feel › "Using a booster shows that hero acting on the board with one line". Nothing about a button, arming, cancelling or what the button shows.
+- Option A (provisional, the owner's grey-box proposal): a button that shows locked before Hoof Tap unlocks, then its free uses left, then the price (100); tap it to arm (free), tap a playable cell to use, tap the button again or a non-cell area to cancel with nothing spent; one arm = one use.
+- Option B: no arming step: the player drags the Kancil icon straight onto a cell (the drop is the use; dropping anywhere else cancels).
+Blocks: the grey-box Hoof Tap button; IR-90 (a) and (b) tests. Not the effect (IR-34, IR-36) or the accounting (IR-82).
+
+### OQ-103 · A refused use (not enough coins): does the button stay armed? — OPEN
+GDD says: Meta & economy › Coins "No purchase (continue, life refill, booster) can be made with fewer coins than its price"; Booster unlocks › "each use costs its price at the moment of use". Not stated: what the UI does after the refusal.
+- Option A (provisional): the use is refused with a message, the button stays armed so the player can cancel or tap another cell; nothing is spent either way.
+- Option B: the refusal also disarms the button; the player must tap the button again.
+Blocks: IR-90 test (c) only (refused use leaves everything else unchanged under both).
+
+### OQ-104 · Armed Hoof Tap and a tap on a non-playable cell — OPEN
+Owner's request: "a tap on a non-playable cell is not a use and spends nothing" and "any non-cell area cancels". Not stated: whether a non-playable cell (a hole in the board shape, IR-64) counts as a cell (stay armed) or as a non-cell area (cancel).
+- Option A (provisional): it counts as a non-cell area: the button disarms; nothing spent.
+- Option B: it counts as a cell: nothing is used and the button stays armed.
+Blocks: IR-90 (d) test on non-playable cells.
+
+### OQ-105 · When exactly Hoof Tap can't be used, and what happens to an armed button then — OPEN
+GDD says: Rules clarifications › row 67 "Using a hero booster uses no move"; Core gameplay › Win (finale Rockets after the win); Interaction rules › Continue offer (shown when moves run out). The GDD never says whether a booster can be used while a move is resolving, during the finale, or while the continue offer is shown.
+- Option A (provisional): no use while a move or an earlier booster is still resolving, during the win finale, on the win/fail/retry screens or while the continue offer is shown; the button can't be armed then, and a button armed before a move started is disarmed when it starts (a swap or special tap while armed is ignored, so this only arises through input timing).
+- Option B: the button may be armed during the continue offer (moves 0), and a use there can still finish the goals and win without paying the offer; resolving and result screens as in A.
+Blocks: IR-90 (e) tests; LevelSession input handling. B changes IR-37's flow, so the owner should decide it.
+
+### OQ-106 · Hoof Tap on a cell holding a special: does the special fire? — OPEN
+GDD says: Meta & economy › Hoof Tap "Clears the piece in one cell"; Interaction rules › "Hero boosters on everything else | Like a special: one hit per cell, top layer only"; Rules clarifications › row 04 "Special hit by another special | It fires too (a chain)". A booster is "like a special" for hits only, and row 04 speaks of a special hitting a special.
+- Option A (provisional): the piece is just cleared (a Rocket, Firecracker or Crane there is removed without firing); the Orb likewise; no chain.
+- Option B: a booster hitting a special sets it off as row 04 says.
+Blocks: a Hoof Tap test on a special cell (none written yet); IR-90 (d) lists only plain pieces, obstacles and collectibles.
+
 ---
 
 ## GDD text to update (owner only) — ALL DONE in a94a7e4

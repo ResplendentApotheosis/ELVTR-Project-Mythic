@@ -60,6 +60,18 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Coins:     Lives:"
 
+[node name="HoofRow" type="HBoxContainer" parent="Hud"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HoofButton" type="Button" parent="Hud/HoofRow"]
+layout_mode = 2
+text = "Kancil: Hoof Tap"
+
+[node name="HoofStatus" type="Label" parent="Hud/HoofRow"]
+layout_mode = 2
+text = ""
+
 [node name="NoteLabel" type="Label" parent="Hud"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)

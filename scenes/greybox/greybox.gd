@@ -3,7 +3,8 @@
 # win / continue-offer / retry panels. All rules come from LevelSession -> the real modules.
 # Debug builds only (DebugGate): "Play again", jump-to-level, a "moves next attempt" box (keys 1-9) and a
 # "Level" box: press L (or click it), type 1-50, press Enter or Load to play res://levels/level_NNN.json.
-# Check: press F5 in the editor (this is the main scene) and make a match; press L, type 1, press Enter.
+# The "Kancil: Hoof Tap" button (IR-90): tap it, then tap a cell to clear it; tap it again or off the board to cancel.
+# Check: press F5 in the editor (this is the main scene) and make a match; press L, type 11, press Enter, click Hoof Tap.
 extends Control
 
 ## The level this scene starts with. The debug "Level" box (key L) switches to res://levels/level_NNN.json.
@@ -31,11 +32,22 @@ const SAVE_PATH: String = "user://greybox_save.json"
 @onready var retry_button: Button = $RetryPanel/Box/RetryButton
 @onready var buy_lives_button: Button = $RetryPanel/Box/BuyLivesButton
 @onready var check_again_button: Button = $RetryPanel/Box/CheckAgainButton
+@onready var hoof_button: Button = $Hud/HoofRow/HoofButton
+@onready var hoof_status: Label = $Hud/HoofRow/HoofStatus
 @onready var debug_panel: VBoxContainer = $DebugPanel
 @onready var debug_moves_box: SpinBox = $DebugPanel/Row/MovesBox
 @onready var debug_status: Label = $DebugPanel/Status
 @onready var debug_level_box: SpinBox = $DebugPanel/LevelRow/LevelBox
 @onready var debug_load_button: Button = $DebugPanel/LevelRow/LoadButton
+
+## What the player reads when Hoof Tap is refused (IR-90).
+const HOOF_REFUSALS: Dictionary = {
+	"not_enough_coins": "Not enough coins (Hoof Tap costs 100). Tap a cell to try again, or the button to cancel.",
+	"non_playable_cell": "That is not a cell: Hoof Tap cancelled",
+	"busy": "Wait for the move to finish",
+	"not_playing": "Hoof Tap can't be used now",
+	"not_armed": "Tap the Hoof Tap button first",
+}
 
 var save: SaveService
 var session: LevelSession
@@ -49,7 +61,8 @@ func _ready() -> void:
 	save = SaveService.new(SAVE_PATH, Callable(self, "_now"))
 	session = LevelSession.new(LEVEL_PATH, save)
 	queue.stage = board_view
-	queue.finished.connect(_refresh)
+	queue.finished.connect(_on_queue_finished)
+	hoof_button.pressed.connect(_on_hoof_button)
 	queue.goal_reached.connect(_on_goal_reached)
 	play_again_button.pressed.connect(_on_play_again)
 	accept_button.pressed.connect(_on_accept)
@@ -107,6 +120,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _debug_key(event):
 		get_viewport().set_input_as_handled()
 		return
+	if _hoof_click(event):
+		get_viewport().set_input_as_handled()
+		return
 	if not _can_play():
 		return
 	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
@@ -118,6 +134,62 @@ func _unhandled_input(event: InputEvent) -> void:
 			_do(input.release(local, session.board()))
 	elif event is InputEventMouseMotion and ((event as InputEventMouseMotion).button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
 		_do(input.move(board_view.to_local((event as InputEventMouseMotion).position)))
+
+
+## While Hoof Tap is armed, the next left click is the cell to hit: a cell uses it, anything else cancels it.
+func _hoof_click(event: InputEvent) -> bool:
+	if session.armed_hero_booster() == "" or not event is InputEventMouseButton:
+		return false
+	var click: InputEventMouseButton = event
+	if click.button_index != MOUSE_BUTTON_LEFT:
+		return false
+	if click.pressed:
+		var board: BoardModel = session.board()
+		var cell: Vector2i = BoardInput.NO_CELL
+		if board != null:
+			cell = BoardInput.pixel_to_cell(board_view.to_local(click.position), board_view.cell_size, board.width, board.height)
+		if cell == BoardInput.NO_CELL:
+			session.cancel_hero_booster()
+			_note = ""
+		else:
+			_use_hoof_tap(cell)
+		_refresh()
+	return true   # the press and its release are both used up
+
+
+func _use_hoof_tap(cell: Vector2i) -> void:
+	var before: Dictionary = BoardSnapshot.piece_grid(session.board())
+	var result: Dictionary = session.use_hero_booster(cell)
+	if bool(result.get("ok", false)):
+		_play(result.events, before)
+	else:
+		_note = HOOF_REFUSALS.get(String(result.get("reason", "")), "Hoof Tap can't be used now")
+
+
+## The Hoof Tap button: tap to arm, tap again to cancel.
+func _on_hoof_button() -> void:
+	_note = ""
+	if session.armed_hero_booster() == "hoof_tap":
+		session.cancel_hero_booster()
+	elif not session.arm_hero_booster("hoof_tap"):
+		_note = "Hoof Tap can't be used now"
+	_refresh()
+
+
+func _show_hoof_button() -> void:
+	var st: Dictionary = session.hero_booster_state("hoof_tap")
+	var armed: bool = bool(st.armed)
+	hoof_button.text = "Kancil: Hoof Tap"
+	hoof_button.disabled = not bool(st.usable) and not armed
+	hoof_button.modulate = Color(1.0, 0.9, 0.3) if armed else Color.WHITE
+	if not bool(st.unlocked):
+		hoof_status.text = "Locked until level 11 is started"
+	elif armed:
+		hoof_status.text = "tap a cell"
+	elif int(st.free_uses) > 0:
+		hoof_status.text = "%d free" % int(st.free_uses)
+	else:
+		hoof_status.text = "%d coins" % int(st.price)
 
 
 func _can_play() -> bool:
@@ -153,7 +225,9 @@ func _play(events: Array[BoardEvent], before: Dictionary) -> void:
 	_note = ""
 	_done_now.clear()
 	_hide_panels()
+	session.set_busy(true)   # no button or cell taps until the animation is done
 	queue.play(events, before, session.board())
+	_refresh()   # coins, goal marks and free uses show at once
 
 
 # ---------------------------------------------------------------- buttons
@@ -286,7 +360,13 @@ func _show_goals() -> void:
 	goals_label.text = "\n".join(lines)
 
 
+func _on_queue_finished() -> void:
+	session.set_busy(false)
+	_refresh()
+
+
 func _refresh() -> void:
+	_show_hoof_button()
 	level_label.text = "Level %d   (grey box)" % session.level_id()
 	moves_label.text = "Moves left: %d" % session.moves_left()
 	_show_goals()
