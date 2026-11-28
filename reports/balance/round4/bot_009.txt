@@ -1,0 +1,3 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+level 9 (easy): 500/500 wins (100.0%), avg moves left on win 16.37, avg goal progress on fail 0.00 -> res://reports/balance/round4/level_009_bot.json
