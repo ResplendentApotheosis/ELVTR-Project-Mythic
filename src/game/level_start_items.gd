@@ -1,5 +1,6 @@
 # Puts the starting drop items (IR-75, IR-31) and pre-level / streak-chest specials (IR-77) on a freshly
-# filled starting board. Every pick uses board.rng, unless a test passes a stub option (API_CONTRACT 11.2).
+# filled starting board; every pick uses board.rng unless a test passes a stub. eligible_columns is shared
+# with the validator (IR-75); pre_special_errors lets load_level refuse unknown names (IR-77).
 # Check: tests/level_loader/test_drop_items_start.gd and test_pre_specials.gd.
 class_name LevelStartItems
 extends RefCounted
@@ -18,17 +19,14 @@ static func place_drop_items(board: BoardModel, drops: Dictionary, fixed: Dictio
 	var wanted: int = mini(board.drop_max_on_board, board.drop_total)
 	if wanted <= 0:
 		return
-	var eligible: Array[int] = []
-	for x in range(board.width):
-		var y: int = top_playable_y(board, x)
-		if y >= 0 and board.get_kind(x, y) == "plain" and board.overlay_hp(x, y) == 0 and not fixed.has(Vector2i(x, y)):
-			eligible.append(x)
+	var eligible: Array[int] = eligible_columns(board, fixed)
 	var picked: Array[int] = []
 	if options.has("stub_drop_columns"):
 		for c in options["stub_drop_columns"]:
 			picked.append(LevelLoader.as_int(c, -1))
 	else:
-		# Not yet specified (IR-75): fewer eligible columns than max_on_board. We place as many as fit.
+		# The validator rejects a level with fewer eligible columns than max_on_board (IR-75), so a valid level
+		# always has enough. If an invalid one is loaded anyway, this places as many as fit instead of crashing.
 		while picked.size() < wanted and not eligible.is_empty():
 			picked.append(eligible.pop_at(board.rng.randi_range(0, eligible.size() - 1)))
 	picked.sort()
@@ -42,14 +40,32 @@ static func place_drop_items(board: BoardModel, drops: Dictionary, fixed: Dictio
 		board.drop_spawned = number
 
 
+## IR-75: columns that can take a starting drop item: the top playable cell holds (or will hold) an uncovered
+## plain piece, so no content obstacle, no moss and no fixed tile. Used by the loader and by the validator.
+static func eligible_columns(board: BoardModel, fixed: Dictionary) -> Array[int]:
+	var out: Array[int] = []
+	for x in range(board.width):
+		var y: int = top_playable_y(board, x)
+		if y >= 0 and LevelLoader.needs_piece(board, x, y) and board.overlay_hp(x, y) == 0 and not fixed.has(Vector2i(x, y)):
+			out.append(x)
+	return out
+
+
+## IR-77: one "IR-77: ..." line per name in options.pre_specials that is not a known special.
+static func pre_special_errors(options: Dictionary) -> Array:
+	var errors: Array = []
+	for n in LevelLoader.array_of(options.get("pre_specials", [])):
+		if not (n is String and PRE_SPECIAL_KINDS.has(n)):
+			errors.append("IR-77: unknown pre_special \"%s\"" % [n])
+	return errors
+
+
 ## IR-77: each special replaces a seeded plain piece (not under moss, not a fixed tile) and keeps its colour.
 static func place_pre_specials(board: BoardModel, level: Dictionary, fixed: Dictionary, options: Dictionary) -> void:
 	var specials: Array = options.get("pre_specials", []) as Array
 	var stub_cells: Array = options.get("stub_special_cells", []) as Array
 	for i in range(specials.size()):
-		var name: String = String(specials[i])
-		if not PRE_SPECIAL_KINDS.has(name):
-			continue
+		var name: String = String(specials[i])   # load_level already refused unknown names (pre_special_errors)
 		var cell: Vector2i = Vector2i(-1, -1)
 		if i < stub_cells.size():
 			cell = stub_cells[i]

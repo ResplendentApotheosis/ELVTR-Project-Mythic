@@ -145,3 +145,77 @@ func test_IR77_drop_items_count_one_each() -> void:
 		"spawn": {"drop_items": {"type": "OB11", "total": 3, "max_on_board": 2}, "generators": null}})
 	var kind: String = _rocket_at(level, Vector2i(5, 0), {"stub_drop_columns": [1, 7]})
 	assert_eq(kind, "rocket_row", "row 0 holds 2 hatchlings, column 5 holds 0")
+
+
+func test_IR77_unknown_pre_special_name_fails_with_an_error_naming_it() -> void:
+	# API_CONTRACT.md 11.2: load_level returns null and LevelLoader.last_errors holds Strings starting "IR-77: ".
+	var script: Variant = _loader()
+	if script == null:
+		return
+	var result: Variant = script.load_level(LF.level(16), {"seed": 1234, "pre_specials": ["rocket", "banana"]})
+	assert_null(result, "no board is returned as if banana were absent")
+	var errs: Variant = script.get("last_errors")
+	if not (errs is Array):
+		fail_test("LevelLoader.last_errors (Array) is missing (API_CONTRACT.md 11.2)")
+		return
+	assert_gt((errs as Array).size(), 0, "an error is reported")
+	var named: bool = false
+	for e in errs:
+		if String(e).begins_with("IR-77") and String(e).contains("banana"):
+			named = true
+	assert_true(named, "an error starting IR-77 names banana, got %s" % [errs])
+
+
+func test_IR77_last_errors_is_cleared_by_a_good_load() -> void:
+	var script: Variant = _loader()
+	if script == null:
+		return
+	script.load_level(LF.level(16), {"seed": 1, "pre_specials": ["banana"]})
+	var ok: Variant = script.load_level(LF.level(16), {"seed": 1, "pre_specials": ["rocket", "crane", "firecracker"]})
+	assert_not_null(ok, "known names load")
+	assert_eq(script.get("last_errors"), [], "last_errors is cleared by each load")
+
+
+func test_IR83_IR84_booster_firecracker_then_chest_rocket_and_crane_three_specials_no_match() -> void:
+	var level: Dictionary = LF.level(22)
+	var names: Array = ["firecracker", "rocket", "crane"]
+	var a1: Variant = load_attempt(level, {"seed": 1234, "pre_specials": names})
+	var a2: Variant = load_attempt(level, {"seed": 1234, "pre_specials": names})
+	if a1 == null or a2 == null:
+		return
+	var cells: Array[Vector2i] = _special_cells(a1.board)
+	assert_eq(cells.size(), 3, "3 specials in 3 different cells")
+	assert_eq(BB.find_kind(a1.board, "firecracker").size(), 1)
+	assert_eq(BB.find_kind(a1.board, "crane").size(), 1)
+	assert_eq(BB.find_kinds(a1.board, ROCKETS).size(), 1)
+	assert_eq(_special_cells(a2.board), cells, "same seed, same cells")
+	assert_false(BB.has_match(a1.board), "the board has no match")
+
+
+func test_IR83_IR84_names_are_placed_in_list_order_booster_first() -> void:
+	var level: Dictionary = LF.level(22)
+	var cells: Array = [Vector2i(1, 1), Vector2i(3, 3), Vector2i(5, 5)]
+	var a: Variant = load_attempt(level, {"seed": 1234, "pre_specials": ["firecracker", "rocket", "crane"],
+		"stub_special_cells": cells})
+	if a == null:
+		return
+	assert_eq(a.board.get_kind(1, 1), "firecracker", "the booster's special takes the first cell")
+	assert_true(ROCKETS.has(String(a.board.get_kind(3, 3))), "then the chest's Rocket")
+	assert_eq(a.board.get_kind(5, 5), "crane", "then the chest's Crane")
+
+
+func test_IR83_IR84_booster_rocket_crane_plus_chest_four_specials_repeatable_with_seed_1234() -> void:
+	var level: Dictionary = LF.level(22)
+	var names: Array = ["rocket", "crane", "rocket", "crane"]
+	var a1: Variant = load_attempt(level, {"seed": 1234, "pre_specials": names})
+	var a2: Variant = load_attempt(level, {"seed": 1234, "pre_specials": names})
+	if a1 == null or a2 == null:
+		return
+	var cells: Array[Vector2i] = _special_cells(a1.board)
+	assert_eq(cells.size(), 4, "4 specials, all in different cells")
+	assert_eq(BB.find_kind(a1.board, "crane").size(), 2)
+	assert_eq(BB.find_kinds(a1.board, ROCKETS).size(), 2)
+	assert_eq(_special_cells(a2.board), cells, "loaded again with seed 1234: the same 4 cells")
+	for c in cells:
+		assert_eq(a2.board.get_color(c.x, c.y), a1.board.get_color(c.x, c.y), "same colour at %s" % c)
+	assert_false(BB.has_match(a1.board), "the board has no match")

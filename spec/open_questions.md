@@ -18,6 +18,10 @@ Status: `OPEN` / `ANSWERED`. "Blocks" names the rules whose tests can't be writt
 
 **Update (28 Nov 2026, LevelLoader check):** OQ-62 to OQ-74 are all ANSWERED (see each entry). New and OPEN: OQ-75 (OB07/OB03 debut levels: GDD vs plan), OQ-76 (same pieces on a retry?), OQ-77 (shrine colours in the file), OQ-78 (OB08 in the file and its layers), OQ-79 (when and where drop items appear), OQ-80 (`fixed_tiles` names and colours), OQ-81 (smaller schema gaps), OQ-82 (pre-level booster and streak-chest placement). None blocks building LevelLoader's core; OQ-77, OQ-78 and OQ-79 block loading OB05, OB08 and OB11.
 
+**Update (28 Nov 2026, SaveService check):** OQ-75 to OQ-88 are all ANSWERED. New and OPEN: OQ-89 (lives refill clock and a new player's lives), OQ-90 (starting with 0 lives; finales), OQ-91 (unlimited lives after a finale), OQ-92 (app closed or killed mid-level), OQ-93 (booster unlock moment and paid uses), OQ-94 (win streak after the chest), OQ-95 (what the 20/50 milestones give), OQ-96 (story beats on a retry). None blocks SaveService's core (save/load, coins, lives lost, fragments, progress, attempt log); they block parts of IR-81 to IR-84.
+
+**Update (28 Nov 2026, round 9, SaveService answers):** Owner in chat: "Yes, all of them" (89 A, 90 B, 91 A, 92 A, 93 A all parts, 94 A all parts, 95 A, 96 A), plus two confirmed readings now owner decisions: levels are played in order with no skipping (IR-79); no purchase of any kind without enough coins, coins never below 0 (IR-80). Cited as "Owner decision, chat 28 Nov 2026 › OQ-xx". No question is open. Minor edge cases left are marked "Not yet specified" in IR-38, IR-81, IR-83, IR-84 and IR-87; none blocks SaveService. GDD lines to add: see "GDD text to update (round 9, owner only)" at the end.
+
 ---
 
 ### OQ-01 · Bamboo Rocket: row or column? — ANSWERED
@@ -834,7 +838,7 @@ Parts that, read together, leave this open:
 Blocks: IR-74 tests for these parts, IR-49 for OB08 goals, the validator's OB08 checks; levels 22–25, 39, 40, 43, 45–47, 49, 50. The rest of IR-74 can be built.
 
 ### OQ-85 · Drop items (OB11): parts OQ-79's answer doesn't settle — ANSWERED
-Decision: Owner decision, chat 28 Nov 2026 › OQ-85: Option A for (a), (b), (c) and (d) (2026-11-28). In plain words: starting items go in the top playable cell of different columns whose top cell holds an uncovered plain piece; a replacement enters in the same refill, in a column that gets a new piece then; items collected in the same move are all replaced in that refill, in different columns; starting items are numbered left to right. Now in IR-75, IR-76, IR-69. Left as "Not yet specified" in IR-75 (minor, level-designer avoids them): fewer eligible starting columns than `max_on_board`; more items to replace than columns refilling; numbering of two items entering in the same refill.
+Decision: Owner decision, chat 28 Nov 2026 › OQ-85: Option A for (a), (b), (c) and (d) (2026-11-28). In plain words: starting items go in the top playable cell of different columns whose top cell holds an uncovered plain piece; a replacement enters in the same refill, in a column that gets a new piece then; items collected in the same move are all replaced in that refill, in different columns; starting items are numbered left to right. Now in IR-75, IR-76, IR-69. Left as "Not yet specified" in IR-75 (minor, level-designer avoids them): more items to replace than columns refilling; numbering of two items entering in the same refill. Fewer eligible starting columns than `max_on_board`: SETTLED, owner decision, chat 28 Nov 2026: the validator rejects the level (now in IR-75).
 
 Parts that, read together, leave this open:
 - Owner decision, chat 28 Nov 2026 › OQ-79 (Option B, trial): "The first `max_on_board` items are placed in the top row at the start (seeded columns); after that, each collected item is replaced at the next refill at the top of a random column (seeded), until `total` have appeared".
@@ -887,6 +891,78 @@ Decision: Owner decision, chat 28 Nov 2026 › OQ-88: Option A for all parts (20
 - Option A: (a) rejected; (b) rejected; (c) rejected (every shrine needs at least 1 piece of each colour it names).
 - Option B: (a) allowed but ignored; (b) allowed but ignored; (c) allowed: no colours means it is lit only when its `hp` reaches 0; a 0 count is ignored.
 Blocks: validator checks only. Not LevelLoader for valid files.
+
+---
+
+## New questions from the SaveService check (28 Nov 2026)
+
+### OQ-89 · Lives refill clock: closed game, when it starts, clock changes, a new player's lives — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-89: Option A (2026-11-28). In plain words: lives refill on real time while the game is closed; the countdown starts when lives drop below 5, each life back starts the next 20 minutes, another loss doesn't restart it, it stops at 5 or when all 5 are bought; a clock moved back gives nothing until it catches up (and never takes a life); a new player starts with 5. Now in IR-81, IR-78. Left as "Not yet specified" in IR-81 (minor): whether the countdown pauses during unlimited lives; buying all 5 at 5 lives. Both settled by the owner, chat 28 Nov 2026: the countdown does not run during unlimited lives and a fresh one starts when they end; buying at 5 lives is refused with "You already have 5 lives" (IR-81, IR-80).
+
+GDD says: Meta & economy › Lives › "5 max; … refill 1 per 20 min, or buy all 5 back for 150 coins". CLAUDE.md › Owner decisions › "Lives: 5 max, 1 back every 20 min". Nothing says whether the 20 minutes pass while the game is closed, when a countdown starts, what a changed device clock does, or how many lives a new player starts with.
+(a) Does the refill run while the game is closed? (b) When does a 20-minute countdown start? (c) The device clock is moved back or forward. (d) A new player's lives.
+- Option A: (a) Yes, by real time: on opening, every full 20 minutes since the saved time gives a life (up to 5). (b) It starts when lives first drop below 5; each life that comes back starts the next 20 minutes; losing another life doesn't restart it; it stops at 5 lives (and when all 5 are bought). (c) Clock moved back: no lives come back until the clock passes the saved time again, and no life is ever taken away; clock moved forward: lives come back as the clock says. (d) 5.
+- Option B: (a) No, only time with the game open counts. (b) Each life lost starts a new 20 minutes for that life. (c) Not an issue (only open-game time counts). (d) 5.
+Blocks: IR-81's refill tests beyond "one life, game open"; SaveService's refill code. Not SaveService's core (saving, loading, coins, lives lost, fragments, progress).
+
+### OQ-90 · Starting a level with 0 lives, and chapter finales — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-90: Option B (2026-11-28). In plain words: no level can be started or retried at 0 lives unless unlimited lives are running, except the finales 25 and 50, which can be played at 0 lives; at 0 lives the retry screen offers only waiting or buying all 5. Now in IR-81, IR-79.
+
+GDD says: Meta & economy › Lives › "lose one when an attempt ends in a fail … chapter finales cost no life on a fail"; Research basis › "Top complaints: … lives lock-out"; Retention test › "Track how many players quit within 2 sessions after running out of lives on levels 15 or 20". The GDD never says that a level needs a life to start, nor whether a finale (where a fail costs nothing) does.
+- Option A: No level can be started (or retried) with 0 lives unless unlimited lives are running (IR-81); finales too. At 0 lives the retry screen offers only waiting or buying all 5 for 150 coins.
+- Option B: As A, except the chapter finales (25 and 50) can be started and retried with 0 lives, since a fail there costs no life.
+Blocks: SaveService's "can this level start?" check and the retry screen at 0 lives. Not SaveService's core.
+
+### OQ-91 · Unlimited lives after a chapter finale: on a win only? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-91: Option A (2026-11-28). In plain words: only winning a chapter finale gives the 10 minutes of unlimited lives, counted in real time from the win (game open or closed); a failed finale gives none. Now in IR-81, IR-60. Left as "Not yet specified" in IR-81 (minor): an attempt started during the 10 minutes that fails after they run out.
+
+GDD says: Meta & economy › Lives › "10 min of unlimited lives after each chapter finale"; Fairness rules › "the unlimited-lives grant shows as a badge on the map". "After each chapter finale" could mean after winning it, or after any attempt at it. In the MVP only level 25 matters (after 50 there is no level to play, IR-79).
+(a) What gives the 10 minutes? (b) Do they pass while the game is closed?
+- Option A: (a) Only winning the finale (once, since it can't be replayed). (b) Yes, real time from the win (as OQ-89 (a) A).
+- Option B: (a) Every finale attempt that ends, won or failed. (b) Only time with the game open counts.
+Blocks: IR-81's unlimited-lives tests beyond "won at T, game open". Not SaveService's core.
+
+### OQ-92 · The app is closed or killed mid-level — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-92: Option A (2026-11-28). In plain words: closing or killing the app mid-level counts as a quit: a fail, a life lost where a fail would cost one, the first try used and logged, the streak reset; on the next launch the player is on the map. Now in IR-38, IR-86, IR-84, IR-78. Left as "Not yet specified" in IR-38 (minor): a killed attempt from inside the unlimited-lives window whose next launch comes after it ended.
+
+GDD says: Interaction rules › "Quitting mid-level | Counts as a fail: costs a life (except on finales) and counts as that level's first try"; Retention test › "Log per player: … mid-level quits". It doesn't say whether closing the app, a crash, or the phone killing it in the background is a quit. Coins spent on continues and boosters used in that attempt stay spent under both options.
+- Option A: It counts as a quit (IR-38): a fail, a life lost (not on finales), the streak back to 0, the first try used and logged; on the next launch the player is on the map (the level is not resumed).
+- Option B: It doesn't count: no life lost, no attempt logged, streak unchanged; on the next launch the level starts fresh as if never begun (the attempt is not resumed).
+Blocks: SaveService's start-of-attempt record and what it does on launch. Not the rest of SaveService's core.
+
+### OQ-93 · Booster unlocks and paid uses — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-93: Option A for (a), (b), (c) and (d) (2026-11-28). In plain words: a booster unlocks when level N is first started (usable on N); a paid use is paid at the moment of use (nothing bought ahead; the save counts free uses left); one pre-level booster per attempt; it is spent per attempt (a retry needs another). Now in IR-82, IR-83, IR-80. Left as "Not yet specified" in IR-83 / IR-84 (minor): a pre-level booster on the streak-chest board. Settled by the owner, chat 28 Nov 2026: allowed; the chest's Rocket and Crane are placed after the booster's specials (IR-83, IR-84, IR-77).
+
+GDD says: Meta & economy › Booster unlocks › "11 | Kancil's Hoof Tap | … | 3 free, then 100 coins each"; "16 | Pre-level boosters | Pre-level | Start with a Rocket + Crane, or a Firecracker … | 1 each free, then 150 coins each" (similar rows for 23, 29, 36); Research basis › "Boosters unlock one at a time with free uses"; Save file › `"boosters": {"hoof_tap": 3, …}` (a count per booster).
+(a) When a booster "unlocks at level N". (b) Paid hero booster uses. (c) Pre-level boosters: can one attempt have both the Rocket + Crane and the Firecracker? (d) Is a pre-level booster spent per attempt or per level?
+- Option A: (a) When level N is first started, so it can be used (and taught) on level N. (b) Paid at the moment of use: with no free uses left, using it costs its price then; the save's count is the free uses left. (c) One of the two per attempt. (d) Per attempt: each attempt started with one spends one (a retry needs another, free or 150 coins).
+- Option B: (a) When level N is won, so it can first be used on level N + 1. (b) Bought ahead into stock, any number, and each use spends one from stock. (c) Both may be used on the same attempt. (d) Per level: one bought for a level covers its retries until it is won.
+Blocks: IR-82 and IR-83 tests on the unlock level, buying and spending; BoosterService's purchase API. Not SaveService's core (it can store a count per booster under either option).
+
+### OQ-94 · Win streak: after the chest, and a failed chest board — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-94: Option A for (a), (b) and (c) (2026-11-28). In plain words: the streak goes back to 0 when the chest drops; the chest board's attempt uses the chest up, so a failed chest board loses it; a 6th win on level 50 gives no chest. Now in IR-84, IR-78.
+
+GDD says: Meta & economy › Currencies › "Win streak | 6 wins in a row: a chest drops a free Rocket and Crane onto the next board, placed as for pre-level boosters". It doesn't say what the streak does after a chest, or what happens to the chest if that board is failed.
+(a) After the chest. (b) The next board is failed. (c) The 6th win is level 50 (no next board).
+- Option A: (a) The streak goes back to 0; the next chest needs 6 more wins (12 in a row in total). (b) The chest is used up by that attempt; the retry starts without it (and the fail sets the streak to 0). (c) No chest.
+- Option B: (a) The streak keeps counting; every win from the 6th on drops a chest onto the next board until a fail. (b) The chest stays for the retries until that level is won. (c) No chest.
+Blocks: IR-84 tests beyond the first chest. On the cut list (item 1); not SaveService's core.
+
+### OQ-95 · Upgrade milestones at levels 20 and 50: what they give — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-95: Option A (2026-11-28). In plain words: nothing is saved for the 20/50 milestones yet; winning 20 or 50 shows the milestone and gives nothing saved; the owner adds rewards when the upgrade flow is designed. Noted in IR-78 (no rule of its own until rewards exist).
+
+GDD says: Level progression › "Your 20/50-level upgrade milestones can sit on top of this"; Open questions › "keep at 20/50 for now"; Meta & economy › "Owner: you. Forest restoration meta, collections and the heroes' upgrade flow". CLAUDE.md › "Upgrade milestones stay at levels 20 and 50". Nothing says what a milestone gives or what the save must keep for it.
+- Option A: Not built in the MVP code yet: winning 20 and 50 shows the milestone (story card / badge) and gives nothing saved; the owner adds rewards when the upgrade flow is designed.
+- Option B: The owner names the reward now (e.g. coins, free booster uses, or a hero upgrade level), and SaveService stores it.
+Blocks: nothing in SaveService's core; only a milestone reward, if any.
+
+### OQ-96 · Story beats on a retry: shown again? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-96: Option A (2026-11-28). In plain words: each story beat plays once, the first time its level is reached; retries skip it; the save remembers which were seen. Now in IR-87 (new), IR-78. Left as "Not yet specified" in IR-87 (minor): whether a beat plays before or after its level.
+
+GDD says: Story beats (levels 15, 20, 25, 30, 35, 40, 45, 50; level 17 after OQ-83), "Intro comic (4 panels, skippable…)"; Level progression › "each hard level carries a mini story beat"; Fairness rules › "At most one pop-up between the lobby and Play". It doesn't say whether a level's story beat plays again on each retry of that level, so whether the save must remember beats already seen.
+- Option A: Each beat plays once, the first time it is reached; retries skip it (the save remembers which were seen).
+- Option B: It plays on every attempt of its level (skippable); nothing to save.
+Blocks: StoryPlayer and one saved list. Not SaveService's core.
 
 ---
 
@@ -1046,6 +1122,34 @@ Brief (`research/match-villains/level_agent_brief.md`):
 23. §4 Colours / §5 (item 12): "Only a 3-colour level has `color_set`; a 4-colour level must not" (OQ-88 A (a)).
 24. §5 `fixed_tiles` (item 11): "an `orb` tile has no `"color"`" (OQ-88 A (b)).
 25. §5 `spawn.drop_items` (item 16): use item 5's wording (OQ-85 A).
+
+---
+
+## GDD text to update (round 9, owner only): decisions OQ-89 to OQ-96 and two confirmed readings (chat 28 Nov 2026)
+
+GDD (`docs/gdd/zodiac-forest-gdd-final.md`):
+1. Meta & economy › Currencies › Lives ("… refill 1 per 20 min, or buy all 5 back for 150 coins; 10 min of unlimited lives after each chapter finale"): add "A new player starts with 5 lives. The refill runs on real time, also while the game is closed: the 20 minutes start when lives drop below 5, each life back starts the next 20, another loss doesn't restart them, and they stop at 5 lives or when all 5 are bought. If the device clock is set back, no life comes back until it passes the saved time again, and no life is taken away (OQ-89 A)." Change "after each chapter finale" to "after winning a chapter finale, counted in real time from the win; during them a fail costs no life (OQ-91 A)".
+2. Meta & economy › Lives (same row or a new line): "No level can be started or retried at 0 lives unless unlimited lives are running, except the chapter finales (25, 50), which can be played at 0 lives. At 0 lives the retry screen offers only waiting or buying all 5 (OQ-90 B)."
+3. Interaction rules › "Quitting mid-level | Counts as a fail: …": add "Closing the app, a crash or the phone killing it mid-level counts as a quit (life lost where a fail costs one, first try used and logged, win streak reset); the next launch opens the map, not the level (OQ-92 A)."
+4. Meta & economy › Booster unlocks (intro or table note): "A booster unlocks when its level is first started, so it can be used on that level. With no free uses left, each use costs its price at the moment of use; uses are never bought ahead. Pre-level boosters: one of the two per attempt, spent per attempt (a retry needs another, free or 150 coins) (OQ-93 A)."
+5. Meta & economy › Currencies › Win streak ("6 wins in a row: a chest drops …"): add "The streak goes back to 0 when the chest drops (the next chest needs 6 more wins). The chest board's attempt uses the chest up, won or failed. A 6th win on level 50 gives no chest (OQ-94 A)." Optionally also say what ends a streak: "a fail (declined offer, moves out a 6th time, or a quit) sets it to 0; a win after continues counts".
+6. Level progression › "Your 20/50-level upgrade milestones can sit on top of this" (and/or Open questions › upgrade flow row): add "MVP: winning 20 and 50 shows the milestone but gives nothing saved yet; rewards come with the upgrade flow (OQ-95 A)."
+7. Story › Story beats, levels 1–50 (intro or a note under the table): "Each beat plays once, the first time its level is reached; retries skip it; the save remembers which were seen (OQ-96 A)."
+8. Soul fragments › Rules ("Won levels cannot be replayed in the MVP") or Level progression: add "Levels are played in order, with no skipping" (confirmed reading, IR-79).
+9. Meta & economy › Currencies › Coins: add "No purchase (continue, life refill, booster) can be made with fewer coins than its price; coins never go below 0" (confirmed reading, IR-80).
+10. Technical design › Save file example: optional note that the save also keeps the life refill time, the unlimited-lives end time, which boosters are unlocked, the win streak and a waiting chest, seen story beats and an "attempt in progress" mark (field names are the engineer's choice).
+11. Rules clarifications: add rows 89 to 96.
+
+Added for five owner decisions without an OQ number (chat 28 Nov 2026):
+
+12. Meta & economy › Currencies › Lives (with item 1): add "The refill countdown doesn't run during unlimited lives: a countdown running when they begin is dropped, and when they end, if lives are below 5, a fresh 20 minutes start then (also while the game is closed)."
+13. Meta & economy › Currencies › Lives: add "Buying all 5 at 5 lives is refused (no coins charged) with the message 'You already have 5 lives'."
+14. Technical design › Save file (with item 10): add "A save that can't be read, with no temporary copy, starts the player as a new player."
+15. Meta & economy › Currencies › Win streak (with item 5) or Booster unlocks › 16 Pre-level boosters: add "A pre-level booster can be used on the chest board; the chest's Rocket and Crane are placed after the booster's specials."
+16. Optional, Technical design › Level format or SaveService row: "In the MVP the save counts a fragment by the level number (26, 30, 33, 35, 38, 40, 45, 50); revisit when another guardian gets fragments."
+17. Rules clarifications: add rows for items 12 to 16 if the owner keeps them there.
+
+Brief (`research/match-villains/level_agent_brief.md`): nothing to change (these decisions are meta, not level files).
 
 ---
 
