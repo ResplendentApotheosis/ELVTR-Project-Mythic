@@ -1,6 +1,7 @@
 # Grey-box playable level: loads LEVEL_PATH with the real LevelLoader, lets you click/drag to swap or click a
 # special to tap, plays the events with AnimationQueue, and shows moves, goals, coins, lives and the
 # win / continue-offer / retry panels. All rules come from LevelSession -> the real modules.
+# Debug builds only (DebugGate): "Play again", jump-to-level and a "moves next attempt" box (keys 1-9).
 # Check: press F5 in the editor (this is the main scene) and make a match.
 extends Control
 
@@ -29,6 +30,9 @@ const SAVE_PATH: String = "user://greybox_save.json"
 @onready var retry_button: Button = $RetryPanel/Box/RetryButton
 @onready var buy_lives_button: Button = $RetryPanel/Box/BuyLivesButton
 @onready var check_again_button: Button = $RetryPanel/Box/CheckAgainButton
+@onready var debug_panel: VBoxContainer = $DebugPanel
+@onready var debug_moves_box: SpinBox = $DebugPanel/Row/MovesBox
+@onready var debug_status: Label = $DebugPanel/Status
 
 var save: SaveService
 var session: LevelSession
@@ -48,6 +52,11 @@ func _ready() -> void:
 	buy_lives_button.pressed.connect(_on_buy_lives)
 	check_again_button.pressed.connect(_refresh)
 	buy_lives_button.text = "Buy all 5 lives (%d coins)" % MetaRules.BUY_LIVES_PRICE
+	# Debug-only controls are hidden (and do nothing) in a release build.
+	play_again_button.visible = session.debug_enabled
+	debug_panel.visible = session.debug_enabled
+	debug_moves_box.value_changed.connect(_on_debug_moves_changed)
+	_show_debug_moves()
 	_start_fresh()
 
 
@@ -64,16 +73,16 @@ func _start_fresh() -> void:
 	_refresh()
 
 
-## GREY BOX ONLY: SaveService only starts the next level in order (IR-79), and a won level can't be played
-## again. So that this test level can always be played, the grey-box save is moved to it with
-## SaveService.debug_set (its test seam). The real game must not do this.
+## DEBUG BUILDS ONLY: SaveService only starts the next level in order (IR-79), and a won level can't be
+## played again. So that this test level can always be played, the grey-box save is moved to it through
+## LevelSession's debug shortcut. With the debug gate off (a release build) this does nothing.
 func _dev_make_level_playable() -> void:
 	var data: Variant = LevelLoader.read_level_file(LEVEL_PATH)
 	if not data is Dictionary:
 		return
 	var id: int = LevelLoader.as_int((data as Dictionary).get("id"), 0)
 	if save.next_level() != id:
-		save.debug_set({"next_level": id})
+		session.debug_jump_to_level(id)
 
 
 func _show_board() -> void:
@@ -87,6 +96,8 @@ func _show_board() -> void:
 # ---------------------------------------------------------------- input
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _debug_key(event):
+		return
 	if not _can_play():
 		return
 	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
@@ -157,9 +168,38 @@ func _on_buy_lives() -> void:
 	_refresh()
 
 
+## DEBUG BUILDS ONLY (the button is hidden otherwise): moves the save back to this level and starts it again.
 func _on_play_again() -> void:
 	_note = ""
-	_start_fresh()
+	if not session.debug_play_again():
+		_note = session.last_error
+	_show_board()
+	_refresh()
+
+
+# ---------------------------------------------------------------- debug moves (debug builds only)
+
+## Keys 1-9 set "moves next attempt". True if the key was used. Does nothing with the debug gate off.
+func _debug_key(event: InputEvent) -> bool:
+	if not session.debug_enabled or not event is InputEventKey:
+		return false
+	var key: InputEventKey = event
+	if not key.pressed or key.echo or key.keycode < KEY_1 or key.keycode > KEY_9:
+		return false
+	debug_moves_box.value = key.keycode - KEY_0   # this also calls _on_debug_moves_changed
+	return true
+
+
+func _on_debug_moves_changed(value: float) -> void:
+	session.set_debug_moves(int(value))
+	_show_debug_moves()
+
+
+func _show_debug_moves() -> void:
+	if session.debug_moves > 0:
+		debug_status.text = "Debug moves: %d (next attempt)" % session.debug_moves
+	else:
+		debug_status.text = "Debug moves: off (the level file's moves)"
 
 
 # ---------------------------------------------------------------- HUD and panels

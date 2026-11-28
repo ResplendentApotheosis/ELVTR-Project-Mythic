@@ -161,3 +161,78 @@ func test_new_piece_matched_away_takes_match_colour() -> void:
 	var evs: Array[BoardEvent] = [_ev("clear", [Vector2i(0, 0)]), _ev("refill", [Vector2i(0, 0)]), m, _ev("clear", [Vector2i(0, 0)])]
 	var looks: Dictionary = AnimationSteps.new_piece_looks(evs, before, board)
 	assert_eq(looks[1][0].look.color, "G")
+
+
+# ---------------------------------------------------------------- refill events carry colours (owner, 28 Nov 2026)
+# The three tests above build refill events WITHOUT data.colors: they now check the safe fallback for old/foreign events.
+
+func _refill(cells: Array, colors: Variant = null) -> BoardEvent:
+	var e: BoardEvent = _ev("refill", cells)
+	if colors != null:
+		e.data = {"colors": colors}
+	return e
+
+
+func test_refill_colour_comes_from_the_event() -> void:
+	var board: BoardModel = BB.from_rows(["R Y", "B G"])
+	var before: Dictionary = BoardSnapshot.piece_grid(board)
+	var evs: Array[BoardEvent] = [_ev("clear", [Vector2i(0, 0)]), _refill([Vector2i(0, 0)], ["B"])]
+	var looks: Dictionary = AnimationSteps.new_piece_looks(evs, before, board)
+	assert_eq(looks[1][0].look.color, "B", "the event's colour wins over the final board's R")
+	assert_eq(looks[1][0].look.kind, "plain")
+
+
+func test_refill_destroyed_later_is_not_unknown_when_the_event_has_colours() -> void:
+	var board: BoardModel = BB.from_rows(["R Y", "B G"])
+	board.clear_piece(0, 0)
+	var before: Dictionary = BoardSnapshot.piece_grid(BB.from_rows(["R Y", "B G"]))
+	var evs: Array[BoardEvent] = [_ev("clear", [Vector2i(0, 0)]), _refill([Vector2i(0, 0)], ["Y"]), _ev("clear", [Vector2i(0, 0)])]
+	var looks: Dictionary = AnimationSteps.new_piece_looks(evs, before, board)
+	assert_ne(looks[1][0].look, AnimationSteps.UNKNOWN_LOOK)
+	assert_eq(looks[1][0].look.color, "Y")
+
+
+func test_refill_several_cells_each_get_their_own_colour() -> void:
+	var board: BoardModel = BB.from_rows(["R Y", "B G"])
+	board.clear_piece(0, 0)
+	board.clear_piece(1, 0)
+	var before: Dictionary = BoardSnapshot.piece_grid(BB.from_rows(["R Y", "B G"]))
+	var evs: Array[BoardEvent] = [_ev("clear", [Vector2i(0, 0), Vector2i(1, 0)]), _refill([Vector2i(0, 0), Vector2i(1, 0)], ["G", "B"]), _ev("clear", [Vector2i(0, 0), Vector2i(1, 0)])]
+	var looks: Dictionary = AnimationSteps.new_piece_looks(evs, before, board)
+	assert_eq(looks[1][0].look.color, "G")
+	assert_eq(looks[1][1].look.color, "B")
+
+
+func test_refill_with_colours_of_the_wrong_length_falls_back_safely() -> void:
+	var board: BoardModel = BB.from_rows(["R Y", "B G"])
+	board.clear_piece(0, 0)
+	var before: Dictionary = BoardSnapshot.piece_grid(BB.from_rows(["R Y", "B G"]))
+	var evs: Array[BoardEvent] = [_ev("clear", [Vector2i(0, 0)]), _refill([Vector2i(0, 0)], []), _ev("clear", [Vector2i(0, 0)])]
+	var looks: Dictionary = AnimationSteps.new_piece_looks(evs, before, board)
+	assert_eq(looks[1][0].look, AnimationSteps.UNKNOWN_LOOK, "no usable colour data: the old fallback")
+
+
+func test_spawn_step_uses_the_refill_colour() -> void:
+	var board: BoardModel = BB.from_rows(["R Y", "B G"])
+	board.clear_piece(0, 0)
+	var evs: Array[BoardEvent] = [_ev("clear", [Vector2i(0, 0)]), _refill([Vector2i(0, 0)], ["B"]), _ev("clear", [Vector2i(0, 0)])]
+	var steps: Array[Dictionary] = AnimationSteps.build(evs, BoardSnapshot.piece_grid(BB.from_rows(["R Y", "B G"])), board)
+	assert_eq(_types(steps), ["clear", "spawn", "clear", "sync"])
+	assert_eq(steps[1].pieces[0].look.color, "B")
+
+
+func test_real_move_never_gives_a_grey_question_mark_for_a_refill() -> void:
+	var board: BoardModel = BB.blank()
+	BB.put(board, "RF", [[4, 4]])
+	board.moves = 10
+	var before: Dictionary = BoardSnapshot.piece_grid(board)
+	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(4, 4))
+	var looks: Dictionary = AnimationSteps.new_piece_looks(events, before, board)
+	var seen: int = 0
+	for i in looks:
+		if events[i].type != "refill":
+			continue
+		for p in looks[i]:
+			seen += 1
+			assert_ne(p.look.color, "?", "refill piece at %s has a real colour" % p.cell)
+	assert_gt(seen, 0)

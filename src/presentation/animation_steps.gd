@@ -1,6 +1,7 @@
 # Turns the Array[BoardEvent] a move returned into a list of simple animation steps (plain Dictionaries),
 # in the same order, each with its duration in seconds. Pure logic: no nodes, no tweens; AnimationQueue plays the steps.
-# It also works out what each new (refilled or shuffled) piece looks like, since the events don't say.
+# It also works out what each new piece looks like: a refill's colours come from the event (data.colors),
+# a shuffle's (or an old event's without colours) are followed through to the final board.
 # Check: GUT tests for AnimationSteps.build (test-engineer); F5 runs the greybox scene that plays them.
 class_name AnimationSteps
 extends RefCounted
@@ -91,6 +92,7 @@ static func total_duration(steps: Array[Dictionary]) -> float:
 ## For each "refill" and "shuffle" event (by index): [{"cell": Vector2i, "look": Dictionary}, ...].
 ## Follows every piece through the events. A new piece still on the board at the end gets the look of
 ## its final cell on `after`; one matched away gets the match's colour; otherwise UNKNOWN_LOOK.
+## A refill event that lists its colours (data.colors, parallel to cells) gives each new piece that colour.
 static func new_piece_looks(events: Array[BoardEvent], before: Dictionary, after: BoardModel) -> Dictionary:
 	var grid: Dictionary = {}     # cell -> piece number
 	var looks: Dictionary = {}    # piece number -> look, once known
@@ -121,10 +123,15 @@ static func new_piece_looks(events: Array[BoardEvent], before: Dictionary, after
 			"fall":
 				apply_fall(grid, e.data.get("moves", []) as Array)
 			"refill", "shuffle":
+				var colors: Array = e.data.get("colors", []) as Array if e.type == "refill" else []
+				var has_colors: bool = colors.size() == e.cells.size()
 				var list: Array = []
-				for c in e.cells:
+				for k in range(e.cells.size()):
+					var c: Vector2i = e.cells[k]
 					next_id += 1
 					grid[c] = next_id
+					if has_colors:
+						looks[next_id] = {"kind": "plain", "color": String(colors[k]), "item": ""}
 					list.append([c, next_id])
 				placed[i] = list
 	for cell in grid:

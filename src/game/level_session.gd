@@ -1,6 +1,8 @@
 # Runs one level from start to win or fail by calling the real modules in the right order: LevelLoader
 # (build, retry), SaveService (open, sync, close the attempt), MatchResolver (swap, tap, finale) and
 # GoalTracker (continue offers). It never decides a rule itself and never animates: it returns the events.
+# The save says yes first, then the board is built once (with any pre-level / chest specials). Debug-only
+# shortcuts (jump to level, play again, debug moves) work only when DebugGate is on.
 # Check: GUT tests for LevelSession (test-engineer); F5 plays the greybox scene, which drives it.
 class_name LevelSession
 extends RefCounted
@@ -16,9 +18,12 @@ var attempt: LevelAttempt = null
 var last_error: String = ""      # why the last start / retry did not work ("" = it worked)
 var win_coins: int = 0           # coins the win paid (20 + 5 per finale Rocket, IR-16)
 var finale_rockets: int = 0      # moves left at the win
+var debug_enabled: bool = DebugGate.enabled()   # debug shortcuts allowed? (never in a release build)
+var debug_moves: int = 0         # debug only: moves for the NEXT start or retry (0 = the file's moves)
 
 var _save: SaveService
 var _level_path: String
+var _level_id: int = 0           # read from the file, so the retry screen knows the level even with no board
 
 
 func _init(level_path: String, save: SaveService) -> void:
@@ -28,45 +33,57 @@ func _init(level_path: String, save: SaveService) -> void:
 
 # ---------------------------------------------------------------- starting
 
-## Builds a fresh attempt from the level file and opens it in the save. `options` go to LevelLoader
-## (e.g. {"seed": 1234}). False if the file did not load or the save refused (then see last_error).
+## Opens a new attempt in the save, then builds its board once. `options` go to LevelLoader (e.g.
+## {"seed": 1234}), except "pre_boosters" (e.g. ["firecracker"]), which goes to the save.
+## False if the file did not load or the save refused (then see last_error).
 func start(options: Dictionary = {}) -> bool:
 	if _attempt_open():
 		last_error = "an attempt is already running"
 		return false
-	var built: LevelAttempt = LevelLoader.load_file(_level_path, options)
-	if built == null:
-		last_error = "could not load %s %s" % [_level_path, LevelLoader.last_errors]
-		state = NOT_STARTED
-		return false
-	return _open(built)
+	return _begin(options, false)
 
 
-## IR-58 / IR-71: a new attempt rebuilt from the level file with a new seed (LevelLoader.retry), then
-## opened in the save. Only from the retry screen.
+## IR-58 / IR-71: a new attempt built again from the level file with a new seed. Only from the retry
+## screen. Takes the same options as start().
 func retry(options: Dictionary = {}) -> bool:
-	if state != RETRY or attempt == null:
+	if state != RETRY:
 		last_error = "retry is only possible from the retry screen"
 		return false
-	var built: LevelAttempt = LevelLoader.retry(attempt, options)
-	if built == null:
-		last_error = "could not rebuild %s %s" % [_level_path, LevelLoader.last_errors]
+	return _begin(options, true)
+
+
+## The order (owner, 28 Nov 2026): the save decides the attempt (IR-79, IR-81, IR-83, IR-84); only if it
+## says yes is the board built, once, with the specials it handed back (IR-77); then the tracker is bound.
+func _begin(options: Dictionary, is_retry: bool) -> bool:
+	_level_id = _read_level_id()
+	if _level_id <= 0:
+		last_error = "could not load %s" % _level_path
+		state = NOT_STARTED
 		return false
-	return _open(built)
-
-
-## Opens `built` in the save (IR-79, IR-81). The save may hand back pre-level or streak-chest specials
-## (IR-77, IR-84); the board is then rebuilt with the same seed plus those specials.
-func _open(built: LevelAttempt) -> bool:
-	var result: Dictionary = _save.start_attempt(built.level_id, built.tracker)
-	attempt = built
+	var opts: Dictionary = options.duplicate()
+	var pre_boosters: Array = LevelLoader.array_of(opts.get("pre_boosters", []))
+	opts.erase("pre_boosters")
+	var result: Dictionary = _save.start_attempt(_level_id, null, pre_boosters)
 	if not bool(result.get("ok", false)):
-		last_error = "the save refused to start level %d (%s)" % [built.level_id, result.get("reason", "")]
+		last_error = "the save refused to start level %d (%s)" % [_level_id, result.get("reason", "")]
 		state = RETRY
 		return false
-	var specials: Array = result.get("pre_specials", [])
-	if not specials.is_empty():
-		attempt = _with_specials(built, specials)
+	opts["pre_specials"] = result.get("pre_specials", [])
+	var built: LevelAttempt = null
+	if is_retry and attempt != null:
+		built = LevelLoader.retry(attempt, opts)   # a new seed unless the caller gave one
+	else:
+		built = LevelLoader.load_file(_level_path, opts)
+	if built == null:
+		# Should not happen (the file was just read). Close the attempt the save opened, as the app would.
+		_save.end_attempt("quit")
+		last_error = "could not build %s %s" % [_level_path, LevelLoader.last_errors]
+		state = NOT_STARTED
+		return false
+	if debug_enabled and debug_moves > 0:
+		built.board.moves = debug_moves   # debug only: changes the starting moves, nothing else
+	_save.bind_tracker(built.tracker)
+	attempt = built
 	last_error = ""
 	win_coins = 0
 	finale_rockets = 0
@@ -74,22 +91,37 @@ func _open(built: LevelAttempt) -> bool:
 	return true
 
 
-## Same level, same seed, plus the specials; keeps the tracker the save already holds.
-func _with_specials(built: LevelAttempt, specials: Array) -> LevelAttempt:
-	var opts: Dictionary = {"seed": built.seed_value, "pre_specials": specials}
-	var again: LevelAttempt = null
-	if built.source_path != "":
-		again = LevelLoader.load_file(built.source_path, opts)
-	else:
-		again = LevelLoader.load_level(built.level, opts)
-	if again == null:
-		last_error = "could not place %s %s" % [specials, LevelLoader.last_errors]
-		return built
-	again.tracker = built.tracker
-	again.board.goal_tracker = built.tracker
-	if LevelLoader.has_dew_goal(again.level):
-		built.tracker.attach(again.board)
-	return again
+## The level's id from its file (0 if the file is missing or not a level).
+func _read_level_id() -> int:
+	var level: Variant = LevelLoader.read_level_file(_level_path)
+	if not level is Dictionary:
+		return 0
+	return LevelLoader.as_int((level as Dictionary).get("id"), 0)
+
+
+# ---------------------------------------------------------------- debug shortcuts (debug builds only)
+
+## Debug only: makes `level` (1-50) the save's next level. False, and nothing touched, with the gate off.
+func debug_jump_to_level(level: int) -> bool:
+	if not debug_enabled or level < 1 or level > 50:
+		return false
+	_save.debug_set({"next_level": level})
+	return true
+
+
+## Debug only: moves the save back to this level and starts it again. False with the gate off.
+func debug_play_again(options: Dictionary = {}) -> bool:
+	if not debug_enabled:
+		return false
+	var id: int = _read_level_id()
+	if not debug_jump_to_level(id):
+		return false
+	return start(options)
+
+
+## Debug only: the moves the next start or retry gets (0 or less = off, the file's moves).
+func set_debug_moves(n: int) -> void:
+	debug_moves = maxi(n, 0)
 
 
 # ---------------------------------------------------------------- moves
@@ -190,7 +222,7 @@ func board() -> BoardModel:
 
 
 func level_id() -> int:
-	return attempt.level_id if attempt != null else 0
+	return attempt.level_id if attempt != null else _level_id
 
 
 func moves_left() -> int:

@@ -38,7 +38,8 @@ func retry_choices(level: int) -> Array:
 
 ## Opens an attempt. Refused ({"ok": false, "reason": ...}) changes nothing. Accepted returns
 ## {"ok": true, "first_try": bool, "pre_specials": Array} for LevelLoader (IR-77).
-func start_attempt(level: int, tracker: GoalTracker, pre_boosters: Array = []) -> Dictionary:
+## `tracker` may be null: the board is built after the save says yes, then bind_tracker(tracker) is called.
+func start_attempt(level: int, tracker: GoalTracker = null, pre_boosters: Array = []) -> Dictionary:
 	var reason: String = _start_refusal(level, pre_boosters)
 	if reason != "":
 		return {"ok": false, "reason": reason}
@@ -58,11 +59,21 @@ func start_attempt(level: int, tracker: GoalTracker, pre_boosters: Array = []) -
 	if first_try:
 		(_data.tried_levels as Array).append(level)
 	_data.open_attempt = {"level": level, "first_try": first_try}
-	_tracker = tracker
+	_tracker = null
 	_save()
+	if tracker != null:
+		bind_tracker(tracker)
+	return {"ok": true, "first_try": first_try, "pre_specials": pre_specials}
+
+
+## Links the open attempt's tracker to the save: from now on its coins are the live balance (a continue
+## spends them there). Gives the tracker the save's lives and coins at once.
+func bind_tracker(tracker: GoalTracker) -> void:
+	_tracker = tracker
+	if tracker == null:
+		return
 	tracker.lives = lives()
 	tracker.coins = coins()
-	return {"ok": true, "first_try": first_try, "pre_specials": pre_specials}
 
 
 ## Writes the open attempt's coins (the tracker's, after a continue) into the save.

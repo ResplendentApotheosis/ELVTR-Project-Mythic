@@ -73,6 +73,37 @@ autowrap_mode = 3
 text = "Click a piece then a neighbour, or drag a piece toward a neighbour, to swap. Click a special (R- R| FC CR ORB) to fire it.
 Grey block = content obstacle (id hp). Green outline = overlay. Tinted cell = underlay (blue = dew, purple = goo)."
 
+[node name="DebugPanel" type="VBoxContainer" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 640.0
+offset_top = 500.0
+offset_right = 1120.0
+offset_bottom = 620.0
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="DebugPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.85, 1, 1)
+text = "DEBUG (editor builds only) - keys 1-9 set the moves"
+
+[node name="Row" type="HBoxContainer" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="MovesCaption" type="Label" parent="DebugPanel/Row"]
+layout_mode = 2
+text = "Moves next attempt (0 = file)"
+
+[node name="MovesBox" type="SpinBox" parent="DebugPanel/Row"]
+layout_mode = 2
+max_value = 99.0
+rounded = true
+
+[node name="Status" type="Label" parent="DebugPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.85, 1, 1)
+text = "Debug moves: off"
+
 [node name="WinPanel" type="PanelContainer" parent="."]
 visible = false
 layout_mode = 0
