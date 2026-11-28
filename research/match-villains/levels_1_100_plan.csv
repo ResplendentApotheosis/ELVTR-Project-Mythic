@@ -44,11 +44,11 @@ id,chapter,tier,moves,colors,goals,new_obstacle,unlock,board_shape,target_first_
 43,2,medium,22,4,OB12 x31; OB08 x27,,,arch opening,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
 44,2,medium,22,4,OB04 x74; OB06 x4,,,diamond,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
 45,2,hard,25,4,OB10 x39; OB08 x26; OB04 x75; OB11 x1,,,"wide open 9x9, blockers spread evenly",35-45%,"Fair hard level: open board, difficulty from goal counts vs moves. Player should always know what to do."
-46,2,intro,26,4,OB09 x1,OB09,,open top rows + blocker band below,95%,Teach hazard_destroyer alone; place it where the first 2-3 obvious matches touch it.
-47,2,easy,24,4,OB09 x1; OB08 x12,,,two towers joined at the base,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
-48,2,medium,22,4,OB09 x2; OB03 x30; OB11 x3,,,staircase,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
+46,2,easy,24,4,OB12 x20; OB08 x12,,,open top rows + blocker band below,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+47,2,easy,24,4,OB08 x12,,,two towers joined at the base,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
+48,2,medium,22,4,OB03 x30; OB11 x3,,,staircase,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
 49,2,medium,22,4,OB08 x25; OB05 x1,,,T-shape,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).
-50,2,finale,27,4,OB11 x2; OB12 x40; OB09 x1; OB08 x30,,Chapter 2 story card,"wide open 9x9, blockers spread evenly",25-35%,"Chapter finale: 4 goals, open board, ends with a story card."
+50,2,finale,27,4,OB11 x2; OB12 x40; OB08 x30; OB04 x70,,Chapter 2 story card,"wide open 9x9, blockers spread evenly",25-35%,"Chapter finale: 4 goals, open board, ends with a story card."
 51,3,easy,24,4,OB06 x3; OB02 x30,,,split halves with a 1-cell bridge,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
 52,3,easy,24,4,OB03 x40; OB11 x3,,,hourglass,85-90%,Relief level; reinforce the newest obstacle with one familiar partner.
 53,3,medium,22,4,OB04 x71; OB03 x38; OB11 x1,,,ring around a centre target,60-70%,Combine 2-3 known obstacles; one priority decision (what to clear first).

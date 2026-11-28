@@ -18,6 +18,8 @@ Who decided what, and who made what: the owner (human) or AI. Newest first. Use 
 
 | Date | What | Decided by | Made by | Where |
 |---|---|---|---|---|
+| 2026-11-28 | Level plan without Nian's Eye: level 46 becomes an easy relief level (cracked idol ×20, paper-screen lantern ×12); OB09 removed from 47 and 48; finale 50 gets healing dew as a 4th obstacle goal. AI advised against 50 B because the fragment also takes a goal slot; the owner chose it. The dew count (×70, within the 90% limit) was set by AI | Human ← AI options | AI (edited the plan) | `research/match-villains/levels_1_100_plan.csv` |
+| 2026-11-28 | Merged PR #4 (GoalTracker, 398 tests passing) into `main` | Human | AI | GitHub |
 | 2026-11-28 | GDD (repo and live) and level brief updated with OQ-62 to OQ-74 (rounds 5–7): goal units, the winning move, dew goals, fragment fields in level files, boosters use no move, lives after continues; brief example goals fixed | AI → Human | AI | GDD; `research/match-villains/level_agent_brief.md` |
 | 2026-11-28 | godot-engineer's folder note changed from `src/game/` to `src/goals/` for GoalTracker | AI → Human | AI | `.claude/agents/godot-engineer.md` |
 | 2026-11-28 | Nian's Eye (OB09) is not in levels 1–50, replacing the 27 Nov "keep it at 46–50 for now"; plans for levels 46 and 50 still to decide | Human | — | GDD (already at 61); `levels_1_100_plan.csv` not yet changed |
