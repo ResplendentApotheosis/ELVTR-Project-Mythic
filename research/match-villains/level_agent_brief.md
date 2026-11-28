@@ -46,7 +46,7 @@ You are the level designer for an original zodiac-themed match-3 game built in G
 - Start the player with at least one area where a power-up is easy to make.
 
 **Colours**
-- Use 4 tile colours by default. Only use 3 on an intro level, if the board is very cramped.
+- Use 4 tile colours by default. Only use 3 on an intro level, if the board is very cramped. A 3-colour level names its colours, e.g. `"color_set": ["red", "yellow", "blue"]`; a 4-colour level must not have `color_set`.
 
 **Variety**
 - Don't repeat the same board shape in two consecutive levels.
@@ -91,7 +91,7 @@ You are the level designer for an original zodiac-themed match-3 game built in G
   "spawn": {"drop_items": null, "generators": null},
   "goals": [
     {"obstacle": "OB06", "count": 2},
-    {"obstacle": "OB02", "count": 26},
+    {"obstacle": "OB02", "count": 1},
     {"obstacle": "OB03", "count": 1}
   ],
   "story_beat": "mini",
@@ -101,10 +101,13 @@ You are the level designer for an original zodiac-themed match-3 game built in G
 
 **Field meanings**
 - `cells`: `#` = playable cell, `.` = no cell. Row 0 is the top row.
-- `underlay`: `.` = none; `1`–`3` = OB10 with that many hp; `s` = OB04 already covering that cell (a seed).
-- `objects`: one entry per blocker. Multi-cell objects (OB05, OB06, OB16) use `w`/`h`, with `x`/`y` as the top-left cell.
-- `fixed_tiles`: optional pre-placed colours or power-ups, e.g. `{"x":4,"y":8,"tile":"line_h"}`.
-- `spawn.drop_items`: e.g. `{"type":"OB11","total":3,"max_on_board":1,"exit_columns":[2,6]}`. On a fragment level whose fragment rides a drop item, add `"fragment_item": n` (the n-th item spawned carries it), e.g. `{"type":"OB11","total":3,"max_on_board":1,"exit_columns":[2,6],"fragment_item":2}`.
+- `underlay`: `.` = none; `1`–`3` = OB10 with that many hp; `s` = OB04 already covering that cell (a seed). No underlay on a `.` cell.
+- `objects`: one entry per blocker. Multi-cell objects (OB05, OB06, OB16) use `w`/`h`, with `x`/`y` as the top-left cell. `hp` is 1–3 for OB03, OB05, OB07 and OB08, and 1–4 for OB06.
+    - OB05 (lantern shrine) needs `"needs"`: a count per colour, e.g. `{"red": 2, "blue": 1}`. It is required, names at least one colour, every count is at least 1, and the colours are among the level's colours.
+    - OB08 (paper-screen lantern) is a one-cell content obstacle with no piece: `{"type": "OB08", "x": 4, "y": 3, "hp": 2, "color": "red"}`. `hp` (the screen) is 1–3; `"color"` is required and one of the level's colours (trial).
+- `fixed_tiles`: optional pre-placed colours or power-ups, e.g. `{"x":4,"y":8,"tile":"line_h"}`. Tile names: `red`, `yellow`, `blue`, `green`, `line_h`, `line_v`, `firecracker`, `crane`, `orb`. A Rocket, Firecracker or Crane takes an optional `"color"` (seeded random if absent); an `orb` tile has no `"color"`. Only on cells that would hold a piece; under moss is allowed (trial).
+- No spawner cells in levels 1–50.
+- `spawn.drop_items`: e.g. `{"type":"OB11","total":3,"max_on_board":1,"exit_columns":[2,6]}`. On a fragment level whose fragment rides a drop item, add `"fragment_item": n` (the n-th item spawned carries it), e.g. `{"type":"OB11","total":3,"max_on_board":1,"exit_columns":[2,6],"fragment_item":2}`. The first `max_on_board` items start in the top playable cells of different columns (seeded), only in columns whose top playable cell holds an uncovered plain piece, numbered left to right; every item collected in a move is replaced in the next refill, each in a different column (seeded) among the columns that get a new piece in that refill, until `total` have appeared (trial).
 - Fragment levels: the fragment's cocoon is the OB07 entry in `objects` with `"fragment": true`, and `goals` lists the fragment as `{"obstacle": "OB07", "count": 1, "fragment": true}` (or `"OB11"` for a drop item). The fragment's cocoon or item also counts toward a plain OB07 / OB11 goal on the same level.
 - `spawn.generators`: generator settings, e.g. for OB17.
 - `story_beat`: `null`, `"mini"` (on hard levels) or `"chapter"` (on finales).
@@ -119,7 +122,9 @@ var level: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://l
 - [ ] No object overlaps another object or a `.` cell, and multi-cell objects fit inside the board.
 - [ ] Each obstacle goal's count equals the number of those obstacles placed; spawned items meet the goal; number of seed cells < OB04 count ≤ 90% of playable cells.
 - [ ] On a fragment level, exactly one OB07 entry has `"fragment": true`, or `spawn.drop_items` has a `fragment_item` between 1 and `total`; a plain OB07 / OB11 goal's count includes the fragment's cocoon or item.
-- [ ] Only introduced obstacle IDs are used, and there is at most one hazard type.
+- [ ] Only introduced obstacle IDs are used, and there is at most one hazard type. Obstacles debut as in the GDD table (moss 7, creature 17).
+- [ ] OB05 `needs`, OB08 `color` and fixed-tile colours are among the level's colours; OB05 `needs` is present, names at least one colour, and every count is at least 1.
+- [ ] No underlay on a `.` cell; `hp` is within the limits above; `color_set` only on a 3-colour level; no `"color"` on an `orb` tile.
 - [ ] Hard/finale boards have no isolated pockets: every playable cell connects to the main area through at least 2 neighbours.
 - [ ] Drop items have an unblocked path to an exit column.
 - [ ] Moves are within ±2 of the plan; any change is explained in `designer_notes`.

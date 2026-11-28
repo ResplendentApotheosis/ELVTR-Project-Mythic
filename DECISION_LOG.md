@@ -18,6 +18,9 @@ Who decided what, and who made what: the owner (human) or AI. Newest first. Use 
 
 | Date | What | Decided by | Made by | Where |
 |---|---|---|---|---|
+| 2026-11-28 | GDD (repo and live) and level brief updated for OQ-75 to OQ-88 (round 8, 25 edits): moss debuts at 7 and creature at 17, the level 10 story beat moves to 17, paper-screen lantern and drop-item rules, retries get a new seed, pre-level special placement, level-file limits; clarification rows 75–88 | AI → Human | AI | GDD; `research/match-villains/level_agent_brief.md` |
+| 2026-11-28 | Brief example: bramble goal count fixed from 26 to 1 (only one bramble is placed), which the goal-unit rule requires; missed in round 5 | AI | AI | `level_agent_brief.md` §5 |
+| 2026-11-28 | Merged PR #5 (LevelLoader, 492 tests passing) into `main` | Human | AI | GitHub |
 | 2026-11-28 | LevelLoader code choices the spec doesn't settle, provisional until checked: a fixed special with no colour gets its colour before the fill draws; if too few columns can take starting drop items, place as many as fit (IR-75 gap); unknown `pre_specials` names are ignored; non-null `spawn.generators` rejected; the validator builds its check board with seed 1; up to 200 fill re-draws | AI | godot-engineer | `src/game/` |
 | 2026-11-28 | LevelLoader built: loads a level into a seeded starting board and goals, rebuilds on retry with a new seed, and `LevelLoader.validate` reports errors by IR ID. 495 tests: 492 pass, 0 fail, 3 pending (SaveService) | AI | rules-keeper, test-engineer, godot-engineer | branch `build/level-loader` |
 | 2026-11-28 | LevelLoader test API (contract section 11) and its test-side choices: retry keeps only lives and coins; loading never validates; load draw order is shape, underlay, objects, fixed tiles, fill, drop items, pre-level specials | AI | test-engineer | `tests/API_CONTRACT.md`, `tests/level_loader/` |
