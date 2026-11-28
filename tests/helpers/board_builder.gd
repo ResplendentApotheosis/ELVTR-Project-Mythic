@@ -259,6 +259,21 @@ static func set_dew_target(board: BoardModel, x: int, y: int) -> void:
 		board.call("set_dew_target", x, y)
 
 
+## A dew level (OQ-66, IR-61): every playable cell is a dew target and has dew, except `bare` (Vector2i cells).
+## Returns the number of cells that have dew. Uses only set_dew_target / set_underlay.
+static func dew_level(board: BoardModel, bare: Array = []) -> int:
+	var n: int = 0
+	for y in range(board.height):
+		for x in range(board.width):
+			if not board.is_playable(x, y):
+				continue
+			set_dew_target(board, x, y)
+			if not bare.has(Vector2i(x, y)):
+				set_dew(board, x, y)
+				n += 1
+	return n
+
+
 static func dew_targets_left(board: BoardModel) -> int:
 	if board.has_method("dew_targets_left"):
 		return int(board.call("dew_targets_left"))

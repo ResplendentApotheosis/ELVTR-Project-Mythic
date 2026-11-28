@@ -10,11 +10,21 @@ const LanternShrine: GDScript = preload("res://src/obstacles/ob05_lantern_shrine
 
 
 ## The player drags the piece at `from` into `to` (IR-01, IR-18, IR-22..27, IR-39, IR-52).
+## With a GoalTracker on the board, the whole move plays out, then ends with `win` if every goal is done;
+## a used-up last move that wins nothing ends with `fail` (IR-56, IR-57; see GoalHook).
 static func swap(board: BoardModel, from: Vector2i, to: Vector2i) -> Array[BoardEvent]:
 	var events: Array[BoardEvent] = []
+	GoalHook.begin(board)
+	var accepted: bool = _swap_and_resolve(board, from, to, events)
+	GoalHook.finish(board, events, accepted)
+	return events
+
+
+## Does the swap. Returns false if it was refused or snapped back (no move used).
+static func _swap_and_resolve(board: BoardModel, from: Vector2i, to: Vector2i, events: Array[BoardEvent]) -> bool:
 	if not _can_swap(board, from, to):
 		events.append(_invalid(from, to, "refused"))
-		return events
+		return false
 	var from_special: bool = board.is_special(from.x, from.y)
 	var to_special: bool = board.is_special(to.x, to.y)
 	board.swap_pieces(from, to)
@@ -23,7 +33,7 @@ static func swap(board: BoardModel, from: Vector2i, to: Vector2i) -> Array[Board
 		if groups.is_empty():
 			board.swap_pieces(from, to)   # snap back: nothing changes, no move used (IR-01)
 			events.append(_invalid(from, to, "no_match"))
-			return events
+			return false
 		_accept(board, from, to, events)
 		_resolve_matches(board, groups, from, to, [] as Array[FireOrder], events)
 	elif from_special and to_special:
@@ -32,28 +42,34 @@ static func swap(board: BoardModel, from: Vector2i, to: Vector2i) -> Array[Board
 	else:
 		_accept(board, from, to, events)
 		_special_with_piece(board, from, to, to if from_special else from, events)
-	_stabilise(board, events)
-	return events
+	stabilise(board, events)
+	return true
 
 
 ## Tapping a special fires it and uses a move; anything else does nothing (IR-02). Owner decision
 ## OQ-57 (chat 27 Nov 2026): a special locked under an overlay can't be tapped (no event, no move used).
+## A tap can end in `win` or `fail` like a swap (IR-56, IR-57).
 static func tap(board: BoardModel, cell: Vector2i) -> Array[BoardEvent]:
 	var events: Array[BoardEvent] = []
 	if not board.is_special(cell.x, cell.y) or board.is_locked(cell.x, cell.y):
 		return events
+	GoalHook.begin(board)
 	board.moves -= 1
 	var queue: Array[FireOrder] = [FireOrder.new(board.get_kind(cell.x, cell.y), board.get_color(cell.x, cell.y), cell, true)]
 	SpecialFiring.run(board, queue, events)
-	_stabilise(board, events)
+	stabilise(board, events)
+	GoalHook.finish(board, events, true)
 	return events
 
 
 ## Resolves a board as it stands, using no move: falls, refills and cascade matches until stable,
 ## then a free shuffle if there is no possible move and board.auto_shuffle is on (IR-32, IR-33).
+## It can end in `win` but never in `fail` (it uses no move).
 static func settle(board: BoardModel) -> Array[BoardEvent]:
 	var events: Array[BoardEvent] = []
-	_stabilise(board, events)
+	GoalHook.begin(board)
+	stabilise(board, events)
+	GoalHook.finish(board, events, false)
 	return events
 
 
@@ -66,6 +82,7 @@ static func settle(board: BoardModel) -> Array[BoardEvent]:
 ## OQ-60 (b): one Rocket at a time; each fully resolves (fall, refill, cascades) before the next draws.
 static func fire_finale(board: BoardModel, directions: Array = [], cells: Array = []) -> Array[BoardEvent]:
 	var events: Array[BoardEvent] = []
+	GoalHook.begin(board)   # the level is already won, so the tracker only watches here
 	var index: int = 0
 	while board.moves > 0:
 		var kind: String = ""
@@ -79,8 +96,11 @@ static func fire_finale(board: BoardModel, directions: Array = [], cells: Array 
 		board.moves -= 1
 		index += 1
 		var order: FireOrder = _place_finale_rocket(board, kind, stub, events)
-		_fire_waiting(board, [order] as Array[FireOrder], events)
+		# IR-16 / IR-56 (OQ-72): the winning move already settled the board, so Rocket 1 needs no
+		# fall first; each later Rocket finds the board settled by the cascade below.
+		SpecialFiring.run(board, [order] as Array[FireOrder], events)
 		cascade(board, events)
+	GoalHook.finish(board, events, false)
 	return events
 
 
@@ -284,7 +304,8 @@ static func _special_cell(g: MatchGroup, _from: Vector2i, to: Vector2i) -> Vecto
 
 
 ## Falls, refills and cascade matches until nothing matches (IR-32). Also used between a
-## Firecracker's two blasts (owner decision OQ-32). Never shuffles.
+## Firecracker's two blasts (owner decision OQ-32). Never shuffles. Owner decision OQ-72
+## (chat 28 Nov 2026): it keeps going after the last goal is done; `win` comes after (IR-56).
 static func cascade(board: BoardModel, events: Array[BoardEvent]) -> void:
 	for _guard in range(MAX_CASCADES):
 		BoardGravity.apply(board, events)
@@ -295,7 +316,8 @@ static func cascade(board: BoardModel, events: Array[BoardEvent]) -> void:
 
 
 ## Cascades until stable, then the free shuffle if there is no possible move (IR-32, IR-33).
-static func _stabilise(board: BoardModel, events: Array[BoardEvent]) -> void:
+## Also used by BoosterService (IR-62: the board settles after a booster).
+static func stabilise(board: BoardModel, events: Array[BoardEvent]) -> void:
 	cascade(board, events)
 	if board.auto_shuffle and not has_possible_move(board):
 		BoardShuffle.shuffle(board, events)

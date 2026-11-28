@@ -15,6 +15,7 @@ var exit_columns: Array = []
 var spawners: Array = []
 var palette: Array = ["R", "Y", "B", "G"]
 var rng: RandomNumberGenerator
+var goal_tracker: GoalTracker = null   # null = no goals tracked (the resolver behaves as before)
 
 # One entry per cell, index = y * width + x.
 var _playable: Array[bool] = []

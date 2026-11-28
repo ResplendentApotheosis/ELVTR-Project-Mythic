@@ -39,14 +39,15 @@ func test_ir53_match_next_to_dew_does_not_spread_it() -> void:
 
 
 func test_ir53_crane_landing_on_the_last_dew_target_gives_it_dew() -> void:
+	# 9x9, all 81 cells playable and targets (OQ-66); 80 have dew, (6,2) has none.
 	var board: BoardModel = BB.blank()
 	BB.put(board, "GC", [[1, 7]])
-	BB.set_dew_target(board, 6, 2)
+	BB.dew_level(board, [Vector2i(6, 2)])
 	board.goals = ["OB04"]
 	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(1, 7))
 	assert_eq(EV.cells_of(events, "crane_landing"), [Vector2i(6, 2)], "the Crane lands on (6,2)")
 	assert_true(BB.has_dew(board, 6, 2), "(6,2) has dew")
-	assert_eq(BB.dew_targets_left(board), 0, "the dew goal is complete")
+	assert_eq(BB.dew_targets_left(board), 0, "no target cell is left without dew")
 
 
 func test_ir53_special_gives_dew_to_an_obstacle_cell_it_covers() -> void:
@@ -89,11 +90,11 @@ func test_ir53_orb_covers_only_the_cells_whose_piece_it_clears() -> void:
 
 
 func test_ir53_crane_landing_on_an_uncovered_dew_target_clears_the_piece_and_gives_dew() -> void:
-	# OQ-49 B: only uncovered target (6,2) holds Y; no other goal.
+	# OQ-49 B: the only cell without dew is (6,2), holding Y; no other goal.
 	var board: BoardModel = BB.blank()
 	BB.put(board, "GC", [[1, 7]])
 	BB.put(board, "Y", [[6, 2]])
-	BB.set_dew_target(board, 6, 2)
+	BB.dew_level(board, [Vector2i(6, 2)])
 	board.goals = ["OB04"]
 	var events: Array[BoardEvent] = MatchResolver.tap(board, Vector2i(1, 7))
 	assert_eq(EV.cells_of(events, "crane_landing"), [Vector2i(6, 2)])
