@@ -15,7 +15,7 @@ Level 1 has `"story_beat": "intro"`. A level with no hint writes `"tutorial": nu
 
 ## 2. §5, Field meanings: add this line, and replace the `story_beat` line
 
-- `tutorial`: optional; `null` or absent = no hint. Otherwise `{"teach": "<name>", "hint_cells": [[x,y],[x,y]]}`. `teach` is `"rocket"` (4 in a row), `"firecracker"` (L/T match), `"crane"` (2×2 match) or `"orb"` (5 in a row). `hint_cells` is exactly two different, orthogonally adjacent playable cells inside the board, each holding a piece at the start (not a content obstacle): the swap the player is shown. Used on tutorial levels (2, 3, 5, 6). It changes no rule (no extra move, no booster). Pin the tiles with `fixed_tiles` so that swapping the two cells really makes the taught special; the validator does not check this (trial, OQ-98).
+- `tutorial`: optional; `null` or absent = no hint. Otherwise `{"teach": "<name>", "hint_cells": [[x,y],[x,y]]}`. `teach` is `"rocket"` (4 in a row), `"firecracker"` (L/T match), `"crane"` (2×2 match) or `"orb"` (5 in a row). `hint_cells` is exactly two different, orthogonally adjacent playable cells inside the board, each holding a piece at the start (not a content obstacle): the swap the player is shown. Used on tutorial levels (2, 3, 5, 6). It changes no rule (no extra move, no booster). Pin the tiles with `fixed_tiles` so that swapping the two cells really makes the taught special; the validator does not check this (owner decision, chat 28 Nov 2026, OQ-98 Option A).
 - `story_beat`: `"intro"` (level 1 only: the opening comic, plays once before the board), `"mini"` (on hard levels), `"chapter"` (on finales), otherwise `null`. `"intro"` on any other level is invalid, and level 1 with `null` is invalid.
 
 ## 3. §6 Validation checklist: add one line

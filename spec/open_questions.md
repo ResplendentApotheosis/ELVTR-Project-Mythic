@@ -983,8 +983,10 @@ Blocks: IR-88 tests for a cancelled attempt that used a pre-level booster or a c
 
 ## New questions from the `tutorial` and `story_beat` "intro" decisions (28 Nov 2026)
 
-### OQ-98 · `tutorial` hint: does the validator check the swap really makes the taught special?
-Owner decision, chat 28 Nov 2026 › `tutorial` field: the field and its shape checks are decided (IR-89). It says nothing on whether the validator proves the hint is correct. Provisional: Option A (the producer's reading, not an owner decision).
+### OQ-98 · `tutorial` hint: does the validator check the swap really makes the taught special? — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-98: Option A (2026-11-28). In plain words: the validator checks only the shape of the `tutorial` field; the level designer pins the tiles with `fixed_tiles` so the swap makes the special, and a playtest catches a wrong hint. Now in IR-89 (provisional wording removed).
+
+Original question: the field and its shape checks were decided (IR-89), but nothing said whether the validator proves the hint is correct.
 - Option A: No. The validator checks only the shape of the field (IR-89). The level designer pins the tiles with `fixed_tiles` so the swap makes the special; a wrong hint is found by a playtest.
 - Option B: Yes. The validator plays the swap of the two hint cells on the starting board with the real MatchFinder / MatchResolver and rejects the level unless it creates the special named by `teach` (Rocket, Firecracker, Crane or Jade Orb).
 Blocks: only an extra validator test for IR-89; nothing else.
