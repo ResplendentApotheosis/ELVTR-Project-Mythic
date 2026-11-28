@@ -991,8 +991,10 @@ Original question: the field and its shape checks were decided (IR-89), but noth
 - Option B: Yes. The validator plays the swap of the two hint cells on the starting board with the real MatchFinder / MatchResolver and rejects the level unless it creates the special named by `teach` (Rocket, Firecracker, Crane or Jade Orb).
 Blocks: only an extra validator test for IR-89; nothing else.
 
-### OQ-99 · Level 17's story beat has no `story_beat` value
-IR-87 lists a story beat at level 17 (the first freed creature, OQ-83), and the GDD's Story table has it. `story_beat` (IR-63, the brief §5) is `"intro"` on level 1, `"mini"` on hard levels, `"chapter"` on finales and `null` on every other level, and level 17 is not a hard level (hard = 15, 20, 30, 35, 40, 45). So a level 17 file would say `null` although IR-87 says a beat plays there.
+### OQ-99 · Level 17's story beat has no `story_beat` value — ANSWERED
+Decision: Owner decision, chat 28 Nov 2026 › OQ-99: Option A with value `"mini"` (2026-11-28). In plain words: level 17 has `"story_beat": "mini"`; `"mini"` is required on levels 15, 20, 30, 35, 40, 45 and 17 and rejected anywhere else; level 17 with `null` is rejected. Now in IR-63, IR-87, `spec/brief_additions.md`.
+
+Original question: IR-87 lists a story beat at level 17 (the first freed creature, OQ-83), and the GDD's Story table has it. `story_beat` (IR-63, the brief §5) is `"intro"` on level 1, `"mini"` on hard levels, `"chapter"` on finales and `null` on every other level, and level 17 is not a hard level (hard = 15, 20, 30, 35, 40, 45). So a level 17 file would say `null` although IR-87 says a beat plays there.
 - Option A: Level 17 uses a new `story_beat` value (e.g. `"mini"`), and IR-63 lists level 17 as the one non-hard level allowed `"mini"`.
 - Option B: The level 17 beat is not driven by `story_beat`; StoryPlayer plays it from a fixed list, and the file stays `null`.
 Blocks: IR-63's test for level 17; StoryPlayer's source for the beat list. Not other levels.

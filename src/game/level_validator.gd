@@ -10,6 +10,7 @@ const LAST_LEVEL: int = 50
 const TIERS: Array[String] = ["intro", "easy", "medium", "hard", "finale"]
 const FINALE_LEVELS: Array[int] = [25, 50]
 const HARD_LEVELS: Array[int] = [15, 20, 30, 35, 40, 45]
+const MINI_BEAT_LEVELS: Array[int] = [17]   # non-hard levels that still take a "mini" story beat (IR-63, OQ-99)
 const MAX_SIDE: int = 9
 const MIN_MOVES: int = 16
 const MOVES_SLACK: int = 2
@@ -85,7 +86,7 @@ static func _check_identity(level: Dictionary, id: int, file_id: int, errors: Ar
 	var wanted: Variant = null
 	if id == 1:
 		wanted = "intro"
-	elif tier == "hard":
+	elif tier == "hard" or MINI_BEAT_LEVELS.has(id):
 		wanted = "mini"
 	elif tier == "finale":
 		wanted = "chapter"
