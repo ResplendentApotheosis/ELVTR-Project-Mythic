@@ -1,0 +1,158 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/greybox/greybox.gd" id="1_main"]
+[ext_resource type="Script" path="res://scenes/greybox/greybox_board_view.gd" id="2_view"]
+[ext_resource type="Script" path="res://src/presentation/animation_queue.gd" id="3_queue"]
+
+[node name="Greybox" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_main")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.11, 0.12, 0.14, 1)
+
+[node name="BoardView" type="Node2D" parent="."]
+position = Vector2(24, 24)
+script = ExtResource("2_view")
+
+[node name="AnimationQueue" type="Node" parent="."]
+script = ExtResource("3_queue")
+
+[node name="Hud" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 640.0
+offset_top = 24.0
+offset_right = 1120.0
+offset_bottom = 420.0
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="LevelLabel" type="Label" parent="Hud"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Level"
+
+[node name="MovesLabel" type="Label" parent="Hud"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Moves left:"
+
+[node name="GoalsLabel" type="Label" parent="Hud"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Goals:"
+
+[node name="WalletLabel" type="Label" parent="Hud"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Coins:     Lives:"
+
+[node name="NoteLabel" type="Label" parent="Hud"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+autowrap_mode = 3
+text = ""
+
+[node name="HelpLabel" type="Label" parent="Hud"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+autowrap_mode = 3
+text = "Click a piece then a neighbour, or drag a piece toward a neighbour, to swap. Click a special (R- R| FC CR ORB) to fire it.
+Grey block = content obstacle (id hp). Green outline = overlay. Tinted cell = underlay (blue = dew, purple = goo)."
+
+[node name="WinPanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 140.0
+offset_top = 220.0
+offset_right = 500.0
+offset_bottom = 400.0
+
+[node name="Box" type="VBoxContainer" parent="WinPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Text" type="Label" parent="WinPanel/Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+text = "Level won!"
+
+[node name="PlayAgainButton" type="Button" parent="WinPanel/Box"]
+layout_mode = 2
+text = "Play again (grey box only)"
+
+[node name="OfferPanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 120.0
+offset_top = 200.0
+offset_right = 520.0
+offset_bottom = 420.0
+
+[node name="Box" type="VBoxContainer" parent="OfferPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Text" type="Label" parent="OfferPanel/Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+text = "Out of moves."
+
+[node name="Warning" type="Label" parent="OfferPanel/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.5, 0.4, 1)
+horizontal_alignment = 1
+text = ""
+
+[node name="AcceptButton" type="Button" parent="OfferPanel/Box"]
+layout_mode = 2
+text = "Accept (+5 moves)"
+
+[node name="DeclineButton" type="Button" parent="OfferPanel/Box"]
+layout_mode = 2
+text = "Decline"
+
+[node name="RetryPanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 120.0
+offset_top = 200.0
+offset_right = 520.0
+offset_bottom = 420.0
+
+[node name="Box" type="VBoxContainer" parent="RetryPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Text" type="Label" parent="RetryPanel/Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+text = "Level failed."
+
+[node name="RetryButton" type="Button" parent="RetryPanel/Box"]
+layout_mode = 2
+text = "Retry"
+
+[node name="BuyLivesButton" type="Button" parent="RetryPanel/Box"]
+layout_mode = 2
+text = "Buy all 5 lives (150 coins)"
+
+[node name="CheckAgainButton" type="Button" parent="RetryPanel/Box"]
+layout_mode = 2
+text = "Check lives again"
