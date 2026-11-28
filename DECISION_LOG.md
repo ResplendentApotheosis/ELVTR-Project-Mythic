@@ -18,6 +18,8 @@ Who decided what, and who made what: the owner (human) or AI. Newest first. Use 
 
 | Date | What | Decided by | Made by | Where |
 |---|---|---|---|---|
+| 2026-11-28 | Owner's first grey-box playtest: swapping, cascades and goal counters feel right; the test level is too easy (expected, it's a fixture); the debug moves setting works for testing the fail flow | Human | — | `scenes/greybox/` |
+| 2026-11-28 | Merged PR #7 (grey-box playable board, 728 tests passing) into `main` | Human | AI | GitHub |
 | 2026-11-28 | Built the owner's grey-box answers and the debug moves box: SaveService `start_attempt` tracker optional and new `bind_tracker`; LevelLoader `build_count`; LevelSession builds once; refill `data.colors`; `DebugGate`; debug panel (number box and keys 1–9). Tests written first; 2 faulty new tests fixed by test-engineer; suite 728 pass, 0 fail | AI | test-engineer, godot-engineer | `src/game/`, `src/match/board_gravity.gd`, `src/presentation/animation_steps.gd`, `scenes/greybox/`, `tests/`, `tests/API_CONTRACT.md` §14 |
 | 2026-11-28 | Grey-box code choices, provisional: if the board build fails after the save opened the attempt, LevelSession ends it as a quit; a retry after a refused first start builds with `load_file` and a new seed; keys 1–9 only set debug moves, 0 or an empty box turns it off, keys ignored while the box has focus; debug moves never apply to continues (IR-37 +5 unchanged) | AI | godot-engineer | `src/game/level_session.gd`, `scenes/greybox/greybox.gd` |
 | 2026-11-28 | Grey box gets a debug-only "moves next attempt" setting, to test losing, all 5 continue offers (300/500) and the 0-lives screen; debug builds only, never in an exported release | Human | — | `scenes/greybox/`, `LevelSession.set_debug_moves` |
