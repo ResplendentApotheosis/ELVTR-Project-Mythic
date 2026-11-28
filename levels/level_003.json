@@ -1,0 +1,70 @@
+{
+  "id": 3,
+  "chapter": 1,
+  "tier": "easy",
+  "moves": 26,
+  "colors": 4,
+  "width": 9,
+  "height": 9,
+  "cells": [
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    "#########",
+    ".#######.",
+    ".#######.",
+    ".#######.",
+    ".#######."
+  ],
+  "underlay": [
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    "........."
+  ],
+  "objects": [
+    {"type": "OB02", "x": 0, "y": 4, "hp": 1},
+    {"type": "OB02", "x": 1, "y": 4, "hp": 1},
+    {"type": "OB02", "x": 2, "y": 4, "hp": 1},
+    {"type": "OB02", "x": 6, "y": 4, "hp": 1},
+    {"type": "OB02", "x": 7, "y": 4, "hp": 1},
+    {"type": "OB02", "x": 8, "y": 4, "hp": 1},
+    {"type": "OB02", "x": 1, "y": 5, "hp": 2},
+    {"type": "OB02", "x": 2, "y": 5, "hp": 2},
+    {"type": "OB02", "x": 6, "y": 5, "hp": 2},
+    {"type": "OB02", "x": 7, "y": 5, "hp": 2},
+    {"type": "OB02", "x": 1, "y": 6, "hp": 2},
+    {"type": "OB02", "x": 2, "y": 6, "hp": 2},
+    {"type": "OB02", "x": 6, "y": 6, "hp": 2},
+    {"type": "OB02", "x": 7, "y": 6, "hp": 2},
+    {"type": "OB02", "x": 1, "y": 7, "hp": 2},
+    {"type": "OB02", "x": 2, "y": 7, "hp": 2},
+    {"type": "OB02", "x": 6, "y": 7, "hp": 2},
+    {"type": "OB02", "x": 7, "y": 7, "hp": 2},
+    {"type": "OB02", "x": 1, "y": 8, "hp": 2},
+    {"type": "OB02", "x": 2, "y": 8, "hp": 2},
+    {"type": "OB02", "x": 6, "y": 8, "hp": 2},
+    {"type": "OB02", "x": 7, "y": 8, "hp": 2}
+  ],
+  "fixed_tiles": [
+    {"x": 3, "y": 4, "tile": "red"},
+    {"x": 3, "y": 5, "tile": "green"},
+    {"x": 3, "y": 6, "tile": "green"},
+    {"x": 3, "y": 7, "tile": "yellow"},
+    {"x": 3, "y": 8, "tile": "green"},
+    {"x": 4, "y": 7, "tile": "green"},
+    {"x": 5, "y": 7, "tile": "green"}
+  ],
+  "spawn": {"drop_items": null, "generators": null},
+  "goals": [
+    {"obstacle": "OB02", "count": 22}
+  ],
+  "story_beat": null,
+  "designer_notes": "Firecracker tutorial: two 2-wide, 2-layer bramble walls flank a 3-wide channel (columns 3-5, rows 5-8), under 3-wide one-layer shoulders on row 4 that funnel into the channel. Tutorial swap: (3,8) green <-> (3,7) yellow makes an L (column 3 rows 5-7 + row 7 columns 3-5), a Firecracker at (3,7) whose double blast fully clears the 2-layer wall brambles (2,6)-(2,8), showing why Firecrackers beat layers. Fixed (3,4) red keeps it from growing into a longer line; the walls cap row 7. Goal OB02 x22 vs plan x19 (+16%, inside +-20%); 22 of 73 playable cells = 30% blocked, 38 layer hits. Moves 26 (plan 28 -2, set by balance). [balance 2026-11-28] moves 28->26; bot still 100%, sent back. [redesign 2026-11-28] was 20 one-layer brambles (20 hits, bot 100%, 20.4 moves left); now 22 brambles (goal at the +20% limit) with all 16 wall brambles at 2 layers (38 hits, +90%), and shoulders widened to (2,4)/(6,4) so the channel is the only open way down."
+}

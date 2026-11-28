@@ -89,6 +89,24 @@ func test_IR88_pre_level_boosters_unlocked_by_the_cancelled_start_are_locked_aga
 	assert_eq(int(s.coins()), 500, "free on the next real start")
 
 
+func test_IR88_story_beat_marked_seen_during_the_cancelled_attempt_is_undone() -> void:
+	var s: Variant = save_with({"next_level": 15, "seen_beats": [1]})
+	if s == null:
+		return
+	var before: Array = s.seen_story_beats().duplicate()
+	assert_true(started(start(s, 15)))
+	assert_true(s.should_play_story_beat(15))
+	s.mark_story_beat_seen(15)
+	assert_false(s.should_play_story_beat(15))
+	_cancel(s)
+	assert_true(s.should_play_story_beat(15), "the card plays again on the next real start")
+	assert_eq(s.seen_story_beats(), before, "seen list back to before")
+	var s2: Variant = reopen()
+	if s2 == null:
+		return
+	assert_true(s2.should_play_story_beat(15), "still undone after closing the app")
+
+
 func test_IR88_cancel_survives_closing_the_app() -> void:
 	var s: Variant = save_with(_pre_state(18, 500, 0, 1))
 	if s == null:
